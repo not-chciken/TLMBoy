@@ -18,6 +18,20 @@ The project is structured as follows:
         # Golden files like screenshots.
 ```
 
+# Building
+```bash
+cd TLMBoy
+mkdir build
+cd build
+cmake tlmboy ..
+cmake --build . --target tlmboy --config Release
+```
+Dependencies:
+- [SystemC 2.3.3](https://github.com/accellera-official/systemc)
+- [fmt](https://github.com/fmtlib/fmt)
+- [SDL2](https://github.com/libsdl-org/SDL)
+- [googletest](https://github.com/google/googletest)
+
 # Controls
 
 | Keyboard  | Game Boy  |

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(tlmboy VERSION 1.0.0)
+project(TLMBoy VERSION 1.0.0)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
@@ -10,7 +10,9 @@ enable_testing()
 set(CMAKE_CXX_FLAGS "-Wall")
 set(CMAKE_CXX_STANDARD 20)
 add_definitions(-DSC_DISABLE_API_VERSION_CHECK) # "Fix" c++ version issue.
-set(SYSTEMC_PATH /usr/local/systemc-2.3.2)
+if(NOT DEFINED SYSTEMC_PATH)
+  set(SYSTEMC_PATH /usr/local/systemc-2.3.3)
+endif()
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set(ALL_CPPS

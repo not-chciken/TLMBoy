@@ -1,5 +1,5 @@
 #!/bin/bash
-export SYSTEMC_PATH=/usr/local/systemc-2.3.3-debug
+export SYSTEMC_PATH=/usr/local/systemc-2.3.3
 export TLMBOY_ROOT=$(pwd)
 export LD_LIBRARY_PATH=${SYSTEMC_PATH}/lib-linux64/
 if [ ! -d "./tests/golden_files" ]; then

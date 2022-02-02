@@ -46,11 +46,9 @@ add_dependencies(tests test_memory)
 add_dependencies(tests test_ppu)
 
 
-set(TEST_INCLUDE_PATHS /usr/local/systemc-2.3.3-debug/include
-                       /usr/local/googletest/googletest/include
+set(TEST_INCLUDE_PATHS ${SYSTEMC_PATH}/include
                        src/)
-set(TEST_LIB_PATHS -L/usr/local/systemc-2.3.3-debug/lib-linux64
-                   -L/usr/local/googletest/lib)
+set(TEST_LIB_PATHS -L${${SYSTEMC_PATH}}/lib-linux64)
 set(TEST_LIBS -lsystemc -lgtest -lpthread -lfmt -lSDL2 -lgcov)
 set(TEST_COMPILE_OPTS --coverage -g -O0)
 
