@@ -48,7 +48,7 @@ add_dependencies(tests test_ppu)
 
 set(TEST_INCLUDE_PATHS ${SYSTEMC_PATH}/include
                        src/)
-set(TEST_LIB_PATHS -L${${SYSTEMC_PATH}}/lib-linux64)
+set(TEST_LIB_PATHS -L${SYSTEMC_PATH}/lib-linux64)
 set(TEST_LIBS -lsystemc -lgtest -lpthread -lfmt -lSDL2 -lgcov)
 set(TEST_COMPILE_OPTS --coverage -g -O0)
 
