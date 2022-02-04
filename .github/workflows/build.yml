@@ -9,9 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: chciken/tlmboyci:latest
     steps:
     - uses: actions/checkout@v2
-    - uses: docker://chciken/tlmboyci:latest
     - run: ls
     - name: configure
       run: |
