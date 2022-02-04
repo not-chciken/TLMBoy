@@ -12,10 +12,9 @@ jobs:
     container: chciken/tlmboyci:latest
     steps:
     - uses: actions/checkout@v2
-    - run: ls
     - name: configure
       run: |
-           source source_me.bash
+           ./source_me.bash
            mkdir build
            cd build
            cmake tlmboy ..
