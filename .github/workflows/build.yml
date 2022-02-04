@@ -14,9 +14,27 @@ jobs:
     - uses: docker://chciken/tlmboyci:latest
     - run: ls
     - name: configure
-      run: | 
+      run: |
+           source source_me.bash
            mkdir build
            cd build
            cmake tlmboy ..
-    - name: build
+    - name: build tlmboy
+      working-directory: ./build
       run: cmake --build . --target tlmboy --config Release
+    - name: build tests
+      working-directory: ./build
+      run: cmake --build . --target test_blarrg_cpuinstr01
+    - name: clean
+      working-directory: ./build
+      run: cmake --build . --target clean
+    - name: run tests
+      working-directory: ./build
+      run: ./test_blarrg_cpuinstr01
+    - name: coverage report
+      run: ./coverage_report.bash
+    - name: archive code coverage results
+      uses: actions/upload-artifact@v2
+      with:
+        name: code-coverage-report
+        path: coverage/coverage.html
