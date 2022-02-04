@@ -1,8 +1,5 @@
 name: Build and Test CI
 
-env:
-  TLMBOY_ROOT: "${GITHUB_WORKSPACE}"
-
 on:
   push:
     branches: [ main ]
@@ -30,7 +27,9 @@ jobs:
       run: cmake --build . --target test_blarrg_cpuinstr01
     - name: run tests
       working-directory: ./build/tests
-      run: ./test_blarrg_cpuinstr01
+      run: |
+            export TLMBOY_ROOT=${GITHUB_WORKSPACE}
+            ./test_blarrg_cpuinstr01
     - name: coverage report
       run: |
            s=`./coverage_report.bash`
