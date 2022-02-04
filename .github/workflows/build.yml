@@ -12,6 +12,9 @@ jobs:
     container: chciken/tlmboyci:latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        lfs: 'true'
+        submodules: 'recursive'
     - name: configure
       run: |
            chmod a+x source_me.bash
