@@ -25,11 +25,8 @@ jobs:
     - name: build tests
       working-directory: ./build
       run: cmake --build . --target test_blarrg_cpuinstr01
-    - name: clean
-      working-directory: ./build
-      run: cmake --build . --target clean
     - name: run tests
-      working-directory: ./build
+      working-directory: ./build/tests
       run: ./test_blarrg_cpuinstr01
     - name: coverage report
       run: ./coverage_report.bash
