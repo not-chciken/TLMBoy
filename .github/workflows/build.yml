@@ -12,8 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: docker://chciken/tlmboyci:latest
-      with:
-        entrypoint: /github/workspace
+    - run: ls
     - name: configure
       run: | 
            mkdir build
@@ -21,4 +20,3 @@ jobs:
            cmake tlmboy ..
     - name: build
       run: cmake --build . --target tlmboy --config Release
-
