@@ -1,4 +1,7 @@
-name: Build CI
+name: Build and Test CI
+
+env:
+  TLMBOY_ROOT: ${GITHUB_WORKSPACE}
 
 on:
   push:
