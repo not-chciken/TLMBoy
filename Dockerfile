@@ -8,6 +8,7 @@ RUN  apt-get install -yq \
      build-essential \
      cmake \
      git \
+     git-lfs \
      gdb \
      gcovr \
      g++-10 \
@@ -30,8 +31,9 @@ WORKDIR /tmp/systemc/objdir
 RUN ../configure --prefix=/usr/local/systemc-2.3.3
 RUN make
 RUN make install
-WORKDIR /tmp/
+WORKDIR /
 
 ENV SYSTEMC_PATH=/usr/local/systemc-2.3.3
+ENV LD_LIBRARY_PATH="${SYSTEMC_PATH}/lib-linux64:${LD_LIBRARY_PATH}"
 
 ENTRYPOINT bash
