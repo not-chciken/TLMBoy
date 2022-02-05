@@ -27,12 +27,12 @@ jobs:
       run: cmake --build . --target tlmboy --config Release
     - name: build tests
       working-directory: ./build
-      run: cmake --build . --target test_blarrg_cpuinstr01
+      run: cmake --build . --target test_cpu
     - name: run tests
       working-directory: ./build/tests
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
-            ./test_blarrg_cpuinstr01
+            ./test_cpu
     - name: coverage report
       run: |
            s=`./coverage_report.bash`
