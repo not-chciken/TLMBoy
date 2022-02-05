@@ -1,3 +1,4 @@
+![example workflow](https://github.com/not-chciken/TLMBoy/actions/workflows/build.yml/badge.svg)
 # TLMBoy
 A Game Boy Simulator written in C++/SystemC TLM-2.0. <br>
 This project also acts as my personal playground for new C++20 features.
