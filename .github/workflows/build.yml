@@ -33,13 +33,3 @@ jobs:
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
             ./test_cpu
-    - name: coverage report
-      run: |
-           s=`./coverage_report.bash`
-           s=($s)
-           curl https://img.shields.io/badge/coverage-${s[1]}%-green > badge.svg
-    - name: archive code coverage results
-      uses: actions/upload-artifact@v2
-      with:
-        name: code-coverage-badge
-        path: badge.svg
