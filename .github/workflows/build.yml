@@ -1,4 +1,4 @@
-name: Build CI
+name: Build and Test CI
 
 on:
   push:
@@ -9,14 +9,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: chciken/tlmboyci:latest
     steps:
     - uses: actions/checkout@v2
-    - uses: docker://chciken/tlmboyci:latest
-    - run: ls
+      with:
+        lfs: 'true'
+        submodules: 'recursive'
     - name: configure
-      run: | 
+      run: |
+           chmod a+x source_me.bash
+           ./source_me.bash
            mkdir build
            cd build
            cmake tlmboy ..
-    - name: build
+    - name: build tlmboy
+      working-directory: ./build
       run: cmake --build . --target tlmboy --config Release
+    - name: build tests
+      working-directory: ./build
+      run: cmake --build . --target test_cpu
+    - name: run tests
+      working-directory: ./build/tests
+      run: |
+            export TLMBOY_ROOT=${GITHUB_WORKSPACE}
+            ./test_cpu
