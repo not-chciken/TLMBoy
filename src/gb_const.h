@@ -3,7 +3,8 @@
  * Copyright (C) 2022 chiken
  * MIT License
  *
- * Here global constants of the gameboy reside. Like the address of the interrupt registers
+ * Here global constants of the gameboy reside.
+ * Like the address of the interrupt registers, the bus width, etc.
  ****************************************************************************************/
 
 #include <cstdint>

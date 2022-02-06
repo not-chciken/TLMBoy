@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * MIT License
- * Copyright (c) 2020 chciken/Niko
+ * Copyright (c) 2022 chciken/Niko
  *
  * The CPU of the gameboy, basically a Z80 clone with some special instructions
 ********************************************************************************/
@@ -21,54 +21,50 @@
 
 struct Cpu : public sc_module {
   SC_HAS_PROCESS(Cpu);
-  bool attachGdb;
-  std::shared_ptr<tlm::tlm_generic_payload> payload;
+  friend GdbServer;
   tlm_utils::simple_initiator_socket<Cpu, gb_const::kBusDataWidth> init_socket;
-  bool intr_master_enable;
-  u8* reg_intr_enable_dmi;  // DMI pointer to the interrupt enable register at 0xffff.
-  u8* reg_intr_pending_dmi;  // DMI pointer to register at 0xff0f indicating pending interrupts.
-  bool halted_;
-  sc_in<bool> irq_vblank;
-  RegFile reg_file;
   sc_in_clk clk;
-  u64 clock_cycles_;
-
-  // zero flag: math op is zero or two values match with CP instruction
-  const u8 kMaskZFlag = 0b10000000;
-  // subtract flag: last math instruction was a subtraction
-  const u8 kMaskNFlag = 0b01000000;
-  // half carry flag: carry occured from lower nibble in last math instruction
-  const u8 kMaskHFlag = 0b00100000;
-  // carry flag: carry occured from last math operation or A is smaller than value with CP instruction
-  const u8 kMaskCFlag = 0b00010000;
-
-  const u8 kIndCFlag = 4;
-  const u8 kIndHFlag = 5;
-  const u8 kIndNFlag = 6;
-  const u8 kIndZFlag = 7;
+  RegFile reg_file;
 
   explicit Cpu(sc_module_name name, bool attachGdb = false);
 
-  // General purpose functions
-  void HandleInterrupts();
-  void SetRegFlag(u8 flag_mask, bool val);
+ private:
+  void Init();
+  u64 clock_cycles_;
+
+  bool intr_master_enable = false;
+  // DMI pointer to the interrupt enable register at 0xffff.
+  u8* reg_intr_enable_dmi = nullptr;
+  // DMI pointer to register at 0xff0f indicating pending interrupts.
+  u8* reg_intr_pending_dmi = nullptr;
+
+  // Register file stuff.
   void SetFlagC(bool val);
   void SetFlagH(bool val);
   void SetFlagN(bool val);
   void SetFlagZ(bool val);
-
   bool GetRegFlag(const u8 flag_mask);
-  std::string RegFileToString();
+
+  // Bus stuff.
   void WriteBus(u16 addr, u8 data);
   void WriteBusDebug(u16 addr, u8 data);
   u8 ReadBus(u16 addr);
   u8 ReadBusDebug(u16 addr);
+  std::shared_ptr<tlm::tlm_generic_payload> payload;
+
+  // Executes on machine cycle (interrupts, fetch, decode, execute)
+  void DoMachineCycle();
+  void HandleInterrupts();
   u8 FetchNextInstrByte();
   u16 FetchNext2InstrBytes();
 
+  // Halt the CPU. Used by the GDB server.
   void Halt();
+  // Continue after halt. Used by the GDB server
   void Continue();
-  void Init();
+  GdbServer gdb_server;
+  bool attachGdb;
+  bool halted_ = false;
 
   // Instructions
   void InstrAddA(Reg<u8> &reg);
@@ -182,10 +178,18 @@ struct Cpu : public sc_module {
   void InstrSwBp();
   void InstrStopSim();
 
+  // Constants.
+  // zero flag: math op is zero or two values match with CP instruction
+  const u8 kMaskZFlag = 0b10000000;
+  // subtract flag: last math instruction was a subtraction
+  const u8 kMaskNFlag = 0b01000000;
+  // half carry flag: carry occured from lower nibble in last math instruction
+  const u8 kMaskHFlag = 0b00100000;
+  // carry flag: carry occured from last math operation or A is smaller than value with CP instruction
+  const u8 kMaskCFlag = 0b00010000;
 
-  // The heart of the CPU. See:
-  // https://github.com/jgilchrist/gbemu/blob/master/src/cpu/opcode_mapping.cc
-  // https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
-  void EvalInstr();
-  GdbServer gdb_server;
+  const u8 kIndCFlag = 4;  // Bit index of the C flag
+  const u8 kIndHFlag = 5;  // Bit index of the H flag
+  const u8 kIndNFlag = 6;  // Bit index of the N flag
+  const u8 kIndZFlag = 7;  // Bit index of the Z flag
 };

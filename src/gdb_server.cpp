@@ -10,8 +10,8 @@
 #include <functional>
 #include <iomanip>
 #include <regex>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 #include "cpu.h"
 #include "fmt/format.h"

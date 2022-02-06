@@ -17,11 +17,13 @@ void Cpu::InstrNop() {
   wait(4);
 }
 
+// LD reg,(a16)
 void Cpu::InstrLoad(Reg<u8> &reg, const u16 &addr_val) {
   reg = ReadBus(addr_val);
   wait(16);
 }
 
+// LD reg,(reg)
 void Cpu::InstrLoad(Reg<u8> &reg, Reg<u16> &addr_reg) {
   reg = ReadBus(addr_reg);
   wait(8);
@@ -33,12 +35,13 @@ void Cpu::InstrLoadImm(Reg<u16> &reg) {
   wait(12);
 }
 
-// LD reg, u8
+// LD reg,u8
 void Cpu::InstrLoadImm(Reg<u8> &reg) {
   reg = FetchNextInstrByte();
   wait(8);
 }
 
+// "LD reg,(reg+)
 void Cpu::InstrLoadInc(Reg<u8> &reg, Reg<u16> &addr_reg) {
   reg = ReadBus(addr_reg);
   ++addr_reg;
@@ -157,7 +160,7 @@ void Cpu::InstrRlca() {
   SetFlagH(false);
   SetFlagZ(false);
   SetFlagN(false);
-  SetFlagC((reg_file.A & 0x01));  // TODO(niko): check this
+  SetFlagC((reg_file.A & 0x01));
   wait(4);
 }
 
@@ -194,7 +197,7 @@ void Cpu::InstrRlc(Reg<u8> &reg) {
   SetFlagH(false);
   SetFlagZ(reg == 0);
   SetFlagN(false);
-  SetFlagC((reg & 0x01));  // TODO(niko): check this
+  SetFlagC((reg & 0x01));
   wait(8);
 }
 
@@ -235,7 +238,7 @@ void Cpu::InstrRcca() {
   SetFlagH(false);
   SetFlagZ(false);
   SetFlagN(false);
-  SetFlagC((reg_file.A & 0x80));  // TODO(niko): check this
+  SetFlagC((reg_file.A & 0x80));
   wait(4);
 }
 
@@ -285,7 +288,7 @@ void Cpu::InstrAddAImm() {
   SetFlagH((reg_file.A & 0x0f) + (imm & 0x0f) > 0x0f);
   reg_file.A += imm;
   SetFlagN(false);
-  SetFlagC(reg_file.A < imm);  // TODO(niko): does this work? check
+  SetFlagC(reg_file.A < imm);
   SetFlagZ(reg_file.A == 0);
   wait(8);
 }
@@ -297,7 +300,7 @@ void Cpu::InstrAddACarry(Reg<u8> &reg) {
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) + carry_add > 0x0f);
   reg_file.A += reg + carry_add;
   SetFlagN(false);
-  SetFlagC((reg_file.A < old_val) || (reg_file.A == old_val && carry_add == 1));  // TODO(niko): does this work? check
+  SetFlagC((reg_file.A < old_val) || (reg_file.A == old_val && carry_add == 1));
   SetFlagZ(reg_file.A == 0);
   wait(4);
 }
@@ -309,11 +312,10 @@ void Cpu::InstrAddACarry(Reg<u16> &addr_reg) {
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) + carry_add > 0x0f);
   reg_file.A += reg + carry_add;
   SetFlagN(false);
-  SetFlagC(reg_file.A < old_val || (reg_file.A == old_val && carry_add == 1));  // TODO(niko): does this work? check
+  SetFlagC(reg_file.A < old_val || (reg_file.A == old_val && carry_add == 1));
   SetFlagZ(reg_file.A == 0);
   wait(8);
 }
-
 
 void Cpu::InstrAddACarryImm() {
   u8 reg = FetchNextInstrByte();
@@ -323,7 +325,7 @@ void Cpu::InstrAddACarryImm() {
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) + carry_add > 0x0f);
   reg_file.A += reg + carry_add;
   SetFlagN(false);
-  SetFlagC(reg_file.A < old_val || (reg_file.A == old_val && carry_add == 1));  // TODO(niko): does this work? check
+  SetFlagC(reg_file.A < old_val || (reg_file.A == old_val && carry_add == 1));
   SetFlagZ(reg_file.A == 0);
   wait(8);
 }
@@ -333,7 +335,7 @@ void Cpu::InstrAddA(Reg<u16> &addr_reg) {
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) > 0x0f);
   reg_file.A += reg;
   SetFlagN(false);
-  SetFlagC(reg_file.A < reg);  // TODO(niko): does this work? check
+  SetFlagC(reg_file.A < reg);
   SetFlagZ(reg_file.A == 0);
   wait(8);
 }
@@ -344,7 +346,7 @@ void Cpu::InstrSubImm() {
   int8_t imm = FetchNextInstrByte();
   reg_file.A -= imm;
   SetFlagC(reg_file.A > pre_val);
-  SetFlagH(((pre_val & 0xf) - (imm & 0xf)) < 0);  // TODO(niko): check
+  SetFlagH(((pre_val & 0xf) - (imm & 0xf)) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
   wait(8);
@@ -356,7 +358,7 @@ void Cpu::InstrSub(Reg<u8> &reg) {
   u8 old_reg_val = reg;
   reg_file.A -= reg;
   SetFlagC(reg_file.A > pre_val);
-  SetFlagH(((pre_val & 0xf) - (old_reg_val & 0xf)) < 0);  // TODO(niko): check
+  SetFlagH(((pre_val & 0xf) - (old_reg_val & 0xf)) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
   wait(4);
@@ -368,7 +370,7 @@ void Cpu::InstrSub(Reg<u16> &addr_reg) {
   u8 pre_val = reg_file.A;
   reg_file.A -= reg;
   SetFlagC(reg_file.A > pre_val);
-  SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);  // TODO(niko): check
+  SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
   wait(8);
@@ -381,7 +383,7 @@ void Cpu::InstrSubCarry(Reg<u8> &reg) {
 
   reg_file.A -= (reg + carry_sub);
   SetFlagC(reg_file.A > old_val || (reg_file.A == old_val && carry_sub == 1));
-  SetFlagH(((old_val & 0xf) - (reg.val() & 0xf) - carry_sub) < 0);  // TODO(niko): check
+  SetFlagH(((old_val & 0xf) - (reg.val() & 0xf) - carry_sub) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
   wait(4);
@@ -394,7 +396,7 @@ void Cpu::InstrSubCarry(Reg<u16> &addr_reg) {
   u8 old_val = reg_file.A;
   reg_file.A -= (reg + carry_sub);
   SetFlagC(reg_file.A > old_val || (reg_file.A == old_val && carry_sub == 1));
-  SetFlagH(((old_val & 0xf) - (reg & 0xf) - carry_sub) < 0);  // TODO(niko): check
+  SetFlagH(((old_val & 0xf) - (reg & 0xf) - carry_sub) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
   wait(8);
@@ -418,7 +420,7 @@ void Cpu::InstrComp(Reg<u8> &reg) {
   u8 pre_val = reg_file.A.val();
   u8 result = reg_file.A.val() - reg;
   SetFlagC(result > pre_val);
-  SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);  // TODO(niko): check
+  SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);
   SetFlagZ(result == 0);
   SetFlagN(true);
   wait(4);
@@ -429,7 +431,7 @@ void Cpu::InstrComp(Reg<u16> &reg) {
   u8 read_reg = ReadBus(reg);
   u8 result = reg_file.A.val() - read_reg;
   SetFlagC(result > pre_val);
-  SetFlagH(((pre_val & 0xf) - (read_reg & 0xf)) < 0);  // TODO(niko): check
+  SetFlagH(((pre_val & 0xf) - (read_reg & 0xf)) < 0);
   SetFlagZ(result == 0);
   SetFlagN(true);
   wait(8);
@@ -443,7 +445,7 @@ void Cpu::InstrCompImm() {
   u8 result = reg_file.A - imm;
   DBG_LOG_INST("d8 = 0x" << std::hex << static_cast<uint>(imm));
   SetFlagC(result > pre_val);
-  SetFlagH(((pre_val & 0xf) - (imm & 0xf)) < 0);  // TODO(niko): check
+  SetFlagH(((pre_val & 0xf) - (imm & 0xf)) < 0);
   SetFlagZ(result == 0);
   SetFlagN(true);
   wait(8);
@@ -545,7 +547,6 @@ void Cpu::InstrOrImm() {
   wait(8);
 }
 
-// TODO(niko): figure out the +1
 void Cpu::InstrJump() {
   int tmp_pc = static_cast<int>(reg_file.PC);
   int tmp_instr = static_cast<int>(static_cast<int8_t>(FetchNextInstrByte()));
@@ -746,7 +747,7 @@ void Cpu::InstrRotLeft(Reg<u8> &reg) {
   SetFlagC(reg & 0b10000000);
 
   reg <<= 1;
-  reg |= (old_carry ? 1 : 0);  // TODO(niko): check
+  reg |= (old_carry ? 1 : 0);
 
   SetFlagZ(reg == 0);
   SetFlagN(false);
@@ -774,7 +775,7 @@ void Cpu::InstrRotRight(Reg<u8> &reg) {
   SetFlagC(reg & 1);
 
   reg = reg >> 1;
-  reg |= (old_carry ? 0b10000000 : 0);  // TODO(niko): check
+  reg |= (old_carry ? 0b10000000 : 0);
 
   SetFlagZ(reg == 0);
   SetFlagN(false);
@@ -803,7 +804,7 @@ void Cpu::InstrRotLeftA() {
   SetFlagC(reg_file.A.val() & 0b10000000);
 
   reg_file.A.val(reg_file.A.val() << 1);
-  reg_file.A.val(reg_file.A.val() | (old_carry ? 1 : 0));  // TODO(niko): check
+  reg_file.A.val(reg_file.A.val() | (old_carry ? 1 : 0));
 
   SetFlagZ(false);
   SetFlagN(false);
@@ -841,7 +842,7 @@ void Cpu::InstrDI() {
 }
 
 void Cpu::InstrEI() {
-  intr_master_enable = true;  // TODO(niko): according to docu EI takes effect in the NEXT cycle
+  intr_master_enable = true;
   wait(4);
 }
 

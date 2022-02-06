@@ -5,7 +5,9 @@
 
 #include "cpu.h"
 
-void Cpu::EvalInstr() {
+void Cpu::DoMachineCycle() {
+  Init();
+
   if (attachGdb) {
     uint port = 1337;
     std::cout << "waiting for gdb to attach on port " << port << "..." << std::endl;
@@ -38,17 +40,11 @@ void Cpu::EvalInstr() {
     DBG_LOG_INST(sc_core::sc_time_stamp() << ": PC 0x" << std::hex
       << static_cast<uint>(reg_file.PC.val()) << " "<< std::dec);
 
-    // Output all registers
-    // static bool go = false;
-    // if (go) {
     DBG_LOG_CPU_REG(fmt::format("af:0x{:04x},bc:0x{:04x},de:0x{:04x},hl:0x{:04x},sp:0x{:04x},pc:0x{:04x},c:",
                     reg_file.AF, reg_file.BC, reg_file.DE, reg_file.HL, reg_file.SP, reg_file.PC)
                     << std::to_string(clock_cycles_));
-    // }
-    //if (reg_file.PC.val() > 0xfe)
-    //  go = true;
 
-    // Fetch
+    // Fetch.
     u8 instr_byte = FetchNextInstrByte();
 
     // Decode & execute.

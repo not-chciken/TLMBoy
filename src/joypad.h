@@ -1,3 +1,4 @@
+#pragma once
 /*******************************************************************************
  * Copyright (C) 2021 chciken
  * MIT License
@@ -24,14 +25,12 @@
  * O key = Select button; P key = Start Button
  ******************************************************************************/
 
-#pragma once
-
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <SDL2/SDL.h>
-#include <systemc.h>
-#include <sysc/kernel/sc_simcontext.h>
-#include <tlm.h>
+#include "SDL2/SDL.h"
+#include "systemc.h"
+#include "sysc/kernel/sc_simcontext.h"
+#include "tlm.h"
 
 #include "common.h"
 #include "debug.h"

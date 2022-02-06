@@ -5,41 +5,20 @@
 
 #include "cpu.h"
 
-#include <fmt/format.h>
-
 #include <bitset>
 #include <string>
 
-#include "./cpu_jumptable.cpp"
-#include "./cpu_ops.cpp"
+#include "fmt/format.h"
+#include "cpu_jumptable.cpp"
+#include "cpu_ops.cpp"
 
 Cpu::Cpu(sc_module_name name, bool attachGdb):
     sc_module(name),
-    attachGdb(attachGdb),
     init_socket("init_socket"),
-    halted_(false),
-    irq_vblank("irq_vblank"),
-    reg_file(),
-    gdb_server(this) {
-  SC_THREAD(EvalInstr);
-  dont_initialize();
-  reg_file.PC = 0x0000;  // Iniitliazed to 0x100 [GBCPUman p.63], this the value after booting, init value is 0x0000
-  reg_file.SP = 0x0000;  // Iniitliazed to 0xFFFE [GBCPUman p.64], or is this also done by the bootloader? TODO(niko): find out NOLINT
-  sensitive << clk.pos();
-  intr_master_enable = false;   // TODO(niko): Is this true?
-  reg_intr_enable_dmi = nullptr;
-
+    gdb_server(this),
+    attachGdb(attachGdb) {
+  SC_CTHREAD(DoMachineCycle, clk);
   payload = MakeSharedPayloadPtr(tlm::TLM_IGNORE_COMMAND, 0x0000, nullptr);
-}
-
-
-void Cpu::SetRegFlag(u8 flag_mask, bool val) {
-  DBG_LOG_CPU("SetRegFlag: 0b" << std::bitset<8>(flag_mask) << "=>" << val);
-  if (val) {
-    reg_file.F = flag_mask | reg_file.F.val();
-  } else {
-    reg_file.F = (~flag_mask) & reg_file.F.val();
-  }
 }
 
 void Cpu::SetFlagC(bool val) {
@@ -58,16 +37,8 @@ void Cpu::SetFlagZ(bool val) {
   reg_file.F = SetBit(reg_file.F.val(), val, kIndZFlag);
 }
 
-
 bool Cpu::GetRegFlag(const u8 flag_mask) {
   return static_cast<bool>(flag_mask & reg_file.F.val());
-}
-
-std::string Cpu::RegFileToString() {
-  return fmt::format("AF:{:04x}\nBC:{:04x}\nDE:{:04x}\n"
-                     "HL:{:04x}\nSP:{:04x}\nPC{:04x}\n",
-                     reg_file.AF, reg_file.BC, reg_file.DE,
-                     reg_file.HL, reg_file.SP, reg_file.PC);
 }
 
 void Cpu::WriteBus(u16 addr, u8 data) {
@@ -115,7 +86,7 @@ u8 Cpu::ReadBusDebug(u16 addr) {
   init_socket->transport_dbg(*payload);
   if (payload->is_response_error()) {
     DBG_LOG_CPU("Transport status is:" << payload->get_response_string());
-    SC_REPORT_ERROR("TLM-2", fmt::format("Response error from transport_dbg!"
+    throw std::runtime_error(fmt::format("Response error from transport_dbg!"
                     "Address=0x{:04x} Data=0x{:02x}", addr, data).c_str());
   }
   return data;

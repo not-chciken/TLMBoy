@@ -10,14 +10,19 @@ GenericMemory::GenericMemory(size_t memory_size, sc_module_name name, u8 *data)
   targ_socket.register_b_transport(this, &GenericMemory::b_transport);
   targ_socket.register_transport_dbg(this, &GenericMemory::transport_dbg);
   targ_socket.register_get_direct_mem_ptr(this, &GenericMemory::get_direct_mem_ptr);
-  if (data == nullptr)
+  if (data == nullptr) {
     data_ = new u8[memory_size_]{0};
-  else
+    delete_data_ = true;
+  } else {
     data_ = data;
+    delete_data_ = false;
+  }
 }
 
 GenericMemory::~GenericMemory() {
-  // delete data_;TODO
+  if (delete_data_) {
+    delete [] data_;
+  }
 }
 
 void GenericMemory::SetMemData(u8 *data, size_t size) {

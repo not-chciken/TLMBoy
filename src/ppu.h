@@ -88,7 +88,6 @@ struct Ppu : public sc_module {
   ~Ppu();
 
   tlm_utils::simple_initiator_socket<Ppu, gb_const::kBusDataWidth> init_socket;
-  sc_out<bool> irq_vblank;  // interrupt signal
   sc_in_clk clk;  // clock for the PP
 
   u8 *reg_0xFF40;

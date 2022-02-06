@@ -36,4 +36,5 @@ struct GenericMemory : public sc_module {
  protected:
   u8 *data_;
   size_t memory_size_;
+  bool delete_data_;
 };

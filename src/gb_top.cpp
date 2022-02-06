@@ -27,33 +27,30 @@ GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesyst
   gb_bus.AddBusMaster(&gb_cpu.init_socket);
   gb_bus.AddBusMaster(&gb_ppu.init_socket);
   gb_bus.AddBusMaster(&io_registers.init_socket);
-  gb_cpu.irq_vblank(sig_vblank);
-  gb_ppu.irq_vblank(sig_vblank);
   cartridge.sig_unmap_rom_in(sig_unmap_rom);
   io_registers.sig_unmap_rom_out(sig_unmap_rom);
 
-  gb_bus.AddBusSlave(cartridge.mbc->rom_socket_in, 0x0000, 0x7FFF);
-  gb_bus.AddBusSlave(video_ram.targ_socket,        0x8000, 0x9FFF);
-  gb_bus.AddBusSlave(cartridge.mbc->ram_socket_in, 0xA000, 0xBFFF);
-  gb_bus.AddBusSlave(work_ram.targ_socket,         0xC000, 0xCFFF);
-  gb_bus.AddBusSlave(work_ram_n.targ_socket,       0xD000, 0xDFFF);
-  gb_bus.AddBusSlave(echo_ram.targ_socket,         0xE000, 0xEFFF);
-  gb_bus.AddBusSlave(echo_ram_n.targ_socket,       0xF000, 0xFDFF);
-  gb_bus.AddBusSlave(obj_attr_mem.targ_socket,     0xFE00, 0xFE9F);
-  gb_bus.AddBusSlave(joy_pad.targ_socket,          0xFF00, 0xFF00);
-  gb_bus.AddBusSlave(serial_transfer.targ_socket,  0xFF01, 0xFF03);
-  gb_bus.AddBusSlave(gb_timer.targ_socket,         0xFF04, 0xFF07);
-  gb_bus.AddBusSlave(reg_if.targ_socket,           0xFF0F, 0xFF0F);
-  gb_bus.AddBusSlave(io_registers.targ_socket,     0xFF10, 0xFF7F);
-  gb_bus.AddBusSlave(high_ram.targ_socket,         0xFF80, 0xFFFE);
-  gb_bus.AddBusSlave(intr_enable.targ_socket,      0xFFFF, 0xFFFF);
+  gb_bus.AddBusSlave(&cartridge.mbc->rom_socket_in, 0x0000, 0x7FFF);
+  gb_bus.AddBusSlave(&video_ram.targ_socket,        0x8000, 0x9FFF);
+  gb_bus.AddBusSlave(&cartridge.mbc->ram_socket_in, 0xA000, 0xBFFF);
+  gb_bus.AddBusSlave(&work_ram.targ_socket,         0xC000, 0xCFFF);
+  gb_bus.AddBusSlave(&work_ram_n.targ_socket,       0xD000, 0xDFFF);
+  gb_bus.AddBusSlave(&echo_ram.targ_socket,         0xE000, 0xEFFF);
+  gb_bus.AddBusSlave(&echo_ram_n.targ_socket,       0xF000, 0xFDFF);
+  gb_bus.AddBusSlave(&obj_attr_mem.targ_socket,     0xFE00, 0xFE9F);
+  gb_bus.AddBusSlave(&joy_pad.targ_socket,          0xFF00, 0xFF00);
+  gb_bus.AddBusSlave(&serial_transfer.targ_socket,  0xFF01, 0xFF03);
+  gb_bus.AddBusSlave(&gb_timer.targ_socket,         0xFF04, 0xFF07);
+  gb_bus.AddBusSlave(&reg_if.targ_socket,           0xFF0F, 0xFF0F);
+  gb_bus.AddBusSlave(&io_registers.targ_socket,     0xFF10, 0xFF7F);
+  gb_bus.AddBusSlave(&high_ram.targ_socket,         0xFF80, 0xFFFE);
+  gb_bus.AddBusSlave(&intr_enable.targ_socket,      0xFFFF, 0xFFFF);
 
   gb_cpu.clk(global_clk);
   gb_ppu.clk(global_clk);
   gb_timer.clk(global_clk);
 
   gb_ppu.InitRegisters();
-  gb_cpu.Init();
 
   dont_initialize();
 }

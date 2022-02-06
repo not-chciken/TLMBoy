@@ -13,10 +13,6 @@ Cartridge::BankSwitchedMem::BankSwitchedMem(sc_module_name name, uint num_banks,
   DoBankSwitch(0);
 }
 
-Cartridge::BankSwitchedMem::~BankSwitchedMem() {
-  delete data_;
-}
-
 void Cartridge::BankSwitchedMem::DoBankSwitch(u8 index) {
   assert(index < num_banks_);
   bank_data_ = &data_[index * bank_size_];

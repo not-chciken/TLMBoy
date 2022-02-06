@@ -7,7 +7,6 @@
 Ppu::Ppu(sc_module_name name)
   : sc_module(name) ,
     init_socket("init_socket"),
-    irq_vblank("irq_vblank"),
     clk("clk"),
     game_wndw(kRenderWndwWidth, kRenderWndwHeight, kGbScreenWidth, kGbScreenHeight),
     window_wndw(128*2, 128*2, 128, 128) {
@@ -216,7 +215,7 @@ void Ppu::RenderLoop() {
     window_wndw.DrawToScreen(*this);
     DBG_LOG_PPU(std::endl << PpuStateStr());
 
-    irq_vblank.write(true);
+    // irq_vblank.write(true);
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
     for (uint i=0; i < 10; i++) {

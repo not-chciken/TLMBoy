@@ -8,7 +8,8 @@ Bus::Bus(sc_module_name name) : sc_module(name) {
 }
 
 void Bus::AddBusMaster(tlm::tlm_initiator_socket<gb_const::kBusDataWidth>* init_sock) {
-  std::string name = std::string(init_sock->name()) + "_bus_master_socket";
+  std::string name = std::string(init_sock->basename()) + "_bus_master_socket_"
+                                 + std::to_string(bus_master_vec_.size());
   auto targ_sock = std::make_shared<tlm_utils::simple_target_socket<Bus, gb_const::kBusDataWidth>>(name.c_str());
   targ_sock->register_b_transport(this, &Bus::b_transport);
   targ_sock->register_transport_dbg(this, &Bus::transport_dbg);
@@ -17,15 +18,16 @@ void Bus::AddBusMaster(tlm::tlm_initiator_socket<gb_const::kBusDataWidth>* init_
   bus_master_vec_.push_back(targ_sock);
 }
 
-void Bus::AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>& targ_sock,
+void Bus::AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>* targ_sock,
                       const u16 addr_from, const u16 addr_to) {
   BusSlave slave;
   slave.addr_from = addr_from;
   slave.addr_to = addr_to;
-  std::string name = std::string(targ_sock.name()) + "_bus_slave_socket";
+  std::string name = std::string(targ_sock->basename()) + "_bus_slave_socket_"
+                                 + std::to_string(bus_slave_vec_.size());
   auto init_sock = std::make_shared<tlm_utils::simple_initiator_socket<Bus, gb_const::kBusDataWidth>>(name.c_str());
   slave.socket = init_sock;
-  init_sock->bind(targ_sock);
+  init_sock->bind(*targ_sock);
   bus_slave_vec_.push_back(slave);
 }
 

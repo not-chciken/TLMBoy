@@ -20,7 +20,6 @@ class Cartridge : public sc_module {
   class BankSwitchedMem : public GenericMemory {
    public:
     BankSwitchedMem(sc_module_name name, uint num_banks, uint bank_size);
-    ~BankSwitchedMem();
 
     void DoBankSwitch(u8 index);
     void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);

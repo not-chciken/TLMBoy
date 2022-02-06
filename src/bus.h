@@ -12,17 +12,16 @@
  * with address 0x0500.
  ******************************************************************************/
 
-#include <systemc.h>
-#include <sysc/kernel/sc_simcontext.h>
-#include <tlm.h>
-#include <tlm_utils/simple_initiator_socket.h>
-#include <tlm_utils/simple_target_socket.h>
-
 #include <iostream>
 #include <memory>
 #include <vector>
 
 #include "gb_const.h"
+#include "systemc.h"
+#include "sysc/kernel/sc_simcontext.h"
+#include "tlm.h"
+#include "tlm_utils/simple_initiator_socket.h"
+#include "tlm_utils/simple_target_socket.h"
 
 struct Bus : public sc_module {
   SC_HAS_PROCESS(Bus);
@@ -31,7 +30,7 @@ struct Bus : public sc_module {
   void operator=(Bus const&) = delete;
 
   void AddBusMaster(tlm::tlm_initiator_socket<gb_const::kBusDataWidth>* init_sock);
-  void AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>& targ_sock,
+  void AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>* targ_sock,
                    const u16 addr_from, const u16 addr_to);
 
   // SystemC Interfaces

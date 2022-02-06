@@ -17,7 +17,6 @@
  *
  * Sources: https://gbdev.gg8.se/wiki/articles/The_Cartridge_Header
  *          https://gbdev.gg8.se/wiki/articles/Gameboy_ROM_Header_Info#Licensee
- * TODO: finish old license map
  ******************************************************************************/
 #pragma once
 
@@ -151,7 +150,7 @@ class GameInfo {
   const u16 kAdrRegionCode      = 0x14a;
   const u16 kAdrOldLicense      = 0x14b;
 
-  explicit GameInfo(std::filesystem::path game_path);  // data pointing to the begin of the bank
+  explicit GameInfo(std::filesystem::path game_path);
 
   operator std::string() const;
 
