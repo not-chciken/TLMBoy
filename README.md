@@ -1,4 +1,6 @@
 ![example workflow](https://github.com/not-chciken/TLMBoy/actions/workflows/build.yml/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com&utm_medium=referral&utm_content=not-chciken/TLMBoy&utm_campaign=Badge_Coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=not-chciken/TLMBoy&amp;utm_campaign=Badge_Grade)
 # TLMBoy
 A Game Boy Simulator written in C++/SystemC TLM-2.0. <br>
 This project also acts as my personal playground for new C++20 features.
