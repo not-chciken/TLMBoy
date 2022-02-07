@@ -18,7 +18,6 @@ struct Top : public sc_module {
   Cpu test_cpu;
   GenericMemory test_memory;
   sc_clock test_clk;
-  sc_signal<bool> signal_vblank;
 
   Top (sc_module_name name)
       : sc_module(name),
@@ -27,10 +26,8 @@ struct Top : public sc_module {
         test_memory(65536, "test_memory"),
         test_clk("test_clock", 1, SC_NS, 0.5) {
     test_bus.AddBusMaster(&test_cpu.init_socket);
-    test_bus.AddBusSlave(test_memory.targ_socket, 0x0000, 0xFFFF);
+    test_bus.AddBusSlave(&test_memory.targ_socket, 0x0000, 0xFFFF);
     test_cpu.clk(test_clk);
-    test_cpu.irq_vblank(signal_vblank);
-    test_cpu.Init();
   }
 };
 Top test_top("test_top");

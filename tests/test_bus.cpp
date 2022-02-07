@@ -136,8 +136,8 @@ struct Top : public sc_module {
         test_slave_0("test_slave_0"),
         test_slave_1("test_slave_1") {
     test_bus.AddBusMaster(&test_master.init_socket);
-    test_bus.AddBusSlave(test_slave_0.target_socket, 0x0000, 0x0FFF);
-    test_bus.AddBusSlave(test_slave_1.target_socket, 0x1000, 0x1FFF);
+    test_bus.AddBusSlave(&test_slave_0.target_socket, 0x0000, 0x0FFF);
+    test_bus.AddBusSlave(&test_slave_1.target_socket, 0x1000, 0x1FFF);
   }
 };
 

@@ -22,7 +22,7 @@ struct Top : public GbTop {
   SC_HAS_PROCESS(Top);
   Top ()
       : GbTop("gb_top", tlm_boy_root + "/roms/dummy.bin",
-                        tlm_boy_root + "../roms/DMG_ROM.bin") {
+                        tlm_boy_root + "/roms/DMG_ROM.bin") {
     std::cout << static_cast<std::string>(*cartridge.game_info);
     SC_METHOD(SigHandler);
     dont_initialize();

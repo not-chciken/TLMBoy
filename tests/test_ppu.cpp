@@ -139,7 +139,6 @@ struct Top : public sc_module {
 
     // wire up the testbench
     test_ppu.clk(global_clk);
-    test_ppu.irq_vblank(intr_sig);
     test_stimulus(global_clk);
   }
 };
