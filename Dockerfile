@@ -18,7 +18,11 @@ RUN  apt-get install -yq \
      python3-dev \
      python3-six \
      python-is-python3 \
-     python3-pip
+     python3-pip \
+     libncurses-dev \
+     flex \
+     bison \
+     texinfo
 
 RUN ln -sf /usr/bin/g++-10 /usr/bin/g++
 
@@ -31,9 +35,22 @@ WORKDIR /tmp/systemc/objdir
 RUN ../configure --prefix=/usr/local/systemc-2.3.3
 RUN make
 RUN make install
-WORKDIR /
+RUN rm -rf /tmp/systemc
+
+# Install Z80 GDB
+WORKDIR /tmp
+RUN git clone --depth 1 https://github.com/b-s-a/binutils-gdb.git
+WORKDIR binutils-gdb
+RUN mkdir build
+RUN ./configure --target=z80-unknown-elf --prefix=$(pwd)/build --exec-prefix=$(pwd)/build
+RUN make
+RUN make install
+RUN mv build/bin/ /opt/gdb
+WORKDIR /tmp
+RUN rm -rf binutils-gdb
 
 ENV SYSTEMC_PATH=/usr/local/systemc-2.3.3
 ENV LD_LIBRARY_PATH="${SYSTEMC_PATH}/lib-linux64:${LD_LIBRARY_PATH}"
+ENV PATH="/opt/gdb/:${PATH}"
 
 ENTRYPOINT bash
