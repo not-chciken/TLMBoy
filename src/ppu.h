@@ -27,9 +27,6 @@
 
 #define TILE_BYTES 16  // Number of bytes per tile.
 
-#define SCREEN_BUFFER_WIDTH 256
-#define SCREEN_BUFFER_HEIGHT 256
-
 // TODO(niko): remove makros, make include guards prettx. realtime settings, interrupts
 // Sources: https://www.youtube.com/watch?v=zQE1K074v3s -> cool video for v blank and h blank interrupt
 
@@ -43,6 +40,8 @@ struct Ppu : public sc_module {
 
   static const uint kGbScreenWidth  = 160;
   static const uint kGbScreenHeight = 144;
+  static const uint kGbScreenBufferWidth = 256;
+  static const uint kGbScreenBufferHeight = 256;
   static const uint kRenderScaling  = 4;
   static const uint kRenderWndwWidth  = kGbScreenWidth * kRenderScaling;
   static const uint kRenderWndwHeight = kGbScreenHeight * kRenderScaling;
@@ -84,7 +83,7 @@ struct Ppu : public sc_module {
   const u8 kMaskVBlankIE = 0b00000001;
   const u8 kMaskLcdcStatIf = 0b00000010;
 
-  explicit Ppu(sc_module_name name);
+  explicit Ppu(sc_module_name name, bool headless=false);
   ~Ppu();
 
   tlm_utils::simple_initiator_socket<Ppu, gb_const::kBusDataWidth> init_socket;
@@ -106,7 +105,7 @@ struct Ppu : public sc_module {
   u8 *reg_intr_pending_dmi;  // interrupt pendin TODO(me)
 
   u8 bg_buffer[kGbScreenHeight][kGbScreenWidth];
-  u8 window_buffer[SCREEN_BUFFER_HEIGHT][SCREEN_BUFFER_WIDTH];
+  u8 window_buffer[kGbScreenBufferHeight][kGbScreenBufferWidth];
   u8 sprite_buffer[kGbScreenHeight][kGbScreenWidth];
 
   // The GB has two tile data tables
@@ -134,12 +133,7 @@ struct Ppu : public sc_module {
   void InitRegisters();
 
   // Maps the colours for the background and the window according to register rBGP (0xff47).
-  uint MapBgCols(const uint val);
-
-  // This the part where SDL functions are called to render background, window and sprites to the screen
-  // First the background is drawn. Second the window is drawn.
-  // Note, that the window has no transparancy and will over overdraw the background
-  void DrawToScreen();
+  const uint MapBgCols(const uint val);
   void DrawBgToLine(uint line_num);
 
   // interleaves two selected bits of two bit vectors
@@ -161,17 +155,17 @@ struct Ppu : public sc_module {
 
   void RenderLoop();
 
-
   std::string PpuStateStr();
 
   class RenderWindow {
    public:
     RenderWindow(uint width, uint height, uint log_width, uint log_height);
-    ~RenderWindow();
+    RenderWindow();
+    virtual ~RenderWindow();
 
-    // Saves a screenshot of the currently rendered frame
-    void SaveScreenshot(const std::filesystem::path file_path);
-
+    // Saves a screenshot of the currently rendered frame.
+    virtual void SaveScreenshot(const std::filesystem::path file_path);
+    // Draw data to screen.
     virtual void DrawToScreen(Ppu &p) = 0;
 
    protected:
@@ -179,19 +173,32 @@ struct Ppu : public sc_module {
     SDL_Window *window;
     uint width;
     uint height;
-    uint log_width;
-    uint log_height;
+    uint log_width;  // Logical width.
+    uint log_height;  // Logical height.
   };
 
+  std::unique_ptr<RenderWindow> game_wndw;
+  std::unique_ptr<RenderWindow> window_wndw;
+
+  // This the main window.
   class GameWindow : public RenderWindow {
    public:
     using RenderWindow::RenderWindow;
     void DrawToScreen(Ppu &ppu) override;
-  } game_wndw;
+  };
 
+  // Used for displaying the window tiles. Intended for debugging/analysis.
   class WindowWindow : public RenderWindow {
    public:
     using RenderWindow::RenderWindow;
     void DrawToScreen(Ppu &ppu) override;
-  } window_wndw;
+  };
+
+  // For the headless mode. Doesn't create any windows, hence renders nothing.
+  class DummyWindow : public RenderWindow {
+   public:
+    DummyWindow():RenderWindow(){};
+    void DrawToScreen(Ppu &ppu) override {}; // Do nothing.
+    void SaveScreenshot(const std::filesystem::path file_path) override {}; // Do nothing.
+  };
 };

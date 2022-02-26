@@ -4,17 +4,21 @@
  ******************************************************************************/
 #include "ppu.h"
 
-Ppu::Ppu(sc_module_name name)
+Ppu::Ppu(sc_module_name name, bool headless)
   : sc_module(name) ,
     init_socket("init_socket"),
-    clk("clk"),
-    game_wndw(kRenderWndwWidth, kRenderWndwHeight, kGbScreenWidth, kGbScreenHeight),
-    window_wndw(128*2, 128*2, 128, 128) {
-  SC_THREAD(RenderLoop);
-  sensitive << clk.pos();
-  memset(window_buffer, 0, SCREEN_BUFFER_WIDTH*SCREEN_BUFFER_HEIGHT);  // TODO(niko): Does the gameboy really start at 0?
-  memset(bg_buffer, 0, SCREEN_BUFFER_WIDTH*SCREEN_BUFFER_HEIGHT);
+    clk("clk") {
+  SC_CTHREAD(RenderLoop, clk);
+  memset(window_buffer, 0, kGbScreenBufferHeight*kGbScreenBufferWidth);
+  memset(bg_buffer, 0, kGbScreenBufferHeight*kGbScreenBufferWidth);
   memset(sprite_buffer, 0, kGbScreenWidth*kGbScreenHeight);
+  if (headless) {
+    game_wndw = std::make_unique<DummyWindow>();
+    window_wndw = std::make_unique<DummyWindow>();
+  } else {
+    game_wndw = std::make_unique<GameWindow>(kRenderWndwWidth, kRenderWndwHeight, kGbScreenWidth, kGbScreenHeight);
+    window_wndw = std::make_unique<WindowWindow>(128*2, 128*2, 128, 128);
+  }
 }
 
 Ppu::~Ppu() {
@@ -90,7 +94,7 @@ void Ppu::InitRegisters() {
   }
 }
 
-uint Ppu::MapBgCols(const uint val) {
+const uint Ppu::MapBgCols(const uint val) {
   return ((0b11 << val*2) & *reg_bgp) >> val*2;
 }
 
@@ -211,8 +215,8 @@ void Ppu::RenderLoop() {
 
     SDL_Delay(1);  // TODO(niko) make this correct with realtime things etc.
     DrawToBuffer();
-    game_wndw.DrawToScreen(*this);
-    window_wndw.DrawToScreen(*this);
+    game_wndw->DrawToScreen(*this);
+    window_wndw->DrawToScreen(*this);
     DBG_LOG_PPU(std::endl << PpuStateStr());
 
     // irq_vblank.write(true);
@@ -259,6 +263,8 @@ Ppu::RenderWindow::RenderWindow(uint width, uint height, uint log_width, uint lo
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 }
+
+Ppu::RenderWindow::RenderWindow(){};
 
 Ppu::RenderWindow::~RenderWindow() {
   SDL_DestroyRenderer(renderer);

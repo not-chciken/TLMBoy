@@ -4,7 +4,7 @@
  ******************************************************************************/
 #include "gb_top.h"
 
-GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path)
+GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path, bool headless)
     : sc_module(name),
       cartridge("cartridge", game_path, boot_path),
       gb_bus("gb_bus"),
@@ -20,7 +20,7 @@ GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesyst
       serial_transfer(3, "serial_transfer"),
       reg_if(1, "reg_if"),
       intr_enable(1, "intr_enable"),
-      gb_ppu("gb_ppu"),
+      gb_ppu("gb_ppu", headless),
       gb_timer("gb_timer", reg_if.GetDataPtr()),
       global_clk("global_clock", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
 
