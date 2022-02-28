@@ -33,3 +33,9 @@ jobs:
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
             ./test_cpu
+            ./test_ppu --headless
+    - name: coverage report
+      run: |
+           ./coverage_report.bash
+           export CODACY_PROJECT_TOKEN=${{secrets.CODACY_TOKEN}}
+           bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage/coverage.xml
