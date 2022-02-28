@@ -27,7 +27,7 @@ jobs:
       run: cmake --build . --target tlmboy --config Release
     - name: build tests
       working-directory: ./build
-      run: cmake --build . --target test_cpu
+      run: cmake --build . --target tests
     - name: run tests
       working-directory: ./build/tests
       run: |
