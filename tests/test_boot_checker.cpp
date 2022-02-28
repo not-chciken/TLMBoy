@@ -13,8 +13,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 
-#include "../src/boot_checker.h"
-
+#include "boot_checker.h"
 
 TEST(BootCheckerTests, GenericTest) {
   BootChecker test_boot_checker();

@@ -51,6 +51,4 @@ GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesyst
   gb_timer.clk(global_clk);
 
   gb_ppu.InitRegisters();
-
-  dont_initialize();
 }

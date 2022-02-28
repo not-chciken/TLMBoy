@@ -16,7 +16,9 @@ Ppu::Ppu(sc_module_name name, bool headless)
     game_wndw = std::make_unique<DummyWindow>();
     window_wndw = std::make_unique<DummyWindow>();
   } else {
-    game_wndw = std::make_unique<GameWindow>(kRenderWndwWidth, kRenderWndwHeight, kGbScreenWidth, kGbScreenHeight);
+    // Need typecast to create some temporaries with addresses for unique pointer reference arguments :/
+    game_wndw = std::make_unique<GameWindow>((u32)kRenderWndwWidth, (u32)kRenderWndwHeight,
+                                             (u32)kGbScreenWidth, (u32)kGbScreenHeight);
     window_wndw = std::make_unique<WindowWindow>(128*2, 128*2, 128, 128);
   }
 }
@@ -254,7 +256,7 @@ const u8 Ppu::InterleaveBits(u8 a, u8 b, const uint pos) {
   return a | b;
 }
 
-Ppu::RenderWindow::RenderWindow(uint width, uint height, uint log_width, uint log_height)
+Ppu::RenderWindow::RenderWindow(const uint width, const uint height, const uint log_width, const uint log_height)
     : width(width), height(height), log_width(log_width), log_height(log_height) {
   SDL_Init(SDL_INIT_VIDEO);
   SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);

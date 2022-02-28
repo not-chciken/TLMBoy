@@ -9,6 +9,7 @@
  * If everything works correctly, a flying "69" should be rendered.
  ******************************************************************************/
 
+#include <getopt.h>
 #include <gtest/gtest.h>
 #include <systemc.h>
 #include <tlm.h>
@@ -16,9 +17,11 @@
 #include <tlm_utils/simple_target_socket.h>
 
 #include "gb_const.h"
+#include "options.h"
 #include "ppu.h"
+#include "utils.h"
 
-const std::string tlm_boy_root = std::string(std::getenv("TLMBOY_ROOT"));
+const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 
 struct PpuStimulus : public sc_module {
   SC_HAS_PROCESS(PpuStimulus);
@@ -169,11 +172,29 @@ TEST(PpuTests, InterleaveBitsTest2) {
 TEST(PpuTests, SmokeTest) {
   Top test_top("test_top");
   sc_start(4000, SC_MS);
-  test_top.test_ppu.game_wndw.SaveScreenshot("test_ppu.bmp");
-  ASSERT_TRUE(CompareFiles("test_ppu.bmp", tlm_boy_root + "/tests/golden_files/test_ppu.bmp"));
+  test_top.test_ppu.game_wndw->SaveScreenshot("test_ppu.bmp");
+  if (options::headless == false) {
+    ASSERT_TRUE(CompareFiles("test_ppu.bmp", tlm_boy_root + "/tests/golden_files/test_ppu.bmp"));
+  }
 }
 
 int sc_main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
+
+  const struct option long_opts[] = {
+    {"headless", no_argument, 0, 'l'}, 0
+  };
+
+  for (;;) {
+    int index;
+    switch (getopt_long(argc, argv, "l", long_opts, &index)) {
+      case 'l':
+        options::headless = true; break;
+        continue;
+      default :
+        break;
+    }
+    break;
+  }
   return RUN_ALL_TESTS();
 }

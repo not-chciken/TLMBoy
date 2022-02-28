@@ -18,8 +18,9 @@
 #include "generic_memory.h"
 #include "io_registers.h"
 #include "ppu.h"
+#include "utils.h"
 
-const std::string tlm_boy_root = std::string(std::getenv("TLMBOY_ROOT"));
+const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 
 TEST(BootTests, BootState) {
   GbTop test_top("test_top", tlm_boy_root + "/roms/dummy.bin",

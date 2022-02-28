@@ -979,9 +979,15 @@ void Cpu::InstrSLA(Reg<u16> &addr_reg) {
   wait(16);
 }
 
-// Not part of the original ISA. Stops the simulation.
-void Cpu::InstrStopSim() {
-  sc_stop();
+// Not part of the original ISA. Stops the simulation
+// The value of register A determines the reason for stop.
+void Cpu::InstrEmu() {
+  switch (reg_file.B.val()) {
+    case 0: cpu_state = kTestPassed; break;
+    case 1: cpu_state = kTestFailed; break;
+    case 2: sc_stop(); break;
+    default: break;
+  }
 }
 
 // Cool: explanation https://ehaskins.com/2018-01-30%20Z80%20DAA/

@@ -11,7 +11,6 @@ Timer::Timer(sc_module_name name, u8 *reg_if)
   SC_CTHREAD(TimerLoop, clk);
   SC_CTHREAD(DivLoop, clk);
   targ_socket.register_b_transport(this, &Timer::b_transport);
-  dont_initialize();
 }
 
 void Timer::DivLoop() {

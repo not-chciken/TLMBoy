@@ -25,6 +25,11 @@ struct Cpu : public sc_module {
   tlm_utils::simple_initiator_socket<Cpu, gb_const::kBusDataWidth> init_socket;
   sc_in_clk clk;
   RegFile reg_file;
+  enum CpuState {
+    kNominal,
+    kTestPassed,
+    kTestFailed,
+  } cpu_state = kNominal;
 
   explicit Cpu(sc_module_name name, bool attachGdb = false);
 
@@ -176,7 +181,7 @@ struct Cpu : public sc_module {
 
   // Not part of the original gameboy cpu.
   void InstrSwBp();
-  void InstrStopSim();
+  void InstrEmu();
 
   // Constants.
   // zero flag: math op is zero or two values match with CP instruction

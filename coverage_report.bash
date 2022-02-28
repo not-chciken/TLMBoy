@@ -1,4 +1,4 @@
 #!/bin/bash
-mkdir coverage
-gcovr -r . --html --html-details -o coverage/coverage.html
-gcovr -r . --xml --print-summary -o coverage/coverage.xml # This is used for the CI
+mkdir -p coverage
+gcovr -r . --html --html-details --exclude tests/ -o coverage/coverage.html
+gcovr -r . --xml --print-summary --exclude tests/ -o coverage/coverage.xml # This is used for the CI

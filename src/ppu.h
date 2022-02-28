@@ -159,7 +159,7 @@ struct Ppu : public sc_module {
 
   class RenderWindow {
    public:
-    RenderWindow(uint width, uint height, uint log_width, uint log_height);
+    RenderWindow(const uint width, const uint height, const uint log_width, const uint log_height);
     RenderWindow();
     virtual ~RenderWindow();
 

@@ -15,8 +15,9 @@
 #include "generic_memory.h"
 #include "io_registers.h"
 #include "ppu.h"
+#include "utils.h"
 
-const std::string tlm_boy_root = std::string(std::getenv("TLMBOY_ROOT"));
+const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 
 struct Top : public GbTop {
   SC_HAS_PROCESS(Top);
@@ -38,7 +39,7 @@ struct Top : public GbTop {
 TEST(BootTests, Boot) {
   Top test_top;
   sc_start();
-  test_top.gb_ppu.game_wndw.SaveScreenshot("test_boot.bmp");
+  test_top.gb_ppu.game_wndw->SaveScreenshot("test_boot.bmp");
   ASSERT_EQ(test_top.cartridge.game_info->GetTitle(), "DUMMY");
   ASSERT_EQ(test_top.cartridge.game_info->GetLicenseCode(), "none");
   ASSERT_EQ(test_top.cartridge.game_info->GetCartridgeType(), "MBC5+BAT+RAM");

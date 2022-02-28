@@ -16,6 +16,7 @@
 
 #include "common.h"
 
+std::string GetEnvVariable(std::string name);
 bool CompareFiles(const std::filesystem::path file1, const std::filesystem::path file2);
 
 bool IsBitSet(u8 dat, u8 bit_index);

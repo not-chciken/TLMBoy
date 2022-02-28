@@ -20,6 +20,7 @@ The project is structured as follows:
 ```
 
 # Building
+Use the following commands to build the TLMBoy:
 ```bash
 cd TLMBoy
 mkdir build
@@ -28,13 +29,12 @@ cmake tlmboy ..
 cmake --build . --target tlmboy --config Release
 ```
 Dependencies:
-- [SystemC 2.3.3](https://github.com/accellera-official/systemc)
-- [fmt](https://github.com/fmtlib/fmt)
-- [SDL2](https://github.com/libsdl-org/SDL)
-- [googletest](https://github.com/google/googletest)
+-  [SystemC 2.3.3](https://github.com/accellera-official/systemc)
+-  [fmt](https://github.com/fmtlib/fmt)
+-  [SDL2](https://github.com/libsdl-org/SDL)
+-  [googletest](https://github.com/google/googletest)
 
 # Controls
-
 | Keyboard  | Game Boy  |
 |-----------|-----------|
 | ←,↑,→,↓   | ←,↑,→,↓   |

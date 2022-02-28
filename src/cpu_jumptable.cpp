@@ -892,7 +892,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xD3:
         DBG_LOG_INST("STOP SIM");  // Special instruction.
-        InstrStopSim();
+        InstrEmu();
         break;
       case 0xD4:
         DBG_LOG_INST("CALL NC,a16");

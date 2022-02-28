@@ -1,0 +1,3 @@
+[submodule "roms/gb-test-roms"]
+	path = roms/gb-test-roms
+	url = https://github.com/not-chciken/gb-test-roms.git
