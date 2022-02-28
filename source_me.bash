@@ -4,6 +4,5 @@ export TLMBOY_ROOT=$(pwd)
 export LD_LIBRARY_PATH=${SYSTEMC_PATH}/lib-linux64/
 export SYSTEMC_DISABLE_COPYRIGHT_MESSAGE=1
 if [ ! -d "./tests/golden_files" ]; then
-  tar -zxvf ./tests/golden_files.tar.gz ./tests/golden_files
+  tar -xf ./tests/golden_files.tar.gz -C ./tests/
 fi
-
