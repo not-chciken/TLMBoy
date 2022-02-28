@@ -34,6 +34,17 @@ jobs:
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
             ./test_cpu
             ./test_ppu --headless
+            ./test_blarrg_cpuinstr01 --headless
+            ./test_blarrg_cpuinstr02 --headless
+            ./test_blarrg_cpuinstr03 --headless
+            ./test_blarrg_cpuinstr04 --headless
+            ./test_blarrg_cpuinstr05 --headless
+            ./test_blarrg_cpuinstr06 --headless
+            ./test_blarrg_cpuinstr07 --headless
+            ./test_blarrg_cpuinstr08 --headless
+            ./test_blarrg_cpuinstr09 --headless
+            ./test_blarrg_cpuinstr10 --headless
+            ./test_blarrg_cpuinstr11 --headless
     - name: coverage report
       run: |
            ./coverage_report.bash
