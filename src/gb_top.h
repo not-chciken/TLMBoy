@@ -41,5 +41,6 @@ struct GbTop : public sc_module {
   sc_clock global_clk;
   sc_signal<bool> sig_unmap_rom;
 
-  GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path, bool headless=false);
+  GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
+        bool headless=false, bool wait_for_gdb=false);
 };

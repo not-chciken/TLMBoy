@@ -13,19 +13,27 @@
 int sc_main(int argc, char* argv[]) {
 
   const struct option long_opts[] = {
-    {"rom-path", required_argument, 0, 'r'},
-    {"help",     no_argument,       0, 'h'},
-    {"headless", no_argument,       0, 'l'}, 0
+    {"boot-rom-path", required_argument, 0, 'b'},
+    {"rom-path", required_argument,      0, 'r'},
+    {"help",     no_argument,            0, 'h'},
+    {"headless", no_argument,            0, 'l'},
+    {"wait-for-gdb", no_argument,        0, 'w'}, 0
   };
 
   int index;
   for (;;) {
-    switch (getopt_long(argc, argv, "r:hl", long_opts, &index)) {
+    switch (getopt_long(argc, argv, "r:hlwb:", long_opts, &index)) {
+      case 'b':
+        options::boot_rom_path = fs::path(optarg);
+        continue;
       case 'r':
         options::rom_path = fs::path(optarg);
         continue;
       case 'l':
         options::headless = true;
+        continue;
+      case 'w':
+        options::wait_for_gdb = true;
         continue;
       case '?':
       case 'h':
@@ -56,7 +64,8 @@ int sc_main(int argc, char* argv[]) {
     return 1;
   }
 
-  GbTop gb_top("game_boy_top", options::rom_path, "../roms/DMG_ROM.bin", options::headless);
+  GbTop gb_top("game_boy_top", options::rom_path, options::boot_rom_path,
+               options::headless, options::wait_for_gdb);
   std::cout << static_cast<std::string>(*gb_top.cartridge.game_info);
   sc_start();  // RUN!
   return 0;

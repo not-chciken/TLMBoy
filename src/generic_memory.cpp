@@ -72,16 +72,6 @@ void GenericMemory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
   }
 }
 
-bool GenericMemory::get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data) {
-  u16 adr = trans.get_address();
-  assert(adr < memory_size_);
-  dmi_data.allow_read_write();
-  dmi_data.set_start_address(0);
-  dmi_data.set_end_address(memory_size_ - 1);
-  dmi_data.set_dmi_ptr(reinterpret_cast<unsigned char*>(&data_[adr]));
-  return true;
-}
-
 uint GenericMemory::transport_dbg(tlm::tlm_generic_payload& trans) {
   tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
@@ -98,3 +88,14 @@ uint GenericMemory::transport_dbg(tlm::tlm_generic_payload& trans) {
   }
   return 1;
 }
+
+bool GenericMemory::get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data) {
+  u16 adr = trans.get_address();
+  assert(adr < memory_size_);
+  dmi_data.allow_read_write();
+  dmi_data.set_start_address(0);
+  dmi_data.set_end_address(memory_size_ - 1);
+  dmi_data.set_dmi_ptr(reinterpret_cast<unsigned char*>(&data_[adr]));
+  return true;
+}
+

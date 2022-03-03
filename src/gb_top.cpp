@@ -4,11 +4,12 @@
  ******************************************************************************/
 #include "gb_top.h"
 
-GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path, bool headless)
+GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
+             bool headless, bool wait_for_gdb)
     : sc_module(name),
       cartridge("cartridge", game_path, boot_path),
       gb_bus("gb_bus"),
-      gb_cpu("gb_cpu", false),
+      gb_cpu("gb_cpu", wait_for_gdb),
       joy_pad("joy_pad"),
       video_ram(8192, "video_ram"),
       work_ram(4096, "work_ram"),
