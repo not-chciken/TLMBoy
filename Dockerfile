@@ -7,6 +7,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN  apt-get install -yq \
      build-essential \
      cmake \
+     curl \
      git \
      git-lfs \
      gdb \
@@ -45,12 +46,12 @@ RUN mkdir build
 RUN ./configure --target=z80-unknown-elf --prefix=$(pwd)/build --exec-prefix=$(pwd)/build
 RUN make
 RUN make install
-RUN mv build/bin/ /opt/gdb
+RUN cp -r build /opt/gdb
 WORKDIR /tmp
 RUN rm -rf binutils-gdb
 
 ENV SYSTEMC_PATH=/usr/local/systemc-2.3.3
 ENV LD_LIBRARY_PATH="${SYSTEMC_PATH}/lib-linux64:${LD_LIBRARY_PATH}"
-ENV PATH="/opt/gdb/:${PATH}"
+ENV PATH="/opt/gdb/bin:${PATH}"
 
 ENTRYPOINT bash
