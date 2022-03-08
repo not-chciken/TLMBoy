@@ -73,19 +73,8 @@ void GenericMemory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 }
 
 uint GenericMemory::transport_dbg(tlm::tlm_generic_payload& trans) {
-  tlm::tlm_command cmd = trans.get_command();
-  u16 adr = static_cast<u16>(trans.get_address());
-  unsigned char* ptr = trans.get_data_ptr();
-
-  if (cmd == tlm::TLM_READ_COMMAND) {
-    *ptr = data_[adr];
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
-  } else if (cmd == tlm::TLM_WRITE_COMMAND) {
-    data_[adr] = *ptr;
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
-  } else {
-    trans.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
-  }
+  sc_time delay(0, SC_NS);
+  b_transport(trans, delay);
   return 1;
 }
 

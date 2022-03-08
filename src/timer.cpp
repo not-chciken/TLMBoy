@@ -11,6 +11,7 @@ Timer::Timer(sc_module_name name, u8 *reg_if)
   SC_CTHREAD(TimerLoop, clk);
   SC_CTHREAD(DivLoop, clk);
   targ_socket.register_b_transport(this, &Timer::b_transport);
+  targ_socket.register_transport_dbg(this, &Timer::transport_dbg);
 }
 
 void Timer::DivLoop() {
@@ -68,4 +69,10 @@ void Timer::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
   } else {
     trans.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
   }
+}
+
+uint Timer::transport_dbg(tlm::tlm_generic_payload& trans) {
+  sc_time delay = sc_time(0, SC_NS);
+  b_transport(trans, delay);
+  return 1;
 }

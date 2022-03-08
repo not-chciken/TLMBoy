@@ -51,4 +51,5 @@ struct Timer : public sc_module {
 
   // SystemC interfaces
   void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+  uint transport_dbg(tlm::tlm_generic_payload& trans);
 };

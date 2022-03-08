@@ -41,8 +41,8 @@ target_compile_options(tlmboy PUBLIC -O3)
 add_executable(tlmboy_test src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy_test PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy_test "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy_test --coverage -lgcov -lsystemc -lSDL2 -lfmt)
-target_compile_options(tlmboy_test PUBLIC -O0 -g)
+target_link_libraries(tlmboy_test -lgcov -lsystemc -lSDL2 -lfmt)
+target_compile_options(tlmboy_test PUBLIC -O0 -g --coverage)
 
 # Add system tests and unit tests.
 add_subdirectory(tests)

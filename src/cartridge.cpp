@@ -34,15 +34,35 @@ void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc
   }
 }
 
+uint Cartridge::BankSwitchedMem::transport_dbg(tlm::tlm_generic_payload& trans) {
+  sc_time delay = sc_time(0, SC_NS);
+  b_transport(trans, delay);
+  return 1;
+}
+
 Cartridge::MemoryBankCtrler::MemoryBankCtrler(uint num_rom_banks, uint num_ram_banks)
     : rom_low(0x4000, "rom_low"),
       rom_high("rom_high", num_rom_banks, 0x4000),
       ext_ram("ext_ram", num_ram_banks, 0x2000) {
   rom_socket_in.register_b_transport(this, &MemoryBankCtrler::b_transport_rom);
   ram_socket_in.register_b_transport(this, &MemoryBankCtrler::b_transport_ram);
+  rom_socket_in.register_transport_dbg(this, &MemoryBankCtrler::transport_dbg_rom);
+  ram_socket_in.register_transport_dbg(this, &MemoryBankCtrler::transport_dbg_ram);
   rom_low_socket_out.bind(rom_low.targ_socket);
   rom_high_socket_out.bind(rom_high.targ_socket);
   ram_socket_out.bind(ext_ram.targ_socket);
+}
+
+uint Cartridge::MemoryBankCtrler::transport_dbg_rom(tlm::tlm_generic_payload& trans) {
+  sc_time delay = sc_time(0, SC_NS);
+  b_transport_rom(trans, delay);
+  return 1;
+}
+
+uint Cartridge::MemoryBankCtrler::transport_dbg_ram(tlm::tlm_generic_payload& trans) {
+  sc_time delay = sc_time(0, SC_NS);
+  b_transport_ram(trans, delay);
+  return 1;
 }
 
 void Cartridge::MemoryBankCtrler::UnmapBootRom() {
@@ -201,6 +221,14 @@ void Cartridge::Mbc5::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   } else {
     assert(false);
   }
+}
+
+uint Cartridge::Mbc5::transport_dbg_ram(tlm::tlm_generic_payload& trans) {
+  u16 adr = static_cast<u16>(trans.get_address());
+  sc_time delay(0, SC_NS);
+  assert(adr <= 0x1FFF);
+  ram_socket_out->b_transport(trans, delay);
+  return 1;
 }
 
 Cartridge::Cartridge(sc_module_name name,

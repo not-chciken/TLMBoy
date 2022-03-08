@@ -23,6 +23,7 @@ class Cartridge : public sc_module {
 
     void DoBankSwitch(u8 index);
     void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+    uint transport_dbg(tlm::tlm_generic_payload& trans);
 
    protected:
     uint current_bank_ind_;
@@ -44,6 +45,8 @@ class Cartridge : public sc_module {
     tlm_utils::simple_initiator_socket<MemoryBankCtrler, gb_const::kBusDataWidth> ram_socket_out;
     virtual void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) = 0;
     virtual void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) = 0;
+    virtual uint transport_dbg_ram(tlm::tlm_generic_payload& trans);
+    virtual uint transport_dbg_rom(tlm::tlm_generic_payload& trans);
     virtual void UnmapBootRom();
 
    protected:
@@ -76,6 +79,7 @@ class Cartridge : public sc_module {
     Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
+    uint transport_dbg_ram(tlm::tlm_generic_payload& trans) override;
    private:
     u16 rom_ind_;
     u16 ram_ind_;

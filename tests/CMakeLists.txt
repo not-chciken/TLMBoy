@@ -25,6 +25,7 @@ add_executable(test_memory test_memory.cpp
 add_executable(test_ppu test_ppu.cpp
                ${CMAKE_SOURCE_DIR}/src/utils.cpp
                ${CMAKE_SOURCE_DIR}/src/ppu.cpp)
+add_executable(test_gdb test_gdb.cpp ${ALL_CPPS})
 
 
 add_dependencies(tests test_blarrg_cpuinstr01)
@@ -44,6 +45,7 @@ add_dependencies(tests test_bus)
 add_dependencies(tests test_cpu)
 add_dependencies(tests test_memory)
 add_dependencies(tests test_ppu)
+add_dependencies(tests test_gdb)
 
 
 set(TEST_INCLUDE_PATHS ${SYSTEMC_PATH}/include
@@ -155,12 +157,19 @@ target_link_libraries(test_cpu ${TEST_LIBS})
 target_compile_options(test_cpu PUBLIC ${TEST_COMPILE_OPTS})
 add_test(NAME test_cpu COMMAND test_cpu)
 
+target_include_directories(test_gdb PUBLIC ${TEST_INCLUDE_PATHS})
+target_link_libraries(test_gdb ${TEST_LIB_PATHS})
+target_link_libraries(test_gdb ${TEST_LIBS})
+target_compile_options(test_gdb PUBLIC ${TEST_COMPILE_OPTS})
+add_test(NAME test_gdb COMMAND test_gdb)
+
 
 # Let them run sequentially.
 # Might algo work in parallel, but better be safe.
 set_tests_properties(
   test_cpu
   test_bus
+  test_gdb
   test_memory
   test_ppu
   test_boot

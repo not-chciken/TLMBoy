@@ -24,7 +24,9 @@ jobs:
            cmake tlmboy ..
     - name: build tlmboy
       working-directory: ./build
-      run: cmake --build . --target tlmboy --config Release
+      run: |
+           cmake --build . --target tlmboy --config Release
+           cmake --build . --target tlmboy_test
     - name: build tests
       working-directory: ./build
       run: cmake --build . --target tests
@@ -45,6 +47,7 @@ jobs:
             ./test_blarrg_cpuinstr09 --headless
             ./test_blarrg_cpuinstr10 --headless
             ./test_blarrg_cpuinstr11 --headless
+            ./test_gdb
     - name: coverage report
       run: |
            export CODACY_PROJECT_TOKEN=${{secrets.CODACY_TOKEN}}

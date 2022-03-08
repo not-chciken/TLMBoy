@@ -18,6 +18,7 @@ void Cpu::DoMachineCycle() {
   while (1) {
     if (gdb_server.IsMsgPending()) {
       gdb_server.HandleMessages();
+      usleep(1000);
     }
 
     if (halted_) {

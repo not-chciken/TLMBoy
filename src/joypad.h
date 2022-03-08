@@ -58,4 +58,5 @@ struct JoyPad : public sc_module {
   u8 ReadReg();
   void WriteReg(u8 dat);
   void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+  uint transport_dbg(tlm::tlm_generic_payload& trans);
 };

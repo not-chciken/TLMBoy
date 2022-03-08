@@ -10,6 +10,7 @@ JoyPad::JoyPad(sc_module_name name) :
   sc_module(name) {
   SC_THREAD(InputLoop);
   targ_socket.register_b_transport(this, &JoyPad::b_transport);
+  targ_socket.register_transport_dbg(this, &JoyPad::transport_dbg);
 }
 
 // This thread continously reads the inputs from SDL.
@@ -123,4 +124,10 @@ void JoyPad::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
   } else {
     trans.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
   }
+}
+
+uint JoyPad::transport_dbg(tlm::tlm_generic_payload& trans) {
+  sc_time delay = sc_time(0, SC_NS);
+  b_transport(trans, delay);
+  return 1;
 }

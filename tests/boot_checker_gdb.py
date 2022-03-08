@@ -1,5 +1,8 @@
-import gdb
 import csv
+import gdb
+import os
+
+MAX_INSTRUCTIONS = 50
 
 class RegFile:
   def __init__(self):
@@ -48,16 +51,24 @@ def check_dic(reg_file, reg_file_golden):
     exit(1)
 
 print("starting gdb boot check test")
+file_dir = os.path.dirname(os.path.abspath(__file__))
+
 gdb.execute('set pagination off')
 gdb.execute('set arch gbz80')
+# gdb.execute('set debug remote 1') # Uncomment for debug output
 gdb.execute('target remote localhost:1337')
-with open('golden_regs.csv') as csv_f:
+
+with open(file_dir + '/golden_files/boot_states.txt') as csv_f:
   csv_read = csv.reader(csv_f, delimiter=',')
   ind = 0
   for row in csv_read:
-    if ind > 500:
+    if ind > MAX_INSTRUCTIONS:
       break
+    if ind < 1:
+      ind += 1
+      continue
     reg_file_golden.set_by_csv(row)
+    print(f"Setting breakpoint at {reg_file_golden['pc']}")
     gdb.execute(f"tbreak *{reg_file_golden['pc']}")
     gdb.execute("c")
     reg_str = gdb.execute('info all-registers', to_string=True)
