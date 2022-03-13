@@ -51,10 +51,10 @@ void GdbServer::HandleMessages() {
   }
 }
 
-// Waits for a packet from the gdb client
-// Note, this function is blocking
+// Waits for a packet from the gdb client.
+// Note, this function is blocking!
 std::string GdbServer::RecvMsgBlocking() {
-    std::string str_buffer("");  // will contain the whole message, e.g: "$vMustReplyEmpty#3a"
+    std::string str_buffer("");  // Will contain the whole message, e.g: "$vMustReplyEmpty#3a".
     std::string resp = tcp_server_.RecvBlocking(1);
     str_buffer.append(resp);
     uint sum_to_check = 0;
@@ -95,11 +95,11 @@ std::string GdbServer::RecvMsgBlocking() {
     return str_buffer;
 }
 
-// decodes a message and calls the corresponding function
+// Decodes a message and calls the corresponding function.
 // message types: $packet-data#checksum
 //                $sequence-id:packet-data#checksum
 // from: https://sourceware.org/gdb/onlinedocs/gdb/Overview.html#Overview
-void GdbServer::DecodeAndCall(std::string msg) {
+void GdbServer::DecodeAndCall(const std::string &msg) {
   std::string msg_stripped = msg.substr(1, msg.length()-4);  // remove $-prefix and checksum suffix
   DBG_LOG_GDB("Stripped message: " << msg_stripped);
   std::vector<std::string> res = SplitMsg(msg_stripped);
@@ -115,7 +115,7 @@ void GdbServer::DecodeAndCall(std::string msg) {
 
 // Returns a two digit hexadecimal checksum given a message string.
 // For instance "08" or "a5".
-std::string GdbServer::GetChecksumStr(const std::string msg) {
+std::string GdbServer::GetChecksumStr(const std::string &msg) {
   uint checksum = 0;
   for (const char& c : msg) {
     checksum += static_cast<uint>(c);
@@ -125,7 +125,7 @@ std::string GdbServer::GetChecksumStr(const std::string msg) {
 }
 
 // This function packetifies your message by prepending "$"
-// and appending the check sum
+// and appending the check sum.
 std::string GdbServer::Packetify(std::string msg) {
   std::string checksum = GetChecksumStr(msg);
   msg.insert(0, "$");
@@ -133,7 +133,7 @@ std::string GdbServer::Packetify(std::string msg) {
   return msg;
 }
 
-std::vector<std::string> GdbServer::SplitMsg(const std::string msg) {
+std::vector<std::string> GdbServer::SplitMsg(const std::string &msg) {
   std::vector<std::string> res;
   std::smatch sm;
   std::regex reg(
@@ -151,20 +151,20 @@ std::vector<std::string> GdbServer::SplitMsg(const std::string msg) {
   return res;
 }
 
-// returns true if a breakpoint was reached
+// Returns true if a breakpoint was reached.
 bool GdbServer::BpReached(const u16 address) {
   return bp_set_.contains(address);
 }
 
-// breakpoint reached indicated by sending a SIGTRAP signal
+// Breakpoint reached indicated by sending a SIGTRAP signal.
 void GdbServer::SendBpReached() {
   std::string msg_resp = Packetify(fmt::format("S{:02x}", SIGTRAP));
   DBG_LOG_GDB("sending breakpoint reached");
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "D"
-void GdbServer::CmdDetach(std::vector<std::string> msg_split) {
+// "D": for detaching.
+void GdbServer::CmdDetach(const std::vector<std::string> &msg_split) {
   std::string msg_resp = "OK";
   is_attached_ = false;
   cpu_->Continue();
@@ -173,8 +173,8 @@ void GdbServer::CmdDetach(std::vector<std::string> msg_split) {
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "qSupported"
-void GdbServer::CmdSupported(std::vector<std::string> msg_split) {
+// "qSupported": We only support hardware breakpoints.
+void GdbServer::CmdSupported(const std::vector<std::string> &msg_split) {
   std::string msg_resp;
   if (msg_split[1].find("hwbreak+;") != std::string::npos) {
     msg_resp.append("hwbreak+;");
@@ -185,7 +185,7 @@ void GdbServer::CmdSupported(std::vector<std::string> msg_split) {
 }
 
 // "qAttached"
-void GdbServer::CmdAttached(std::vector<std::string> msg_split) {
+void GdbServer::CmdAttached(const std::vector<std::string> &msg_split) {
   std::string msg_resp = Packetify("1");
   is_attached_ = true;
   DBG_LOG_GDB("replying server is attached to process");
@@ -193,19 +193,19 @@ void GdbServer::CmdAttached(std::vector<std::string> msg_split) {
 }
 
 // "?"
-void GdbServer::CmdHalted(std::vector<std::string> msg_split) {
+void GdbServer::CmdHalted(const std::vector<std::string> &msg_split) {
   std::string msg_resp = Packetify(fmt::format("S{:02x}", SIGTRAP));
   cpu_->Halt();
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// Command not found
-void GdbServer::CmdNotFound(std::vector<std::string> msg_split) {
+// Command not found.
+void GdbServer::CmdNotFound(const std::vector<std::string> &msg_split) {
   tcp_server_.SendMsg(kMsgEmpty);
 }
 
-// "g": Command read general registers
-void GdbServer::CmdReadReg(std::vector<std::string> msg_split) {
+// "g": Read general registers.
+void GdbServer::CmdReadReg(const std::vector<std::string> &msg_split) {
   std::string msg_resp;
   msg_resp = fmt::format("{:04x}{:04x}{:04x}{:04x}{:04x}{:04x}{:x>{}}",
                          std::rotl(cpu_->reg_file.AF.val(), 8), std::rotl(cpu_->reg_file.BC.val(), 8),
@@ -217,8 +217,8 @@ void GdbServer::CmdReadReg(std::vector<std::string> msg_split) {
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "m": read memory
-void GdbServer::CmdReadMem(std::vector<std::string> msg_split) {
+// "m": Read memory.
+void GdbServer::CmdReadMem(const std::vector<std::string> &msg_split) {
   std::string msg_resp;
   std::string addr_str = msg_split[1];
   std::string length_str = msg_split[2];
@@ -233,8 +233,8 @@ void GdbServer::CmdReadMem(std::vector<std::string> msg_split) {
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "M": write memory
-void GdbServer::CmdWriteMem(std::vector<std::string> msg_split) {
+// "M": Write memory.
+void GdbServer::CmdWriteMem(const std::vector<std::string> &msg_split) {
   std::string msg_resp = "OK";
   std::string addr_str = msg_split[1];
   std::string length_str = msg_split[2];
@@ -251,8 +251,8 @@ void GdbServer::CmdWriteMem(std::vector<std::string> msg_split) {
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "Z": insert breakpoint
-void GdbServer::CmdInsertBp(std::vector<std::string> msg_split) {
+// "Z": Insert breakpoint.
+void GdbServer::CmdInsertBp(const std::vector<std::string> &msg_split) {
   std::string msg_resp = "";
   if (msg_split[1] == "0" || msg_split[1] == "1") {
     msg_resp = "OK";
@@ -266,8 +266,8 @@ void GdbServer::CmdInsertBp(std::vector<std::string> msg_split) {
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "z": remove breakpoint
-void GdbServer::CmdRemoveBp(std::vector<std::string> msg_split) {
+// "z": Remove breakpoint.
+void GdbServer::CmdRemoveBp(const std::vector<std::string> &msg_split) {
   std::string msg_resp = "";
   if (msg_split[1] == "0" || msg_split[1] == "1") {
     msg_resp = "OK";
@@ -281,7 +281,7 @@ void GdbServer::CmdRemoveBp(std::vector<std::string> msg_split) {
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
-// "c": continue execution
-void GdbServer::CmdContinue(std::vector<std::string> msg_split) {
+// "c": Continue execution.
+void GdbServer::CmdContinue(const std::vector<std::string> &msg_split) {
   cpu_->Continue();
 }
