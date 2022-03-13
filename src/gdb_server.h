@@ -30,6 +30,7 @@ class GdbServer {
     void SendBpReached();
 
  private:
+    uint kMaxMessageLength = 4096;
     bool is_attached_;
     std::map<std::string, std::function<void(std::vector<std::string>)>> cmd_map;
     std::set<u16> bp_set_;

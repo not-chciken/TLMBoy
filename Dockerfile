@@ -16,6 +16,7 @@ RUN  apt-get install -yq \
      libfmt-dev \
      libgtest-dev \
      libsdl2-dev \
+     netcat \
      python3-dev \
      python3-six \
      python-is-python3 \

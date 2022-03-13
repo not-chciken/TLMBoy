@@ -66,14 +66,14 @@ std::string GdbServer::RecvMsgBlocking() {
       throw std::logic_error("received '-', protocol error");
     }
     if (str_buffer.at(0) != '$') {
-      DBG_LOG_GDB(str_buffer);
+      DBG_LOG_GDB("string buffer: " + str_buffer);
       throw std::logic_error("message not beginning with '$'");
     }
     do {
       resp = tcp_server_.RecvBlocking(1);
       str_buffer.append(resp);
       sum_to_check += static_cast<int>(resp.at(0));
-      if (str_buffer.length() > 4096) {
+      if (str_buffer.length() > kMaxMessageLength) {
         throw std::logic_error("message is too long");
       }
     } while (resp.at(0) != '#');
@@ -105,12 +105,9 @@ void GdbServer::DecodeAndCall(std::string msg) {
   std::vector<std::string> res = SplitMsg(msg_stripped);
 
   if (res.size() > 0) {
-    if (cmd_map.contains(res[0])) {
-        tcp_server_.SendMsg(kMsgAck);
-        cmd_map[res[0]](res);
-    } else {
-        throw std::runtime_error("command not in map although in regex");
-    }
+    assert(cmd_map.contains(res[0])); // Command not in map although in regex.
+    tcp_server_.SendMsg(kMsgAck);
+    cmd_map[res[0]](res);
   } else {
     CmdNotFound(res);
   }
@@ -159,16 +156,6 @@ bool GdbServer::BpReached(const u16 address) {
   return bp_set_.contains(address);
 }
 
-// send a POSIX signal to gdb
-void GdbServer::SendSignal(const uint signal) {
-  std::string msg_resp = fmt::format("S{:02x}", signal);
-  std::string checksum = GetChecksumStr(msg_resp);
-  msg_resp.insert(0, "$");
-  msg_resp.append("#" + checksum);
-  DBG_LOG_GDB("sending signal " << signal);
-  tcp_server_.SendMsg(msg_resp.c_str());
-}
-
 // breakpoint reached indicated by sending a SIGTRAP signal
 void GdbServer::SendBpReached() {
   std::string msg_resp = Packetify(fmt::format("S{:02x}", SIGTRAP));
@@ -201,7 +188,7 @@ void GdbServer::CmdSupported(std::vector<std::string> msg_split) {
 void GdbServer::CmdAttached(std::vector<std::string> msg_split) {
   std::string msg_resp = Packetify("1");
   is_attached_ = true;
-  DBG_LOG_GDB("sending sever is attached to process");
+  DBG_LOG_GDB("replying server is attached to process");
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 

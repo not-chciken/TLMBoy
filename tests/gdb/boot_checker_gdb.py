@@ -57,8 +57,9 @@ gdb.execute('set pagination off')
 gdb.execute('set arch gbz80')
 # gdb.execute('set debug remote 1') # Uncomment for debug output
 gdb.execute('target remote localhost:1337')
+gdb.execute(r'set {char}0x0 = 0xAF') # Tests write
 
-with open(file_dir + '/golden_files/boot_states.txt') as csv_f:
+with open(file_dir + '/../golden_files/boot_states.txt') as csv_f:
   csv_read = csv.reader(csv_f, delimiter=',')
   ind = 0
   for row in csv_read:
