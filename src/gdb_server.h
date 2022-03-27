@@ -36,6 +36,8 @@ class GdbServer {
     TcpServer tcp_server_;
     char const *kMsgEmpty = "+$#00";
     char const *kMsgAck = "+";
+    char const *kMsgOk = "+$OK#9a";
+
     uint kMaxMessageLength = 4096;
 
     std::string RecvMsgBlocking();

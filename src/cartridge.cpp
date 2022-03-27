@@ -53,9 +53,17 @@ Cartridge::MemoryBankCtrler::MemoryBankCtrler(uint num_rom_banks, uint num_ram_b
   ram_socket_out.bind(ext_ram.targ_socket);
 }
 
+
+// When debugging, we'll allow writes into the ROM.
 uint Cartridge::MemoryBankCtrler::transport_dbg_rom(tlm::tlm_generic_payload& trans) {
-  sc_time delay = sc_time(0, SC_NS);
-  b_transport_rom(trans, delay);
+  u16 adr = static_cast<u16>(trans.get_address());
+  assert(adr < 0x8000);
+  if (adr < 0x4000) {
+    rom_low_socket_out->transport_dbg(trans);
+  } else {
+    trans.set_address(adr-0x4000);
+    rom_high_socket_out->transport_dbg(trans);
+  }
   return 1;
 }
 
@@ -80,7 +88,7 @@ Cartridge::Rom::Rom(std::filesystem::path game_path, std::filesystem::path boot_
 }
 
 void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) {
-  u16 adr = static_cast<uint16_t>(trans.get_address());
+  u16 adr = static_cast<u16>(trans.get_address());
   tlm::tlm_command cmd = trans.get_command();
   assert(adr < 0x8000);
   if (cmd == tlm::TLM_WRITE_COMMAND) {

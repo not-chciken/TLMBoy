@@ -65,6 +65,12 @@ std::string GdbServer::RecvMsgBlocking() {
     if (str_buffer.at(0) == '-') {
       throw std::logic_error("received '-', protocol error");
     }
+    if (str_buffer.at(0) == '\x03') {  // Byte 0x03 is send if "Ctrl-C" is prssed.
+      DBG_LOG_GDB("Recived Ctrl+C!");
+      std::vector<std::string> dummy;
+      CmdHalted(dummy);
+      return str_buffer;
+    }
     if (str_buffer.at(0) != '$') {
       DBG_LOG_GDB("string buffer: " + str_buffer);
       throw std::logic_error("message not beginning with '$'");
@@ -133,17 +139,21 @@ std::string GdbServer::Packetify(std::string msg) {
   return msg;
 }
 
+// This functions checks if message complies to the GDB RSP standard.
+// It uses a big chonky regex to find any matches.
+// The return value is a vector of string that comprises the atomic parts of the message.
 std::vector<std::string> GdbServer::SplitMsg(const std::string &msg) {
+  static std::regex reg(
+    R"(^(\?)|(D)|(g)|(c)([0-9]*)|(m)([0-9A-Fa-f]+),([0-9A-Fa-f]+))"
+    R"(|(qSupported):((?:[a-zA-Z-]+\+?;?)+))"
+    R"(|(M)([0-9A-Fa-f]+),([0-9A-Fa-f]+):([0-9A-Fa-f]+))"
+    R"(|([zZ])([0-1]),([0-9A-Fa-f]+),([0-9]))"
+    R"(|(qAttached)$)"
+  );
   std::vector<std::string> res;
   std::smatch sm;
-  std::regex reg(
-      R"(^(\?)|(D)|(g)|(c)([0-9]*)|(m)([0-9A-Fa-f]+),([0-9A-Fa-f]+))"
-      R"(|(qSupported):((?:[a-zA-Z-]+\+?;?)+))"
-      R"(|(M)([0-9A-Fa-f]+),([0-9A-Fa-f]+):([0-9A-Fa-f]+))"
-      R"(|([zZ])([0-3]),([0-9A-Fa-f]+),([0-9]))"
-      R"(|(qAttached)$)");
   regex_match(msg, sm, reg);
-  for (uint i = 1; i < sm.size(); i++) {
+  for (uint i = 1; i < sm.size(); ++i) {
     if (sm[i].str() != "") {
       res.push_back(sm[i].str());
     }
@@ -165,12 +175,10 @@ void GdbServer::SendBpReached() {
 
 // "D": for detaching.
 void GdbServer::CmdDetach(const std::vector<std::string> &msg_split) {
-  std::string msg_resp = "OK";
   is_attached_ = false;
   cpu_->Continue();
-  msg_resp = Packetify(msg_resp);
   DBG_LOG_GDB("detaching");
-  tcp_server_.SendMsg(msg_resp.c_str());
+  tcp_server_.SendMsg(kMsgOk);
 }
 
 // "qSupported": We only support hardware breakpoints.
@@ -224,7 +232,7 @@ void GdbServer::CmdReadMem(const std::vector<std::string> &msg_split) {
   std::string length_str = msg_split[2];
   uint addr = std::stoi(addr_str, nullptr, 16);
   uint length = std::stoi(length_str, nullptr, 16);
-  for (uint i = 0; i < length; i++) {
+  for (uint i = 0; i < length; ++i) {
     u8 data = cpu_->ReadBusDebug(addr + i);
     msg_resp.append(fmt::format("{:02x}", data));
   }
@@ -235,20 +243,18 @@ void GdbServer::CmdReadMem(const std::vector<std::string> &msg_split) {
 
 // "M": Write memory.
 void GdbServer::CmdWriteMem(const std::vector<std::string> &msg_split) {
-  std::string msg_resp = "OK";
   std::string addr_str = msg_split[1];
   std::string length_str = msg_split[2];
   std::string data_str = msg_split[3];
   uint addr = std::stoi(addr_str, nullptr, 16);
   uint length = std::stoi(length_str, nullptr, 16);
-  for (uint i=0; i < length; i++) {
+  for (uint i = 0; i < length; ++i) {
     u8 data = std::stoi(data_str.substr(i, 2), nullptr, 16);
     cpu_->WriteBusDebug(addr + i, data);
   }
   DBG_LOG_GDB("writing 0x" << length_str << " bytes at address 0x" << addr_str);
   DBG_LOG_GDB("data is:" << data_str);
-  msg_resp = Packetify(msg_resp);
-  tcp_server_.SendMsg(msg_resp.c_str());
+  tcp_server_.SendMsg(kMsgOk);
 }
 
 // "Z": Insert breakpoint.
