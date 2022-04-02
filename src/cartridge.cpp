@@ -110,11 +110,14 @@ void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& d
   u16 adr = static_cast<uint16_t>(trans.get_address());
   tlm::tlm_command cmd = trans.get_command();
   assert(adr < 0x8000);
+  trans.set_response_status(tlm::TLM_OK_RESPONSE);
   if (cmd == tlm::TLM_WRITE_COMMAND) {
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    std::cout << "[WARNING] Tried to write into non-existing RAM!" << std::endl;
     return;
   } else if (cmd == tlm::TLM_READ_COMMAND) {
-    throw std::runtime_error("Tried to access non-existing RAM!");
+    unsigned char* data = trans.get_data_ptr();
+    *data = 0;
+    std::cout << "[WARNING] Tried to read from non-existing RAM!" << std::endl;
   }
 }
 

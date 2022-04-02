@@ -51,6 +51,7 @@ class GdbServer {
     void CmdDetach(const std::vector<std::string> &msg_split);
     void CmdNotFound(const std::vector<std::string> &msg_split);
     void CmdReadReg(const std::vector<std::string> &msg_split);
+    void CmdWriteReg(const std::vector<std::string> &msg_split);
     void CmdReadMem(const std::vector<std::string> &msg_split);
     void CmdWriteMem(const std::vector<std::string> &msg_split);
     void CmdContinue(const std::vector<std::string> &msg_split);

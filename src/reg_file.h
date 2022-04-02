@@ -107,6 +107,11 @@ struct RegFile {
     static_assert(std::endian::native == std::endian::little, "RegFile is not big endian compatible!");
   }
 
+ public:
+  std::vector<Reg<u16>*>::iterator begin() { return reg_vec_.begin(); }
+  std::vector<Reg<u16>*>::iterator end()   { return reg_vec_.end(); }
+
  private:
-    u8 _dat[12]{0};
+  u8 _dat[12]{0};
+  std::vector<Reg<u16>*> reg_vec_{&AF,&BC,&DE,&HL,&SP,&PC};
 };

@@ -19,6 +19,7 @@
 GdbServer::GdbServer(Cpu *cpu) : cpu_(cpu), is_attached_(false) {
   cmd_map["?"] = std::bind(&GdbServer::CmdHalted, this, std::placeholders::_1);
   cmd_map["g"] = std::bind(&GdbServer::CmdReadReg, this, std::placeholders::_1);
+  cmd_map["G"] = std::bind(&GdbServer::CmdWriteReg, this, std::placeholders::_1);
   cmd_map["D"] = std::bind(&GdbServer::CmdDetach, this, std::placeholders::_1);
   cmd_map["m"] = std::bind(&GdbServer::CmdReadMem, this, std::placeholders::_1);
   cmd_map["M"] = std::bind(&GdbServer::CmdWriteMem, this, std::placeholders::_1);
@@ -144,11 +145,14 @@ std::string GdbServer::Packetify(std::string msg) {
 // The return value is a vector of string that comprises the atomic parts of the message.
 std::vector<std::string> GdbServer::SplitMsg(const std::string &msg) {
   static std::regex reg(
-    R"(^(\?)|(D)|(g)|(c)([0-9]*)|(m)([0-9A-Fa-f]+),([0-9A-Fa-f]+))"
-    R"(|(qSupported):((?:[a-zA-Z-]+\+?;?)+))"
+    R"(^(\?)|(D)|(g))"
+    R"(|(c)([0-9]*))"
+    R"(|(G)([0-9A-Fa-f]+))"
     R"(|(M)([0-9A-Fa-f]+),([0-9A-Fa-f]+):([0-9A-Fa-f]+))"
+    R"(|(m)([0-9A-Fa-f]+),([0-9A-Fa-f]+))"
     R"(|([zZ])([0-1]),([0-9A-Fa-f]+),([0-9]))"
     R"(|(qAttached)$)"
+    R"(|(qSupported):((?:[a-zA-Z-]+\+?;?)+))"
   );
   std::vector<std::string> res;
   std::smatch sm;
@@ -223,6 +227,21 @@ void GdbServer::CmdReadReg(const std::vector<std::string> &msg_split) {
   DBG_LOG_GDB("reading geeneral registers");
   msg_resp = Packetify(msg_resp);
   tcp_server_.SendMsg(msg_resp.c_str());
+}
+
+// "G": Write general registers.
+// TODO: test this function!
+void GdbServer::CmdWriteReg(const std::vector<std::string> &msg_split) {
+  std::string data_str = msg_split[1];
+  assert(data_str.size() >= 24);
+  int i = 0;
+  for (auto reg : cpu_->reg_file) {
+    u16 data = std::stoi(data_str.substr(i, 4), nullptr, 16);
+    reg->val(std::rotl(data, 8));
+    i += 4;
+  }
+  DBG_LOG_GDB("writing into registers: " << data_str);
+  tcp_server_.SendMsg(kMsgOk);
 }
 
 // "m": Read memory.
