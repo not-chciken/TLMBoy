@@ -249,7 +249,7 @@ void GdbServer::CmdWriteMem(const std::vector<std::string> &msg_split) {
   uint addr = std::stoi(addr_str, nullptr, 16);
   uint length = std::stoi(length_str, nullptr, 16);
   for (uint i = 0; i < length; ++i) {
-    u8 data = std::stoi(data_str.substr(i, 2), nullptr, 16);
+    u8 data = std::stoi(data_str.substr(i*2, 2), nullptr, 16);
     cpu_->WriteBusDebug(addr + i, data);
   }
   DBG_LOG_GDB("writing 0x" << length_str << " bytes at address 0x" << addr_str);
