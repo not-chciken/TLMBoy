@@ -85,9 +85,9 @@ std::string GdbServer::RecvMsgBlocking() {
       }
     } while (resp.at(0) != '#');
     sum_to_check -= '#';
+
     std::string checksum_str = tcp_server_.RecvBlocking(2);
-    uint checksum = 0;
-    checksum = std::stoi(checksum_str, 0, 16);
+    const uint checksum = std::stoi(checksum_str, 0, 16);
     str_buffer.append(checksum_str);
     DBG_LOG_GDB("GDB message received: " << str_buffer);
 
