@@ -16,8 +16,6 @@
 #include "gb_const.h"
 #include "utils.h"
 
-#define SC_INCLUDE_DYNAMIC_PROCESSES
-
 struct MemRequester : public sc_module {
   SC_HAS_PROCESS(MemRequester);
   tlm_utils::simple_initiator_socket<MemRequester, gb_const::kBusDataWidth> init_socket;

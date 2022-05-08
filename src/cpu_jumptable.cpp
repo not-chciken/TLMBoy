@@ -9,9 +9,8 @@ void Cpu::DoMachineCycle() {
   Init();
 
   if (attachGdb) {
-    uint port = 1337;
-    std::cout << "waiting for gdb to attach on port " << port << "..." << std::endl;
-    gdb_server.InitBlocking(port);
+    std::cout << "waiting for gdb to attach on port " << gdb_port_ << "..." << std::endl;
+    gdb_server.InitBlocking(gdb_port_);
     std::cout << "gdb attached!" << std::endl;
   }
 
@@ -26,10 +25,7 @@ void Cpu::DoMachineCycle() {
       continue;
     }
 
-    clock_cycles_ = static_cast<u64>(sc_core::sc_time_stamp().to_default_time_units()
-                                     / (gb_const::kNsPerMachineCycle));
-
-    if (gdb_server.BpReached(reg_file.PC.val())) {
+    if (gdb_server.BpReached(reg_file.PC)) {
       halted_ = true;
       gdb_server.SendBpReached();
       wait(4);
@@ -43,7 +39,8 @@ void Cpu::DoMachineCycle() {
 
     DBG_LOG_CPU_REG(fmt::format("af:0x{:04x},bc:0x{:04x},de:0x{:04x},hl:0x{:04x},sp:0x{:04x},pc:0x{:04x},c:",
                     reg_file.AF, reg_file.BC, reg_file.DE, reg_file.HL, reg_file.SP, reg_file.PC)
-                    << std::to_string(clock_cycles_));
+                    << std::to_string(static_cast<u64>(sc_core::sc_time_stamp().to_default_time_units() \
+                                      / (gb_const::kNsPerMachineCycle)))); // Calculated number of machine cycles.
 
     // Fetch.
     u8 instr_byte = FetchNextInstrByte();
@@ -181,7 +178,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0x20:
         DBG_LOG_INST("JR NZ, r8");
-        InstrJumpNz();
+        InstrJumpIf(!GetFlagZ());
         break;
       case 0x21:
         DBG_LOG_INST("LD HL, d16");
@@ -213,7 +210,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0x28:
         DBG_LOG_INST("JR Z,r8");
-        InstrJumpZ();
+        InstrJumpIf(GetFlagZ());
         break;
       case 0x29:
         DBG_LOG_INST("ADD HL,HL");
@@ -245,7 +242,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0x30:
         DBG_LOG_INST("JR NC,r8");
-        InstrJumpNc();
+        InstrJumpIf(!GetFlagC());
         break;
       case 0x31:
         DBG_LOG_INST("LD SP,d16");
@@ -277,7 +274,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0x38:
         DBG_LOG_INST("JR C,r8");
-        InstrJumpC();
+        InstrJumpIf(GetFlagC());
         break;
       case 0x39:
         DBG_LOG_INST("ADD HL,SO");
@@ -821,7 +818,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xC0:
         DBG_LOG_INST("RET NZ");
-        InstrRetNz();
+        InstrRetIf(!GetFlagZ());
         break;
       case 0xC1:
         DBG_LOG_INST("POP BC");
@@ -829,7 +826,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xC2:
         DBG_LOG_INST("JP NZ,a16");
-        InstrJumpNzAddr();
+        InstrJumpAddrIf(!GetFlagZ());
         break;
       case 0xC3:
         DBG_LOG_INST("JP a16");
@@ -837,7 +834,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xC4:
         DBG_LOG_INST("Call NZ,a16");
-        InstrCallIf(!GetRegFlag(kMaskZFlag));
+        InstrCallIf(!GetFlagZ());
         break;
       case 0xC5:
         DBG_LOG_INST("PUSH BC");
@@ -853,7 +850,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xC8:
         DBG_LOG_INST("RET Z");
-        InstrRetIf(GetRegFlag(kMaskZFlag));
+        InstrRetIf(GetFlagZ());
         break;
       case 0xC9:
         DBG_LOG_INST("RET");
@@ -861,11 +858,11 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xCA:
         DBG_LOG_INST("JP Z,a16");
-        InstrJumpAddrIf(GetRegFlag(kMaskZFlag));
+        InstrJumpAddrIf(GetFlagZ());
         break;
       case 0xCC:
         DBG_LOG_INST("Call z,a16");
-        InstrCallIf(GetRegFlag(kMaskZFlag));
+        InstrCallIf(GetFlagZ());
         break;
       case 0xCD:
         DBG_LOG_INST("Call a16");
@@ -881,7 +878,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xD0:
         DBG_LOG_INST("RET NC");
-        InstrRetNc();
+        InstrRetIf(!GetFlagC());
         break;
       case 0xD1:
         DBG_LOG_INST("POP DE");
@@ -889,7 +886,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xD2:
         DBG_LOG_INST("JP NC, a16");
-        InstrJumpAddrIf(!GetRegFlag(kMaskCFlag));
+        InstrJumpAddrIf(!GetFlagC());
         break;
       case 0xD3:
         DBG_LOG_INST("STOP SIM");  // Special instruction.
@@ -897,7 +894,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xD4:
         DBG_LOG_INST("CALL NC,a16");
-        InstrCallIf(!GetRegFlag(kMaskCFlag));
+        InstrCallIf(!GetFlagC());
         break;
       case 0xD5:
         DBG_LOG_INST("PUSH DE");
@@ -913,7 +910,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xD8:
         DBG_LOG_INST("RET C");
-        InstrRetIf(GetRegFlag(kMaskCFlag));
+        InstrRetIf(GetFlagC());
         break;
       case 0xD9:
         DBG_LOG_INST("RETI");
@@ -921,17 +918,14 @@ void Cpu::DoMachineCycle() {
         break;
       case 0xDA:
         DBG_LOG_INST("JP C,a16");
-        InstrJumpAddrIf(GetRegFlag(kMaskCFlag));
+        InstrJumpAddrIf(GetFlagC());
         break;
       // case 0xDB: Not implemented!
       case 0xDC:
         DBG_LOG_INST("CALL C,a16");
-        InstrCallIf(GetRegFlag(kMaskCFlag));
+        InstrCallIf(GetFlagC());
         break;
-      case 0xDD:
-        DBG_LOG_INST("SW Bp");
-        InstrSwBp();
-        break;
+      // case 0xDD: Not implemented!
       case 0xDE:
         DBG_LOG_INST("SBC A, d8");
         InstrSubCarryImm();

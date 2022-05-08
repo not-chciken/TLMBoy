@@ -10,6 +10,7 @@ enable_testing()
 set(CMAKE_CXX_FLAGS "-Wall")
 set(CMAKE_CXX_STANDARD 20)
 add_definitions(-DSC_DISABLE_API_VERSION_CHECK) # "Fix" c++ version issue.
+add_definitions(-DSC_INCLUDE_DYNAMIC_PROCESSES)
 if(NOT DEFINED SYSTEMC_PATH)
   set(SYSTEMC_PATH /usr/local/systemc-2.3.3)
 endif()

@@ -22,23 +22,35 @@ Cpu::Cpu(sc_module_name name, bool attachGdb):
 }
 
 void Cpu::SetFlagC(bool val) {
-  reg_file.F = SetBit(reg_file.F.val(), val, kIndCFlag);
+  reg_file.F = SetBit(reg_file.F, val, kIndCFlag);
 }
 
 void Cpu::SetFlagH(bool val) {
-  reg_file.F = SetBit(reg_file.F.val(), val, kIndHFlag);
+  reg_file.F = SetBit(reg_file.F, val, kIndHFlag);
 }
 
 void Cpu::SetFlagN(bool val) {
-  reg_file.F = SetBit(reg_file.F.val(), val, kIndNFlag);
+  reg_file.F = SetBit(reg_file.F, val, kIndNFlag);
 }
 
 void Cpu::SetFlagZ(bool val) {
-  reg_file.F = SetBit(reg_file.F.val(), val, kIndZFlag);
+  reg_file.F = SetBit(reg_file.F, val, kIndZFlag);
 }
 
-bool Cpu::GetRegFlag(const u8 flag_mask) {
-  return static_cast<bool>(flag_mask & reg_file.F.val());
+bool Cpu::GetFlagC() {
+  return static_cast<bool>(kMaskCFlag & reg_file.F);
+}
+
+bool Cpu::GetFlagH() {
+  return static_cast<bool>(kMaskHFlag & reg_file.F);
+}
+
+bool Cpu::GetFlagN() {
+  return static_cast<bool>(kMaskNFlag & reg_file.F);
+}
+
+bool Cpu::GetFlagZ() {
+  return static_cast<bool>(kMaskZFlag & reg_file.F);
 }
 
 void Cpu::WriteBus(u16 addr, u8 data) {

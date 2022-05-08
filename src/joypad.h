@@ -24,9 +24,6 @@
  * A key = A button; S key = B button
  * O key = Select button; P key = Start Button
  ******************************************************************************/
-
-#define SC_INCLUDE_DYNAMIC_PROCESSES
-
 #include "SDL2/SDL.h"
 #include "systemc.h"
 #include "sysc/kernel/sc_simcontext.h"
