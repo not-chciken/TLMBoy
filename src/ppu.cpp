@@ -69,7 +69,6 @@ void Ppu::InitRegisters() {
   payload->set_address(0xFE00);  // start of oam table
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    assert(dmi_data.get_end_address() >= 0);
     data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
     oam_table = &data_ptr[0xFE00 - 0xFE00];
   } else {
@@ -79,7 +78,6 @@ void Ppu::InitRegisters() {
   payload->set_address(0xFFFF);  // interrupt register
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    assert(dmi_data.get_end_address() >= 0);
     data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
     reg_ie = &data_ptr[0xFFFF - 0xFFFF];
   } else {
@@ -89,7 +87,6 @@ void Ppu::InitRegisters() {
   payload->set_address(0xFF0F);  // interrupt pending register
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    assert(dmi_data.get_end_address() >= 0);
     reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
   } else {
     throw std::runtime_error("Could not get DMI for interrupt pending register!");

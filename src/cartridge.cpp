@@ -142,7 +142,7 @@ void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
 
   assert(adr < 0x8000);
   if (cmd == tlm::TLM_WRITE_COMMAND) {
-    if (0 <= adr && adr <= 0x1FFF) {
+    if (adr <= 0x1FFF) {
       ram_enabled_ = (*ptr & 0xA) == 0xA;
     } else if (adr >= 0x2000 && adr <= 0x3FFF) {
       rom_bank_low_bits = 0b00011111 & *ptr;

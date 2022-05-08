@@ -1,106 +1,114 @@
 /**********************************************
- * MIT License
+ * Apache License, Version 2.0
  * Copyright (c) 2022 chciken/Niko
 **********************************************/
 
 #include "cpu.h"
 #include "utils.h"
 
+// Halts the Game Boy until an interrupt is triggered.
 void Cpu::InstrHalt() {
   do {
-    wait(4);  // TODO(niko): Maybe use a signal?
+    wait(4);  // Busy waiting.
   } while ((*reg_intr_enable_dmi & *reg_intr_pending_dmi) == 0);
 }
 
-// NOP, does nothing
+// NOP, does nothing.
 void Cpu::InstrNop() {
   wait(4);
 }
 
-// LD reg,(a16)
+// LD reg,(u16)
 void Cpu::InstrLoad(Reg<u8> &reg, const u16 &addr_val) {
   reg = ReadBus(addr_val);
   wait(16);
 }
 
-// LD reg,(reg)
+// LD reg8,(reg16)
 void Cpu::InstrLoad(Reg<u8> &reg, Reg<u16> &addr_reg) {
   reg = ReadBus(addr_reg);
   wait(8);
 }
 
-// LD reg,u16
+// LD reg16,u16
 void Cpu::InstrLoadImm(Reg<u16> &reg) {
   reg = FetchNext2InstrBytes();
   wait(12);
 }
 
-// LD reg,u8
+// LD reg8,u8
 void Cpu::InstrLoadImm(Reg<u8> &reg) {
   reg = FetchNextInstrByte();
   wait(8);
 }
 
-// "LD reg,(reg+)
+// "LD reg8,(reg16+)
 void Cpu::InstrLoadInc(Reg<u8> &reg, Reg<u16> &addr_reg) {
   reg = ReadBus(addr_reg);
   ++addr_reg;
   wait(8);
 }
 
+// LD reg8,(reg16-)
 void Cpu::InstrLoadDec(Reg<u16> &addr_reg, Reg<u8> &reg) {
   reg = ReadBus(addr_reg);
   --addr_reg;
   wait(8);
 }
 
+// LD (reg16+),reg8
 void Cpu::InstrStoreInc(Reg<u16> &addr_reg, const u8 val) {
   WriteBus(addr_reg, val);
   ++addr_reg;
   wait(8);
 }
 
+// LD (reg16-),reg8
 void Cpu::InstrStoreDec(Reg<u16> &addr_reg, const u8 val) {
   WriteBus(addr_reg, val);
   --addr_reg;
   wait(8);
 }
 
-// LD (addr),reg
-void Cpu::InstrStore(const Reg<u16> &addr_reg, Reg<u8> &reg) {
+// LD (reg16),reg8
+void Cpu::InstrStore(const Reg<u16> &addr_reg, const Reg<u8> &reg) {
   WriteBus(addr_reg, reg);
   wait(8);
 }
 
-// LD (addr+0xFF),reg
-void Cpu::InstrStore(const u8 &addr_reg, Reg<u8> &reg) {
-  WriteBus(static_cast<u16>(addr_reg)+0xFF00, reg.val());
+// LD (reg8+0xFF),reg8
+void Cpu::InstrStore(const u8 &addr_reg, const Reg<u8> &reg) {
+  WriteBus(static_cast<u16>(addr_reg) + 0xFF00, reg);
   wait(8);
 }
 
-void Cpu::InstrStore(Reg<u8> &reg) {
-  WriteBus(FetchNext2InstrBytes(), reg.val());
+// LD (u16),reg8
+void Cpu::InstrStore(const Reg<u8> &reg) {
+  WriteBus(FetchNext2InstrBytes(), reg);
   wait(16);
 }
 
+// LD (reg16), u8
 void Cpu::InstrStoreImm(Reg<u16> &addr) {
   WriteBus(addr, FetchNextInstrByte());
   wait(12);
 }
 
+// LDH (u8+0xFF00), reg8
 void Cpu::InstrStoreH(Reg<u8> &reg) {
-  WriteBus(static_cast<u16>(FetchNextInstrByte()) + 0xFF00, reg.val());
+  WriteBus(static_cast<u16>(FetchNextInstrByte()) + 0xFF00, reg);
   wait(12);
 }
 
+// LDH reg8,(u8+0xFF00)
 void Cpu::InstrLoadH(Reg<u8> &reg) {
   u16 addr = static_cast<u16>(FetchNextInstrByte()) + 0xFF00;
   reg = ReadBus(addr);
-  DBG_LOG_INST("reg = 0x" << std::hex << static_cast<uint>(reg));
   assert(addr >= 0xFF00);
   wait(12);
 }
 
+// LDHL SP,n
 void Cpu::InstrLoadHlSpRel() {
   i8 imm = FetchNextInstrByte();
   u16 reg = reg_file.SP;
@@ -115,12 +123,13 @@ void Cpu::InstrLoadHlSpRel() {
   wait(12);
 }
 
+// LD SP,HL
 void Cpu::InstrLoadSpHl() {
-  reg_file.SP = reg_file.HL.val();
+  reg_file.SP = reg_file.HL;
   wait(8);
 }
 
-// INC <reg>
+// INC reg8
 void Cpu::InstrInc(Reg<u8> &reg) {
   ++reg;
   SetFlagZ((reg == 0));
@@ -129,12 +138,13 @@ void Cpu::InstrInc(Reg<u8> &reg) {
   wait(4);
 }
 
-// INC <reg>
+// INC reg16
 void Cpu::InstrInc(Reg<u16> &reg) {
   ++reg;
   wait(8);
 }
 
+// INC (reg16)
 void Cpu::InstrIncAddr(Reg<u16> &addr) {
   u8 val = ReadBus(addr);
   ++val;
@@ -145,6 +155,7 @@ void Cpu::InstrIncAddr(Reg<u16> &addr) {
   wait(12);
 }
 
+// DEC (reg16)
 void Cpu::InstrDecAddr(Reg<u16> &addr) {
   u8 val = ReadBus(addr);
   --val;
@@ -155,6 +166,7 @@ void Cpu::InstrDecAddr(Reg<u16> &addr) {
   wait(12);
 }
 
+// Rotate A left. Old bit 7 to carry.
 void Cpu::InstrRlca() {
   reg_file.A = (reg_file.A.val() << 1) | (reg_file.A.val() >> (8 - 1));
   SetFlagH(false);
@@ -164,7 +176,7 @@ void Cpu::InstrRlca() {
   wait(4);
 }
 
-// Rotate A right through Carry flag.
+// Rotate A right. Old bit 0 to carry.
 void Cpu::InstrRrca() {
   u8 carry_flag = reg_file.A & gb_const::kMaskBit0;
   reg_file.A = (reg_file.A >> 1) | (carry_flag << 7);
@@ -172,28 +184,24 @@ void Cpu::InstrRrca() {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(false);
-
   wait(4);
 }
 
+// Rotate A right. Old bit 0 to carry.
 void Cpu::InstrRra() {
   u8 carry_flag = reg_file.A & gb_const::kMaskBit0;
   u8 old_carry_flag = GetRegFlag(kMaskCFlag);
-
-  reg_file.A = (reg_file.A >> 1) | (old_carry_flag << 7);
-
+  reg_file.A = reg_file.A >> 1 | old_carry_flag << 7;
   SetFlagC(carry_flag);
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(false);
-
   wait(4);
 }
 
-// Rotate n left. Old bit 7 to Carry flag.
+// Rotate reg8 left. Old bit 7 to Carry flag.
 void Cpu::InstrRlc(Reg<u8> &reg) {
-  reg = (reg << 1) | (reg >> 7);
-
+  reg = reg << 1 | reg >> 7;
   SetFlagH(false);
   SetFlagZ(reg == 0);
   SetFlagN(false);
@@ -201,11 +209,11 @@ void Cpu::InstrRlc(Reg<u8> &reg) {
   wait(8);
 }
 
-void Cpu::InstrRlc(Reg<u16> &addr_reg) {
+// Rotate (reg16) left. Old bit 7 to Carry flag.
+void Cpu::InstrRlc(const Reg<u16> &addr_reg) {
   u8 dat = ReadBus(addr_reg);
-  dat = (dat << 1) | (dat >> 7);
+  dat = dat << 1 | dat >> 7;
   WriteBus(addr_reg, dat);
-
   SetFlagH(false);
   SetFlagZ(dat == 0);
   SetFlagN(false);
@@ -213,8 +221,9 @@ void Cpu::InstrRlc(Reg<u16> &addr_reg) {
   wait(16);
 }
 
+// Rotate reg8 right. Old bit 0 to carry.
 void Cpu::InstrRrc(Reg<u8> &reg) {
-  reg = (reg.val() >> 1) | (reg.val() << (8 - 1));
+  reg = reg >> (u8)1 | reg << (u8)7;
   SetFlagH(false);
   SetFlagZ(reg == 0);
   SetFlagN(false);
@@ -222,9 +231,10 @@ void Cpu::InstrRrc(Reg<u8> &reg) {
   wait(8);
 }
 
-void Cpu::InstrRrc(Reg<u16> &addr_reg) {
+// Rotate (reg16) right. Old bit 0 to carry.
+void Cpu::InstrRrc(const Reg<u16> &addr_reg) {
   u8 dat = ReadBus(addr_reg);
-  dat = (dat >> 1) | (dat << (8 - 1));
+  dat = dat >> 1 | dat << 7;
   WriteBus(addr_reg, dat);
   SetFlagH(false);
   SetFlagZ(dat == 0);
@@ -233,15 +243,7 @@ void Cpu::InstrRrc(Reg<u16> &addr_reg) {
   wait(16);
 }
 
-void Cpu::InstrRcca() {
-  reg_file.A = (reg_file.A >> 1) | (reg_file.A << (8 - 1));
-  SetFlagH(false);
-  SetFlagZ(false);
-  SetFlagN(false);
-  SetFlagC((reg_file.A & 0x80));
-  wait(4);
-}
-
+// LD (u16),SP
 void Cpu::InstrStoreSp() {
   u16 addr = FetchNext2InstrBytes();
   WriteBus(addr, reg_file.SPlsb);
@@ -249,6 +251,7 @@ void Cpu::InstrStoreSp() {
   wait(20);
 }
 
+// ADD HL,reg16
 void Cpu::InstrAddHl(Reg<u16> &reg) {
   SetFlagH((reg_file.HL & 0x0fff) + (reg & 0x0fff) > 0x0fff);
   u16 old_val = reg_file.HL;
@@ -275,7 +278,7 @@ void Cpu::InstrAddSp() {
 
 void Cpu::InstrAddA(Reg<u8> &reg) {
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) > 0x0f);
-  u8 old_val = reg.val();
+  u8 old_val = reg;
   reg_file.A += reg;
   SetFlagN(false);
   SetFlagC(reg_file.A < old_val);
@@ -296,7 +299,7 @@ void Cpu::InstrAddAImm() {
 // Add reg + carry flag to A
 void Cpu::InstrAddACarry(Reg<u8> &reg) {
   u8 carry_add = GetRegFlag(kMaskCFlag) ? 1 : 0;
-  u8 old_val = reg_file.A.val();
+  u8 old_val = reg_file.A;
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) + carry_add > 0x0f);
   reg_file.A += reg + carry_add;
   SetFlagN(false);
@@ -319,7 +322,7 @@ void Cpu::InstrAddACarry(Reg<u16> &addr_reg) {
 
 void Cpu::InstrAddACarryImm() {
   u8 reg = FetchNextInstrByte();
-  u8 old_val = reg_file.A.val();
+  u8 old_val = reg_file.A;
   u8 carry_add = GetRegFlag(kMaskCFlag) ? 1 : 0;
 
   SetFlagH((reg_file.A & 0x0f) + (reg & 0x0f) + carry_add > 0x0f);
@@ -417,8 +420,8 @@ void Cpu::InstrSubCarryImm() {
 // Compare A with n. This is basically an A - n  subtraction instruction
 // but the results are thrown away.
 void Cpu::InstrComp(Reg<u8> &reg) {
-  u8 pre_val = reg_file.A.val();
-  u8 result = reg_file.A.val() - reg;
+  u8 pre_val = reg_file.A;
+  u8 result = reg_file.A - reg;
   SetFlagC(result > pre_val);
   SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);
   SetFlagZ(result == 0);
@@ -427,9 +430,9 @@ void Cpu::InstrComp(Reg<u8> &reg) {
 }
 
 void Cpu::InstrComp(Reg<u16> &reg) {
-  u8 pre_val = reg_file.A.val();
+  u8 pre_val = reg_file.A;
   u8 read_reg = ReadBus(reg);
-  u8 result = reg_file.A.val() - read_reg;
+  u8 result = reg_file.A - read_reg;
   SetFlagC(result > pre_val);
   SetFlagH(((pre_val & 0xf) - (read_reg & 0xf)) < 0);
   SetFlagZ(result == 0);
@@ -470,7 +473,7 @@ void Cpu::InstrXor(Reg<u8> &reg) {
   SetFlagC(false);
   SetFlagH(false);
   SetFlagN(false);
-  SetFlagZ(reg_file.A.val() == 0);
+  SetFlagZ(reg_file.A == 0);
   wait(4);
 }
 
@@ -488,7 +491,7 @@ void Cpu::InstrXorImm() {
   SetFlagC(false);
   SetFlagH(false);
   SetFlagN(false);
-  SetFlagZ(reg_file.A.val() == 0);
+  SetFlagZ(reg_file.A == 0);
   wait(8);
 }
 
@@ -640,7 +643,7 @@ void Cpu::InstrJumpAddrIf(bool cond) {
 void Cpu::InstrBitN(uint bit_index, Reg<u8> &reg) {
   SetFlagH(true);
   SetFlagN(false);
-  SetFlagZ(!IsBitSet(reg.val(), bit_index));
+  SetFlagZ(!IsBitSet(reg, bit_index));
   wait(8);
 }
 
@@ -649,13 +652,13 @@ void Cpu::InstrBitN(uint bit_index, Reg<u8> &reg) {
 void Cpu::InstrBitN(uint bit_index, Reg<u16> &addr) {
   SetFlagH(true);
   SetFlagN(false);
-  SetFlagZ(!IsBitSet(ReadBus(addr.val()), bit_index));
+  SetFlagZ(!IsBitSet(ReadBus(addr), bit_index));
   wait(12);
 }
 
 
 void Cpu::InstrSetBitN(uint bit_index, Reg<u8> &reg) {
-  reg = SetBit(reg.val(), true, bit_index);
+  reg = SetBit(reg, true, bit_index);
   wait(8);
 }
 
@@ -694,9 +697,9 @@ void Cpu::InstrCallIf(bool cond) {
 
 // Pop two bytes from stack & jump to that address
 void Cpu::InstrRet() {
-  u16 lsb = static_cast<u16>(ReadBus(reg_file.SP.val()));
+  u16 lsb = static_cast<u16>(ReadBus(reg_file.SP));
   ++reg_file.SP;
-  u16 msb = static_cast<u16>(ReadBus(reg_file.SP.val()));
+  u16 msb = static_cast<u16>(ReadBus(reg_file.SP));
   msb <<= 8;
   ++reg_file.SP;
   reg_file.PC = msb | lsb;
@@ -705,9 +708,9 @@ void Cpu::InstrRet() {
 
 // Pop two bytes from stack & jump to that address and enable interrupts
 void Cpu::InstrRetI() {
-  u16 lsb = static_cast<u16>(ReadBus(reg_file.SP.val()));
+  u16 lsb = static_cast<u16>(ReadBus(reg_file.SP));
   ++reg_file.SP;
-  u16 msb = static_cast<u16>(ReadBus(reg_file.SP.val()));
+  u16 msb = static_cast<u16>(ReadBus(reg_file.SP));
   msb <<= 8;
   ++reg_file.SP;
   reg_file.PC = msb | lsb;
@@ -718,9 +721,9 @@ void Cpu::InstrRetI() {
 // Push register pair nn onto stack. Decrement Stack Pointer (SP) twice
 void Cpu::InstrPush(Reg<u16> &reg) {
   --reg_file.SP;
-  WriteBus(reg_file.SP.val(), static_cast<u8>(reg.val() >> 8));  // msb
+  WriteBus(reg_file.SP.val(), static_cast<u8>(reg >> 8));  // msb
   --reg_file.SP;
-  WriteBus(reg_file.SP.val(), static_cast<u8>(reg.val() & 0x00FF));  // lsb
+  WriteBus(reg_file.SP.val(), static_cast<u8>(reg & 0x00FF));  // lsb
   wait(16);
 }
 

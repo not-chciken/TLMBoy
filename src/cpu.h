@@ -92,9 +92,9 @@ struct Cpu : public sc_module {
   void InstrLoadHlSpRel();
   void InstrLoadSpHl();
   void InstrNop();
-  void InstrStore(const Reg<u16> &addr_reg, Reg<u8> &reg);
-  void InstrStore(const u8 &addr_reg, Reg<u8> &reg);
-  void InstrStore(Reg<u8> &reg);
+  void InstrStore(const Reg<u16> &addr_reg, const Reg<u8> &reg);
+  void InstrStore(const u8 &addr_reg, const Reg<u8> &reg);
+  void InstrStore(const Reg<u8> &reg);
   void InstrStoreInc(Reg<u16> &addr_reg, const u8 val);
   void InstrStoreImm(Reg<u16> &addr);
   void InstrStoreDec(Reg<u16> &addr_reg, const u8 val);
@@ -105,10 +105,9 @@ struct Cpu : public sc_module {
   void InstrDecAddr(Reg<u16> &addr);
   void InstrRlca();
   void InstrRlc(Reg<u8> &reg);
-  void InstrRlc(Reg<u16> &addr_reg);
+  void InstrRlc(const Reg<u16> &addr_reg);
   void InstrRrc(Reg<u8> &reg);
-  void InstrRrc(Reg<u16> &addr_reg);
-  void InstrRcca();
+  void InstrRrc(const Reg<u16> &addr_reg);
   void InstrRra();
   void InstrRrca();
   void InstrStoreSp();

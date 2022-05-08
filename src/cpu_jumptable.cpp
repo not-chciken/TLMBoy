@@ -112,7 +112,7 @@ void Cpu::DoMachineCycle() {
         break;
       case 0x0F:
         DBG_LOG_INST("RRCA");
-        InstrRcca();
+        InstrRrca();
         break;
       case 0x10:
         DBG_LOG_INST("STOP 0");  // Halt CPU & LCD display until button pressed.
@@ -261,11 +261,11 @@ void Cpu::DoMachineCycle() {
         break;
       case 0x34:
         DBG_LOG_INST("INC (HL)");
-        InstrIncAddr(reg_file.HL);  // TODO(niko): check if correct
+        InstrIncAddr(reg_file.HL);
         break;
       case 0x35:
         DBG_LOG_INST("INC (HL)");
-        InstrDecAddr(reg_file.HL);  // TODO(niko): check if correct
+        InstrDecAddr(reg_file.HL);
         break;
       case 0x36:
         DBG_LOG_INST("LD (HL),d8");

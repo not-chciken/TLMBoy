@@ -45,7 +45,9 @@ namespace options {
           std::cout << "######### TLM Boy #########" << std::endl
                     << "Usage: tlmboy -r <path_to_rom>" << std::endl
                     << "Optional: --headless" << std::endl
-                    << "          Runs the TLMBoy without any graphical output." << std::endl;
+                    << "          Runs the TLMBoy without any graphical output." << std::endl
+                    << "          --wait-for-gdb" << std::endl
+                    << "          Wait for a GDB remote connection on port 1337." << std::endl;
           exit(1);
         case -1:
           break;
