@@ -38,13 +38,13 @@ struct Ppu : public sc_module {
   static const u8 kNumOamEntries = 40;  // Number of OAM entries. Hence, 40 sprites can be displayed at max.
   static const u8 kTileLength    = 8;   // Length of a normal tile in pixels.
 
-  static const uint kGbScreenWidth  = 160;
-  static const uint kGbScreenHeight = 144;
-  static const uint kGbScreenBufferWidth = 256;
-  static const uint kGbScreenBufferHeight = 256;
-  static const uint kRenderScaling  = 4;
-  static const uint kRenderWndwWidth  = kGbScreenWidth * kRenderScaling;
-  static const uint kRenderWndwHeight = kGbScreenHeight * kRenderScaling;
+  static const int kGbScreenWidth  = 160;
+  static const int kGbScreenHeight = 144;
+  static const int kGbScreenBufferWidth = 256;
+  static const int kGbScreenBufferHeight = 256;
+  static const int kRenderScaling  = 4;
+  static const int kRenderWndwWidth  = kGbScreenWidth * kRenderScaling;
+  static const int kRenderWndwHeight = kGbScreenHeight * kRenderScaling;
 
   // Masks for reg_0xFF40.
   static const u8 kMaskLcdControl         = 0b10000000;  // bit 7; 1 -> operate
@@ -135,6 +135,7 @@ struct Ppu : public sc_module {
   // Maps the colours for the background and the window according to register rBGP (0xff47).
   const uint MapBgCols(const uint val);
   void DrawBgToLine(uint line_num);
+  void DrawSpriteToLine(int line_num);
 
   // interleaves two selected bits of two bit vectors
   // and arranges them in a screen buffer friendly way

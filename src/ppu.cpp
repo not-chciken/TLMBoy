@@ -105,7 +105,7 @@ void Ppu::DrawBgToLine(uint line_num) {
   bg_tile_map = (*reg_0xFF40 & kMaskBgTileSlct) ? tile_map_up : tile_map_low;
 
   const u32 y_tile_pixel = (*reg_scroll_y + line_num) % 8;
-  for (int i = 0; i < 160; i++) {;
+  for (int i = 0; i < 160; ++i) {;
     u32 bg_tile_ind = 32 * (((line_num + *reg_scroll_y) % 256) / 8) + ((*reg_scroll_x + i) % 256) / 8;
     u32 tile_ind = bg_tile_map[bg_tile_ind];
     u32 x_tile_pixel = (*reg_scroll_x + i) % 8;
@@ -113,6 +113,63 @@ void Ppu::DrawBgToLine(uint line_num) {
     u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
     bg_buffer[line_num][i] = res;
     assert(bg_tile_ind < 1024);
+  }
+}
+
+void Ppu::DrawSpriteToLine(int line_num) {
+  if (!(kMaskObjSpriteDisp & *reg_0xFF40))
+    return;
+
+  int num_rendered_sprites = 0; // Stop at a maximum of 10 per line.
+  u8* tile_data_table = tile_data_table_low;  // Sprites always use the low data table.
+  for (int i = 0; i < kNumOamEntries; ++i) {
+    int pos_y            = oam_table[i*kOamEntryBytes] - 16;       // byte0 = y pos
+    int pos_x            = oam_table[i*kOamEntryBytes + 1] - 8;  // byte1 = x pos
+    int sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];       // byte2 = tile index
+    int sprite_flags     = oam_table[i*kOamEntryBytes + 3];       // byte3 = flags //TODO(niko)
+    const bool palette = IsBitSet(sprite_flags, 4);
+    const bool x_flip = IsBitSet(sprite_flags, 5);
+    const bool y_flip = IsBitSet(sprite_flags, 6);
+    const bool obj_prio = IsBitSet(sprite_flags, 7);
+
+    const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
+    const int sprite_height = is_big_sprite ? 16 : 8;  // Width of a sprite in pixels.
+    //const int sprite_bytes = is_big_sprite ? 32 : 16;  // Bytes per sprite.
+
+    if (num_rendered_sprites > 10)
+      continue;
+    if ((pos_y > line_num) || ((pos_y + sprite_height) <= line_num))
+      continue;
+    if ((pos_x < -7) || (pos_x >= kGbScreenWidth))
+      continue;
+
+    ++num_rendered_sprites;
+
+    if (is_big_sprite) {
+      sprite_tile_ind &= 0xFE;  // Ignore the last bit in 8x16 mode.
+    }
+
+    const int y_tile_pixel = y_flip ? (is_big_sprite ? 15 : 7) - (line_num - pos_y)
+                                    : line_num - pos_y;
+    // if (is_big_sprite && (y_tile_pixel >= 8))
+    // {
+    //     pixel_y_2 = (pixel_y - 8) << 1;
+    //     offset = 16;
+    // }
+    // else
+    //     pixel_y_2 = y_tile_pixel * 2;
+    i32 pixel_ind = sprite_tile_ind * 16 + y_tile_pixel * 2;
+
+    for (int j = 0; j < 8; ++j) {
+      int x_draw = (pos_x + j);
+      if (x_draw < 0 || x_draw >= kGbScreenWidth)
+          continue;
+
+      u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], (x_flip ? j : 7 - j));
+      if (res == 0) //Color 0 is transparent.
+          continue;
+      sprite_buffer[line_num][x_draw] = res;
+    }
   }
 }
 
@@ -152,53 +209,61 @@ void Ppu::DrawToBuffer() {
   // smallest x always overlaps TODO(niko)
   // when sprites with the same x overlap the higher memory wins TODO(niko)
   // x=0 and y=0 hides a sprite sx-8 and s-8
-  if (kMaskObjSpriteDisp & *reg_0xFF40) {
-    u8* tile_data_table = tile_data_table_low;  // sprites always use the low data table
-    for (uint i = 0; i < kNumOamEntries; i++) {
-      uint pos_y            = oam_table[i*kOamEntryBytes];      // byte0 = y pos
-      uint pos_x            = oam_table[i*kOamEntryBytes + 1];  // byte1 = x pos
-      uint sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];  // byte2 = tile index
-      uint sprite_flags     = oam_table[i*kOamEntryBytes + 3];  // byte3 = flags //TODO(niko)
+  // if (kMaskObjSpriteDisp & *reg_0xFF40) {
+  //   u8* tile_data_table = tile_data_table_low;  // sprites always use the low data table
+  //   for (uint i = 0; i < kNumOamEntries; i++) {
+  //     uint pos_y            = oam_table[i*kOamEntryBytes];      // byte0 = y pos
+  //     uint pos_x            = oam_table[i*kOamEntryBytes + 1];  // byte1 = x pos
+  //     uint sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];  // byte2 = tile index
+  //     uint sprite_flags     = oam_table[i*kOamEntryBytes + 3];  // byte3 = flags //TODO(niko)
 
-      const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
-      if (is_big_sprite) {
-        sprite_tile_ind &= 0b11111110;  // Ignore the last bit in 8x16 mode.
-      }
+  //     const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
+  //     if (is_big_sprite) {
+  //       sprite_tile_ind &= 0b11111110;  // Ignore the last bit in 8x16 mode.
+  //     }
 
-      const uint sprite_height = is_big_sprite ? 16 : 8;  // Width of a sprite in pixels.
-      const uint sprite_width = 8;  // Height of a sprite in pixels.
-      const uint sprite_bytes = is_big_sprite ? 32 : 16;  // Bytes per sprite.
+  //     const uint sprite_height = is_big_sprite ? 16 : 8;  // Width of a sprite in pixels.
+  //     const uint sprite_width = 8;  // Height of a sprite in pixels.
+  //     const uint sprite_bytes = is_big_sprite ? 32 : 16;  // Bytes per sprite.
 
-      for (uint l = 0; l < sprite_height; l++) {
-        for (uint k = 0; k < sprite_width; k++) {
-          uint sprite_pixel_ind = sprite_tile_ind * sprite_bytes + l*2;
-          res = InterleaveBits(tile_data_table[sprite_pixel_ind], tile_data_table[sprite_pixel_ind+1], (sprite_width-k)-1);
-          int x_draw = pos_x + k - 8;
-          int y_draw = pos_y + l - 16;
-          if ((x_draw < 0) | (x_draw >= 160) | (y_draw < 0) | (y_draw >= 144))
-            continue;
-          sprite_buffer[y_draw][x_draw] = res;
-         // assert(sprite_pixel_ind < 3072);
-        }
-      }
-    }
-  }
+  //     for (uint l = 0; l < sprite_height; l++) {
+  //       for (uint k = 0; k < sprite_width; k++) {
+  //         uint sprite_pixel_ind = sprite_tile_ind * sprite_bytes + l*2;
+  //         res = InterleaveBits(tile_data_table[sprite_pixel_ind], tile_data_table[sprite_pixel_ind+1], (sprite_width-k)-1);
+  //         int x_draw = pos_x + k - 8;
+  //         int y_draw = pos_y + l - 16;
+  //         if ((x_draw < 0) | (x_draw >= 160) | (y_draw < 0) | (y_draw >= 144))
+  //           continue;
+  //         sprite_buffer[y_draw][x_draw] = res;
+  //        // assert(sprite_pixel_ind < 3072);
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 // A complete screen refresh occurs every 70224 cycles.
 void Ppu::RenderLoop() {
   while (1) {
-    for (uint i=0; i < 144; i++) {
-      SetBit(reg_0xFF41, false, 0);  // Mode = OAM-search (10).
+    for (int i = 0; i < 144; ++i) {
+      // Mode = OAM-search (10).
+      SetBit(reg_0xFF41, false, 0);
       SetBit(reg_0xFF41, true, 1);
       wait(80);
-      SetBit(reg_0xFF41, true, 0);  // Mode = LCD transfer (11)
+
+      // Mode = LCD transfer (11)
+      SetBit(reg_0xFF41, true, 0);
       wait(168);
+
+      // Mode = H-Blank (00).
+      SetBit(reg_0xFF41, false, 0);
+      SetBit(reg_0xFF41, false, 1);
       DrawBgToLine(i);
+      DrawSpriteToLine(i);
+      ++(*reg_lcdc_y);
       if (*reg_0xFF41 & gb_const::kMaskBit3) {
-        *reg_intr_pending_dmi |= kMaskLcdcStatIf;  // Continue here
+        *reg_intr_pending_dmi |= kMaskLcdcStatIf;
       }
-      *reg_0xFF41 = 0b11111100;  // Mode = H-Blank (00).
 
       bool ly_coinc_interrupt = *reg_intr_pending_dmi & gb_const::kMaskBit6;
       bool ly_coinc = *reg_ly_comp == i;
@@ -206,11 +271,11 @@ void Ppu::RenderLoop() {
           *reg_intr_pending_dmi |= kMaskLcdcStatIf;
       }
       SetBit(reg_0xFF41, ly_coinc, 2);
-
       wait(208);
-      (*reg_lcdc_y)++;
     }
-    SetBit(reg_0xFF41, true, 0);  // Mode = V-Blank (01)
+
+    // Mode = V-Blank (01)
+    SetBit(reg_0xFF41, true, 0);
 
     SDL_Delay(1);  // TODO(niko) make this correct with realtime things etc.
     DrawToBuffer();
@@ -221,9 +286,9 @@ void Ppu::RenderLoop() {
     // irq_vblank.write(true);
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
-    for (uint i=0; i < 10; i++) {
+    for (int i = 0; i < 10; ++i) {
       wait(456);  // The vblank period is 4560 cycles.
-      (*reg_lcdc_y)++;
+      ++(*reg_lcdc_y);
     }
     *reg_lcdc_y = 0;
   }
