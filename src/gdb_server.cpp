@@ -111,8 +111,8 @@ void GdbServer::DecodeAndCall(const std::string &msg) {
   DBG_LOG_GDB("Stripped message: " << msg_stripped);
   std::vector<std::string> res = SplitMsg(msg_stripped);
 
-  if (res.size() > 0) {
-    assert(cmd_map.contains(res[0])); // Command not in map although in regex.
+  if (!res.empty()) {
+    assert(cmd_map.contains(res[0]));  // Command not in map although in regex.
     tcp_server_.SendMsg(kMsgAck);
     cmd_map[res[0]](res);
   } else {
@@ -152,8 +152,7 @@ std::vector<std::string> GdbServer::SplitMsg(const std::string &msg) {
     R"(|(m)([0-9A-Fa-f]+),([0-9A-Fa-f]+))"
     R"(|([zZ])([0-1]),([0-9A-Fa-f]+),([0-9]))"
     R"(|(qAttached)$)"
-    R"(|(qSupported):((?:[a-zA-Z-]+\+?;?)+))"
-  );
+    R"(|(qSupported):((?:[a-zA-Z-]+\+?;?)+))");
   std::vector<std::string> res;
   std::smatch sm;
   regex_match(msg, sm, reg);
@@ -230,7 +229,7 @@ void GdbServer::CmdReadReg(const std::vector<std::string> &msg_split) {
 }
 
 // "G": Write general registers.
-// TODO: test this function!
+// TODO(me): test this function!
 void GdbServer::CmdWriteReg(const std::vector<std::string> &msg_split) {
   std::string data_str = msg_split[1];
   assert(data_str.size() >= 24);

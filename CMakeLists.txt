@@ -36,7 +36,7 @@ add_executable(tlmboy src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy -lsystemc -lSDL2 -lfmt)
-target_compile_options(tlmboy PUBLIC -O3)
+target_compile_options(tlmboy PUBLIC -Ofast -flto)
 
 # For test purposes
 add_executable(tlmboy_test src/main.cpp ${ALL_CPPS})

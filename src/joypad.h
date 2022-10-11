@@ -31,9 +31,10 @@
 
 #include "common.h"
 #include "debug.h"
+#include "interrupt_module.h"
 #include "utils.h"
 
-struct JoyPad : public sc_module {
+struct JoyPad : public InterruptModule<JoyPad>, sc_module {
   SC_HAS_PROCESS(JoyPad);
   u8 reg_0xFF00 = 0b00111111;
   const u32 kWaitMs = 10;
@@ -49,6 +50,7 @@ struct JoyPad : public sc_module {
   tlm_utils::simple_target_socket<JoyPad, gb_const::kBusDataWidth> targ_socket;
 
   explicit JoyPad(sc_module_name name);
+  void start_of_simulation() override;
 
   void InputLoop();
   void SetButton(SDL_Keycode sym, bool pressed);

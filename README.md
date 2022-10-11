@@ -45,9 +45,23 @@ Dependencies:
 | O         | Select    |
 | P         | Start     |
 
+Utilities:
+Keyboard 0 = Do not render background
+Keyboard 1 = Do not render sprites
+Keyboard 2 = Do not render window
+# Documentation
+- [Overview] (https://www.chciken.com/tlmboy/2022/02/19/gameboy-systemc.html)
+- [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
+
+# Command Line Arguments
+- `--boot-rom-path=P`: Specifies the path `P` of the boot ROM. Points to "../roms/DMG_ROM.bin" by default.
+- `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
+- `--max-cycles=X`: Only execute a maximum number of `X` machine cycles.
+- `--rom-path=P`: Specifies the ROM/game `P` that shall be executed.
+- `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
+
 # TODO
 - Show full tile map in window (currently only the lower tile map is shown)
-- Include number of sprites per line in delay
 - Implement the sound processor
 - Complete instructions (stop)
 - BankSwitchMemory: Use seperate functions for loading of the boot ROM and the game.
@@ -59,7 +73,3 @@ Dependencies:
 - Gzip golden trace files
 - Find a simple and non-hacky way to get the number of clock cycles
 - Checkpointing system
-
-# Status
-- Passes all 11 blarrg's test ROMs.
-- Tetris is playable

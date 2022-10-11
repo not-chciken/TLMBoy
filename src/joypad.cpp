@@ -5,6 +5,7 @@
  ******************************************************************************/
 
 #include "joypad.h"
+#include "ppu.h"
 
 JoyPad::JoyPad(sc_module_name name) :
   sc_module(name) {
@@ -23,13 +24,23 @@ void JoyPad::InputLoop() {
         if (event.key.repeat == true) {
           break;
         }
-        SetButton(event.key.keysym.sym, true);
+        switch (event.key.keysym.sym) {
+          case SDLK_1: Ppu::uiRenderBg = false; break;
+          case SDLK_2: Ppu::uiRenderSprites = false; break;
+          case SDLK_3: Ppu::uiRenderWndw = false; break;
+          default: SetButton(event.key.keysym.sym, true);
+        }
         break;
       case SDL_KEYUP:
         if (event.key.repeat == true) {
           break;
         }
-        SetButton(event.key.keysym.sym, false);
+        switch (event.key.keysym.sym) {
+          case SDLK_1: Ppu::uiRenderBg = true; break;
+          case SDLK_2: Ppu::uiRenderSprites = true; break;
+          case SDLK_3: Ppu::uiRenderWndw = true; break;
+          default: SetButton(event.key.keysym.sym, false);
+        }
         break;
       case SDL_WINDOWEVENT:
         if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
@@ -47,6 +58,10 @@ void JoyPad::InputLoop() {
     }
     wait(kWaitMs, SC_MS);
   }
+}
+
+void JoyPad::start_of_simulation() {
+  InterruptModule::start_of_simulation();
 }
 
 void JoyPad::SetButton(SDL_Keycode sym, bool pressed) {
@@ -84,8 +99,11 @@ void JoyPad::SetButton(SDL_Keycode sym, bool pressed) {
       but_start = pressed;
       break;
     default:
-      break;
+      return;
   }
+
+  if (pressed)
+    *reg_intr_pending_dmi |= gb_const::kJoypadIf;
 }
 
 u8 JoyPad::ReadReg() {

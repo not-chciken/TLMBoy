@@ -14,7 +14,6 @@
 
 Cpu::Cpu(sc_module_name name, bool attachGdb):
     sc_module(name),
-    init_socket("init_socket"),
     gdb_server(this),
     attachGdb(attachGdb) {
   SC_CTHREAD(DoMachineCycle, clk);
@@ -37,32 +36,29 @@ void Cpu::SetFlagZ(bool val) {
   reg_file.F = SetBit(reg_file.F, val, kIndZFlag);
 }
 
-bool Cpu::GetFlagC() {
+const bool Cpu::GetFlagC() {
   return static_cast<bool>(kMaskCFlag & reg_file.F);
 }
 
-bool Cpu::GetFlagH() {
+const bool Cpu::GetFlagH() {
   return static_cast<bool>(kMaskHFlag & reg_file.F);
 }
 
-bool Cpu::GetFlagN() {
+const bool Cpu::GetFlagN() {
   return static_cast<bool>(kMaskNFlag & reg_file.F);
 }
 
-bool Cpu::GetFlagZ() {
+const bool Cpu::GetFlagZ() {
   return static_cast<bool>(kMaskZFlag & reg_file.F);
 }
 
 void Cpu::WriteBus(u16 addr, u8 data) {
-  sc_time delay = sc_time(0, SC_NS);
+  static sc_time delay = sc_time(0, SC_NS);  // Dummy delay.
 
   payload->set_command(tlm::TLM_WRITE_COMMAND);
   payload->set_address(addr);
   payload->set_data_ptr(reinterpret_cast<unsigned char*>(&data));
   init_socket->b_transport(*payload, delay);
-
-  // assert(!payload->is_response_error());
-  return;
 }
 
 void Cpu::WriteBusDebug(u16 addr, u8 data) {
@@ -74,12 +70,11 @@ void Cpu::WriteBusDebug(u16 addr, u8 data) {
   if (payload->is_response_error()) {
     SC_REPORT_ERROR("TLM-2", "Response error from b_transport");
   }
-  return;
 }
 
 u8 Cpu::ReadBus(u16 addr) {
+  static sc_time delay = sc_time(0, SC_NS);  // Dummy delay.
   u8 data;
-  sc_time delay = sc_time(0, SC_NS);
   payload->set_command(tlm::TLM_READ_COMMAND);
   payload->set_address(addr);
   payload->set_data_ptr(reinterpret_cast<unsigned char*>(&data));
@@ -134,23 +129,8 @@ void Cpu::Continue() {
 }
 
 // Initialize interrupt enable and pending DMI.
-void Cpu::Init() {
-  if (reg_intr_enable_dmi == nullptr) {
-    tlm::tlm_dmi dmi_data;
-    uint dummy_data;
-    auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0xffff, reinterpret_cast<void*>(&dummy_data));
-    if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
-      reg_intr_enable_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
-    } else {
-      throw std::runtime_error("Could not get interrupt enable register DMI!");
-    }
-    payload->set_address(0xff0f);
-    if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
-      reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
-    } else {
-      throw std::runtime_error("Could not get interrupt pending register DMI!");
-    }
-  }
+void Cpu::start_of_simulation() {
+  InterruptModule::start_of_simulation();
 }
 
 // TODO(niko): What happens if there are multiple interrupts???
@@ -165,36 +145,42 @@ void Cpu::Init() {
 // Furthermore the register 0xFF0F indicates whether an interrupt is pending
 // using the same order as 0xFFFF.
 void Cpu::HandleInterrupts() {
-  // Interrupts only take place if intr_master_enable (interrupt master enable IME) is true.
+  // Interrupts only take place if interrupt master enable (IME) is true.
+  if (!intr_master_enable)
+    return;
+
   u8 intr = *reg_intr_enable_dmi & *reg_intr_pending_dmi;
-  if (intr_master_enable && intr) {
+  if (intr) {
     intr_master_enable = false;  // Disable IME.
-    *reg_intr_pending_dmi &= ~intr;  // Clear pending interrupt.
-    halted_ = false;
     InstrPush(reg_file.PC);
-    if (intr & gb_const::kMaskBit0) {
+    if (intr & gb_const::kVBlankIf) {
       DBG_LOG_CPU("Executing vblank ISR");
       reg_file.PC = 0x40;
+      *reg_intr_pending_dmi &= ~gb_const::kVBlankIf;
       return;
     }
-    if (intr & gb_const::kMaskBit1) {
+    if (intr & gb_const::kLCDCIf) {
       DBG_LOG_CPU("Executing LCDC status ISR");
       reg_file.PC = 0x48;
+      *reg_intr_pending_dmi &= ~gb_const::kLCDCIf;
       return;
     }
-    if (intr & gb_const::kMaskBit2) {
+    if (intr & gb_const::kTimerOfIf) {
       DBG_LOG_CPU("Executing timer ISR");
       reg_file.PC = 0x50;
+      *reg_intr_pending_dmi &= ~gb_const::kTimerOfIf;
       return;
     }
-    if (intr & gb_const::kMaskBit3) {
+    if (intr & gb_const::kSerialIOIf) {
       DBG_LOG_CPU("Executing serial transfer ISR");
       reg_file.PC = 0x58;
+      *reg_intr_pending_dmi &= ~gb_const::kSerialIOIf;
       return;
     }
-    if (intr & gb_const::kMaskBit4) {
+    if (intr & gb_const::kJoypadIf) {
       DBG_LOG_CPU("Executing joypad ISR");
       reg_file.PC = 0x60;
+      *reg_intr_pending_dmi &= ~gb_const::kJoypadIf;
       return;
     }
   }

@@ -27,6 +27,7 @@ GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesyst
 
   gb_bus.AddBusMaster(&gb_cpu.init_socket);
   gb_bus.AddBusMaster(&gb_ppu.init_socket);
+  gb_bus.AddBusMaster(&joy_pad.init_socket);
   gb_bus.AddBusMaster(&io_registers.init_socket);
   cartridge.sig_unmap_rom_in(sig_unmap_rom);
   io_registers.sig_unmap_rom_out(sig_unmap_rom);
@@ -50,6 +51,4 @@ GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesyst
   gb_cpu.clk(global_clk);
   gb_ppu.clk(global_clk);
   gb_timer.clk(global_clk);
-
-  gb_ppu.InitRegisters();
 }

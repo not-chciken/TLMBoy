@@ -86,7 +86,7 @@ struct PpuStimulus : public sc_module {
 
   void StimulusLoop() {
     while (1) {
-      wait(70224);  // a complete screen refresh occurs every 70224 cycles
+      wait(70224);  // A complete screen refresh occurs every 70224 cycles.
       memory[Ppu::kAdrRegScrollY] += 1;
       memory[Ppu::kAdrRegScrollX] += 1;
     }
@@ -138,7 +138,6 @@ struct Top : public sc_module {
         test_ppu("test_ppu"),
         global_clk("global_clk", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
     test_ppu.init_socket.bind(test_stimulus.targ_socket);
-    test_ppu.InitRegisters();
 
     // wire up the testbench
     test_ppu.clk(global_clk);

@@ -6,8 +6,6 @@
 #include "cpu.h"
 
 void Cpu::DoMachineCycle() {
-  Init();
-
   if (attachGdb) {
     std::cout << "waiting for gdb to attach on port " << gdb_port_ << "..." << std::endl;
     gdb_server.InitBlocking(gdb_port_);
@@ -36,11 +34,6 @@ void Cpu::DoMachineCycle() {
 
     DBG_LOG_INST(sc_core::sc_time_stamp() << ": PC 0x" << std::hex
       << static_cast<uint>(reg_file.PC.val()) << " "<< std::dec);
-
-    DBG_LOG_CPU_REG(fmt::format("af:0x{:04x},bc:0x{:04x},de:0x{:04x},hl:0x{:04x},sp:0x{:04x},pc:0x{:04x},c:",
-                    reg_file.AF, reg_file.BC, reg_file.DE, reg_file.HL, reg_file.SP, reg_file.PC)
-                    << std::to_string(static_cast<u64>(sc_core::sc_time_stamp().to_default_time_units() \
-                                      / (gb_const::kNsPerMachineCycle)))); // Calculated number of machine cycles.
 
     // Fetch.
     u8 instr_byte = FetchNextInstrByte();

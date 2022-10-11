@@ -15,11 +15,12 @@
 #include "reg_file.h"
 #include "gb_const.h"
 #include "gdb_server.h"
+#include "interrupt_module.h"
 
-struct Cpu : public sc_module {
+class Cpu : public InterruptModule<Cpu>, sc_module {
+ public:
   SC_HAS_PROCESS(Cpu);
   friend GdbServer;
-  tlm_utils::simple_initiator_socket<Cpu, gb_const::kBusDataWidth> init_socket;
   sc_in_clk clk;
 
   // The Game Boy's register file.
@@ -35,25 +36,20 @@ struct Cpu : public sc_module {
   explicit Cpu(sc_module_name name, bool attachGdb = false);
 
  private:
-  // Init() is called once at the beginning to setup the DMI pointers.
-  void Init();
+  void start_of_simulation() override;
 
   // Interrupt master enable.
   bool intr_master_enable = false;
-  // DMI pointer to the interrupt enable register at 0xffff.
-  u8* reg_intr_enable_dmi = nullptr;
-  // DMI pointer to register at 0xff0f indicating pending interrupts.
-  u8* reg_intr_pending_dmi = nullptr;
 
   // Flag register setters and getter.
   void SetFlagC(bool val);
   void SetFlagH(bool val);
   void SetFlagN(bool val);
   void SetFlagZ(bool val);
-  bool GetFlagC();
-  bool GetFlagH();
-  bool GetFlagN();
-  bool GetFlagZ();
+  const bool GetFlagC();
+  const bool GetFlagH();
+  const bool GetFlagN();
+  const bool GetFlagZ();
 
   // Write to bus/memory.
   void WriteBus(u16 addr, u8 data);
@@ -189,14 +185,13 @@ struct Cpu : public sc_module {
   // Not part of the original SM83 ISA. Used for semihosting.
   void InstrEmu();
 
-  // Constants.
-  // zero flag: math op is zero or two values match with CP instruction
+  // zero flag: math op is zero or two values match with CP instruction.
   const u8 kMaskZFlag = 0b10000000;
-  // subtract flag: last math instruction was a subtraction
+  // subtract flag: last math instruction was a subtraction.
   const u8 kMaskNFlag = 0b01000000;
-  // half carry flag: carry occured from lower nibble in last math instruction
+  // half carry flag: carry occured from lower nibble in last math instruction.
   const u8 kMaskHFlag = 0b00100000;
-  // carry flag: carry occured from last math operation or A is smaller than value with CP instruction
+  // carry flag: carry occured from last math operation or A is smaller than value with CP instruction.
   const u8 kMaskCFlag = 0b00010000;
 
   const u8 kIndCFlag = 4;  // Bit index of the C flag

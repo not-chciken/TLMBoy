@@ -17,6 +17,7 @@
 #include <bitset>
 #include <cassert>
 #include <filesystem>
+#include <memory>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -80,10 +81,18 @@ struct Ppu : public sc_module {
   static const u16 kAdrTiledataLow  = 0x8800;
   static const u16 kAdrTiledataHigh = 0x9C00;
 
-  const u8 kMaskVBlankIE = 0b00000001;
-  const u8 kMaskLcdcStatIf = 0b00000010;
+  const u8 kMaskVBlankIE = 1;
+  const u8 kMaskLcdcStatIf = 1 << 1;
+  const u8 kMaskTimerIf = 1 << 2;
+  const u8 kMaskSerialIoIf = 1 << 3;
 
-  explicit Ppu(sc_module_name name, bool headless=false);
+  // User interface.
+  static bool uiRenderBg;
+  static bool uiRenderSprites;
+  static bool uiRenderWndw;
+
+  void start_of_simulation() override;
+  explicit Ppu(sc_module_name name, bool headless = false);
   ~Ppu();
 
   tlm_utils::simple_initiator_socket<Ppu, gb_const::kBusDataWidth> init_socket;
@@ -128,9 +137,6 @@ struct Ppu : public sc_module {
   // whereby block corresponds to a byte
   // Range from 0xFE00-0xFE9F
   u8* oam_table;
-
-  // This function sets registers using get_direct_mem_ptr().
-  void InitRegisters();
 
   // Maps the colours for the background and the window according to register rBGP (0xff47).
   const uint MapBgCols(const uint val);
@@ -198,8 +204,8 @@ struct Ppu : public sc_module {
   // For the headless mode. Doesn't create any windows, hence renders nothing.
   class DummyWindow : public RenderWindow {
    public:
-    DummyWindow():RenderWindow(){};
-    void DrawToScreen(Ppu &ppu) override {}; // Do nothing.
-    void SaveScreenshot(const std::filesystem::path file_path) override {}; // Do nothing.
+    DummyWindow():RenderWindow(){}
+    void DrawToScreen(Ppu &ppu) override {};  // Do nothing.
+    void SaveScreenshot(const std::filesystem::path file_path) override {};  // Do nothing.
   };
 };

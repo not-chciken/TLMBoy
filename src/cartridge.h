@@ -77,8 +77,8 @@ class Cartridge : public sc_module {
   class Mbc5 : public MemoryBankCtrler {
    public:
     Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path);
-    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
-    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
+    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
+    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     uint transport_dbg_ram(tlm::tlm_generic_payload& trans) override;
    private:
     u16 rom_ind_;

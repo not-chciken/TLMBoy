@@ -29,7 +29,7 @@ void Timer::TimerLoop() {
       old_val = reg_tima++;
       if (old_val > reg_tima) {
         reg_tima = reg_tma;
-        *reg_if |= gb_const::kMaskTimerOf;
+        *reg_if |= gb_const::kTimerOfIf;
       }
     }
   }

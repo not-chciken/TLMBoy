@@ -147,9 +147,9 @@ void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
     } else if (adr >= 0x2000 && adr <= 0x3FFF) {
       rom_bank_low_bits = 0b00011111 & *ptr;
     } else if (adr >= 0x4000 && adr <= 0x5FFF) {
-      the_two_bits_ = *ptr && 0b00000011;
+      the_two_bits_ = *ptr & 0b00000011;
     } else if (adr >= 0x6000 && adr <= 0x7FFF) {
-      more_ram_mode_ = static_cast<bool>(*ptr && 0b0000001);
+      more_ram_mode_ = static_cast<bool>(*ptr & 0b0000001);
     }
     rom_ind_ = rom_bank_low_bits | (more_ram_mode_ ? 0 : (the_two_bits_ << 5));
     if (rom_ind_ == 0 || rom_ind_ == 0x20 || rom_ind_ == 0x40 || rom_ind_ == 0x60) {
@@ -177,7 +177,7 @@ void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   if (ram_enabled_) {
     ram_socket_out->b_transport(trans, delay);
   } else {
-    assert(false);
+    std::cout << "[WARNING] Tried to write into disabled RAM!" << std::endl;
   }
 }
 
@@ -206,7 +206,7 @@ void Cartridge::Mbc5::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
     } else if (adr >= 0x3000 && adr <= 0x3FFF) {
       rom_bank_high_bits_ = *ptr & 1;
     } else if (adr >= 0x4000 && adr <= 0x5FFF) {
-      ram_bits_ = *ptr && 0x0F;
+      ram_bits_ = *ptr & 0x0F;
     }
     assert(0 <= rom_ind_ && rom_ind_< 512);
     ram_ind_ = ram_enabled_ ? ram_bits_ : 0;

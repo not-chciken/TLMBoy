@@ -2,7 +2,13 @@
  * Copyright (C) 2021 chciken
  * MIT License
  ******************************************************************************/
+#include <memory>
+
 #include "ppu.h"
+
+bool Ppu::uiRenderBg = true;
+bool Ppu::uiRenderSprites = true;
+bool Ppu::uiRenderWndw = true;
 
 Ppu::Ppu(sc_module_name name, bool headless)
   : sc_module(name) ,
@@ -26,7 +32,7 @@ Ppu::Ppu(sc_module_name name, bool headless)
 Ppu::~Ppu() {
 }
 
-void Ppu::InitRegisters() {
+void Ppu::start_of_simulation() {
   tlm::tlm_dmi dmi_data;
   u8 *data_ptr;
   uint dummy;
@@ -104,13 +110,15 @@ void Ppu::DrawBgToLine(uint line_num) {
   tile_data_table = (*reg_0xFF40 & kMaskBgWndwTileDataSlct) ?  tile_data_table_low : tile_data_table_up;
   bg_tile_map = (*reg_0xFF40 & kMaskBgTileSlct) ? tile_map_up : tile_map_low;
 
-  const u32 y_tile_pixel = (*reg_scroll_y + line_num) % 8;
-  for (int i = 0; i < 160; ++i) {;
-    u32 bg_tile_ind = 32 * (((line_num + *reg_scroll_y) % 256) / 8) + ((*reg_scroll_x + i) % 256) / 8;
-    u32 tile_ind = bg_tile_map[bg_tile_ind];
-    u32 x_tile_pixel = (*reg_scroll_x + i) % 8;
-    u32 pixel_ind = tile_ind * TILE_BYTES + 2 * y_tile_pixel;
-    u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
+  const i32 y_tile_pixel = (*reg_scroll_y + line_num) % 8;
+  for (i32 i = 0; i < 160; ++i) {;
+    i32 bg_tile_ind = 32 * (((line_num + *reg_scroll_y) % 256) / 8) + ((*reg_scroll_x + i) % 256) / 8;
+    u8 tile_ind = bg_tile_map[bg_tile_ind];
+    if (tile_data_table == tile_data_table_up)
+      tile_ind += 128;  // Using wraparound.
+    i32 x_tile_pixel = (*reg_scroll_x + i) % 8;
+    i32 pixel_ind = static_cast<i32>(tile_ind) * TILE_BYTES + 2 * y_tile_pixel;
+    i32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
     bg_buffer[line_num][i] = res;
     assert(bg_tile_ind < 1024);
   }
@@ -120,11 +128,11 @@ void Ppu::DrawSpriteToLine(int line_num) {
   if (!(kMaskObjSpriteDisp & *reg_0xFF40))
     return;
 
-  int num_rendered_sprites = 0; // Stop at a maximum of 10 per line.
+  int num_rendered_sprites = 0;  // Stop at a maximum of 10 sprites per line.
   u8* tile_data_table = tile_data_table_low;  // Sprites always use the low data table.
   for (int i = 0; i < kNumOamEntries; ++i) {
-    int pos_y            = oam_table[i*kOamEntryBytes] - 16;       // byte0 = y pos
-    int pos_x            = oam_table[i*kOamEntryBytes + 1] - 8;  // byte1 = x pos
+    int pos_y            = oam_table[i*kOamEntryBytes] - 16;      // byte0 = y pos
+    int pos_x            = oam_table[i*kOamEntryBytes + 1] - 8;   // byte1 = x pos
     int sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];       // byte2 = tile index
     int sprite_flags     = oam_table[i*kOamEntryBytes + 3];       // byte3 = flags //TODO(niko)
     const bool palette = IsBitSet(sprite_flags, 4);
@@ -134,7 +142,6 @@ void Ppu::DrawSpriteToLine(int line_num) {
 
     const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
     const int sprite_height = is_big_sprite ? 16 : 8;  // Width of a sprite in pixels.
-    //const int sprite_bytes = is_big_sprite ? 32 : 16;  // Bytes per sprite.
 
     if (num_rendered_sprites > 10)
       continue;
@@ -151,13 +158,6 @@ void Ppu::DrawSpriteToLine(int line_num) {
 
     const int y_tile_pixel = y_flip ? (is_big_sprite ? 15 : 7) - (line_num - pos_y)
                                     : line_num - pos_y;
-    // if (is_big_sprite && (y_tile_pixel >= 8))
-    // {
-    //     pixel_y_2 = (pixel_y - 8) << 1;
-    //     offset = 16;
-    // }
-    // else
-    //     pixel_y_2 = y_tile_pixel * 2;
     i32 pixel_ind = sprite_tile_ind * 16 + y_tile_pixel * 2;
 
     for (int j = 0; j < 8; ++j) {
@@ -166,7 +166,7 @@ void Ppu::DrawSpriteToLine(int line_num) {
           continue;
 
       u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], (x_flip ? j : 7 - j));
-      if (res == 0) //Color 0 is transparent.
+      if (res == 0)  // Color 0 is transparent.
           continue;
       sprite_buffer[line_num][x_draw] = res;
     }
@@ -204,42 +204,6 @@ void Ppu::DrawToBuffer() {
       }
     }
   }
-
-  // iterate through the oam table
-  // smallest x always overlaps TODO(niko)
-  // when sprites with the same x overlap the higher memory wins TODO(niko)
-  // x=0 and y=0 hides a sprite sx-8 and s-8
-  // if (kMaskObjSpriteDisp & *reg_0xFF40) {
-  //   u8* tile_data_table = tile_data_table_low;  // sprites always use the low data table
-  //   for (uint i = 0; i < kNumOamEntries; i++) {
-  //     uint pos_y            = oam_table[i*kOamEntryBytes];      // byte0 = y pos
-  //     uint pos_x            = oam_table[i*kOamEntryBytes + 1];  // byte1 = x pos
-  //     uint sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];  // byte2 = tile index
-  //     uint sprite_flags     = oam_table[i*kOamEntryBytes + 3];  // byte3 = flags //TODO(niko)
-
-  //     const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
-  //     if (is_big_sprite) {
-  //       sprite_tile_ind &= 0b11111110;  // Ignore the last bit in 8x16 mode.
-  //     }
-
-  //     const uint sprite_height = is_big_sprite ? 16 : 8;  // Width of a sprite in pixels.
-  //     const uint sprite_width = 8;  // Height of a sprite in pixels.
-  //     const uint sprite_bytes = is_big_sprite ? 32 : 16;  // Bytes per sprite.
-
-  //     for (uint l = 0; l < sprite_height; l++) {
-  //       for (uint k = 0; k < sprite_width; k++) {
-  //         uint sprite_pixel_ind = sprite_tile_ind * sprite_bytes + l*2;
-  //         res = InterleaveBits(tile_data_table[sprite_pixel_ind], tile_data_table[sprite_pixel_ind+1], (sprite_width-k)-1);
-  //         int x_draw = pos_x + k - 8;
-  //         int y_draw = pos_y + l - 16;
-  //         if ((x_draw < 0) | (x_draw >= 160) | (y_draw < 0) | (y_draw >= 144))
-  //           continue;
-  //         sprite_buffer[y_draw][x_draw] = res;
-  //        // assert(sprite_pixel_ind < 3072);
-  //       }
-  //     }
-  //   }
-  // }
 }
 
 // A complete screen refresh occurs every 70224 cycles.
@@ -265,7 +229,7 @@ void Ppu::RenderLoop() {
         *reg_intr_pending_dmi |= kMaskLcdcStatIf;
       }
 
-      bool ly_coinc_interrupt = *reg_intr_pending_dmi & gb_const::kMaskBit6;
+      bool ly_coinc_interrupt = *reg_0xFF41 & gb_const::kMaskBit6;
       bool ly_coinc = *reg_ly_comp == i;
       if (ly_coinc_interrupt && ly_coinc) {
           *reg_intr_pending_dmi |= kMaskLcdcStatIf;
@@ -328,7 +292,7 @@ Ppu::RenderWindow::RenderWindow(const uint width, const uint height, const uint 
   SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 }
 
-Ppu::RenderWindow::RenderWindow(){};
+Ppu::RenderWindow::RenderWindow() {}
 
 Ppu::RenderWindow::~RenderWindow() {
   SDL_DestroyRenderer(renderer);
@@ -355,56 +319,68 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
   }
 
   // Background loop
-  for (uint j = 0; j < log_height; j++) {
-    for (uint i = 0; i < log_width; i++) {
-      val = p.bg_buffer[j][i];
-      val = p.MapBgCols(val);
-      SDL_SetRenderDrawColor(renderer,
-                             renderColor[val][0],
-                             renderColor[val][1],
-                             renderColor[val][2], 255);
-      SDL_RenderDrawPoint(renderer, i, j);
+  if (uiRenderBg) {
+    for (uint j = 0; j < log_height; ++j) {
+      for (uint i = 0; i < log_width; ++i) {
+        val = p.bg_buffer[j][i];
+        val = p.MapBgCols(val);
+        SDL_SetRenderDrawColor(renderer,
+                              renderColor[val][0],
+                              renderColor[val][1],
+                              renderColor[val][2], 255);
+        SDL_RenderDrawPoint(renderer, i, j);
+      }
     }
+  } else {
+    SDL_SetRenderDrawColor(renderer, 242, 255, 217, 255);
+    for (uint j = 0; j < log_height; ++j)
+      for (uint i = 0; i < log_width; ++i)
+        SDL_RenderDrawPoint(renderer, i, j);
   }
 
   // Window loop
-  if ((*p.reg_0xFF40 & kMaskWndwDisp) && (*p.reg_0xFF40 & kMaskBgWndwDisp)) {
-    for (uint j = *p.reg_wndw_y; j < kGbScreenHeight; j++) {
-      for (uint i = *p.reg_wndw_x; i < kGbScreenWidth; i++) {
-        val = p.window_buffer[j-*p.reg_wndw_y][i-*p.reg_wndw_x];
-        val = p.MapBgCols(val);
-        SDL_SetRenderDrawColor(renderer,
-                               renderColor[val][0],
-                               renderColor[val][1],
-                               renderColor[val][2], 255);
-        SDL_RenderDrawPoint(renderer, i, j);
+  if (uiRenderWndw) {
+    if ((*p.reg_0xFF40 & kMaskWndwDisp) && (*p.reg_0xFF40 & kMaskBgWndwDisp)) {
+      for (uint j = *p.reg_wndw_y; j < kGbScreenHeight; ++j) {
+        for (uint i = *p.reg_wndw_x; i < kGbScreenWidth; ++i) {
+          val = p.window_buffer[j-*p.reg_wndw_y][i-*p.reg_wndw_x];
+          val = p.MapBgCols(val);
+          SDL_SetRenderDrawColor(renderer,
+                                renderColor[val][0],
+                                renderColor[val][1],
+                                renderColor[val][2], 255);
+          SDL_RenderDrawPoint(renderer, i, j);
+        }
       }
     }
   }
 
   // Sprite loop
-  for (uint j = 0; j < kGbScreenHeight; j++) {
-    for (uint i = 0; i < kGbScreenWidth; i++) {
-      val = p.sprite_buffer[j][i];
-      p.sprite_buffer[j][i] = 0;
-      if (val == 0)
-        continue;  // Continues if val is 0, This implements transparancy!
-      SDL_SetRenderDrawColor(renderer,
-                             renderColor[val][0],
-                             renderColor[val][1],
-                             renderColor[val][2], 255);
-      SDL_RenderDrawPoint(renderer, i, j);
+  if (uiRenderSprites) {
+    for (uint j = 0; j < kGbScreenHeight; ++j) {
+      for (uint i = 0; i < kGbScreenWidth; ++i) {
+        val = p.sprite_buffer[j][i];
+        p.sprite_buffer[j][i] = 0;
+        if (val == 0)
+          continue;  // Continues if val is 0, This implements transparancy!
+        SDL_SetRenderDrawColor(renderer,
+                              renderColor[val][0],
+                              renderColor[val][1],
+                              renderColor[val][2], 255);
+        SDL_RenderDrawPoint(renderer, i, j);
+      }
     }
   }
+
   SDL_RenderPresent(renderer);
 }
 
 // TODO(me) render both, higher and lower, tile maps
 void Ppu::WindowWindow::DrawToScreen(Ppu &p) {
-  for (uint t = 0; t < 16; t++) {
-    for (uint i = 0; i < 8; i++) {
-      for (uint j = 0; j < 16; j++) {
-        for (uint k = 0; k < 8; k++) {
+  for (uint t = 0; t < 16; ++t) {
+    for (uint i = 0; i < 8; ++i) {
+      for (uint j = 0; j < 16; ++j) {
+        for (uint k = 0; k < 8; ++k) {
           uint val = p.InterleaveBits(p.tile_data_table_low[t*256+j*16+2*i],
                                       p.tile_data_table_low[t*256+j*16+2*i+1], 7-k);
           val = p.MapBgCols(val);

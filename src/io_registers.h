@@ -3,7 +3,7 @@
  * Copyright (C) 2021 chciken
  * MIT License
  *
- * IO registers.
+ * IO registers. Reside in 0xFF10-0xFF7F.
  ******************************************************************************/
 #include <filesystem>
 
@@ -50,12 +50,16 @@ struct IoRegisters : public GenericMemory {
       trans.set_response_status(tlm::TLM_OK_RESPONSE);
     } else if (cmd == tlm::TLM_WRITE_COMMAND) {
       switch (adr) {
+        case 0x31:  // 0xFF41
+          // Mode (first two bits) is read-only. Hence, some masking.
+          data_[adr] = (*ptr & 0x78) | (data_[adr] & 0x07);
+          break;
+        case 0x36:  // 0xFF46
+          DmaTransfer(*ptr);
+          break;
         case 0x40:  // Writing "1" to 0xFF50 maps out the rom.
           if (*ptr == 1)
             sig_unmap_rom_out.write(true);
-          break;
-        case 0x36:
-          DmaTransfer(*ptr);
           break;
         case 0x7F:
           // TODO(niko) warn!

@@ -91,6 +91,8 @@ class Reg {
 // 16-bit registers: AF, BC, DE, HL, SP, PC
 // Note that registers might use a shared memory.
 class RegFile {
+static_assert(std::endian::native == std::endian::little, "RegFile is not big endian compatible!");
+
  public:
   Reg<u8> A, F, B, C, D, E, H, L, SPmsb, SPlsb, PCmsb, PClsb;
   Reg<u16> AF, BC, DE, HL, SP, PC;
@@ -113,7 +115,6 @@ class RegFile {
       HL("HL", reinterpret_cast<u16&>(_dat[6])),
       SP("SP", reinterpret_cast<u16&>(_dat[8])),
       PC("SP", reinterpret_cast<u16&>(_dat[10])) {
-    static_assert(std::endian::native == std::endian::little, "RegFile is not big endian compatible!");
   }
 
   // For the pupose of range-based for-loops á la "for (auto reg : reg_file)".
@@ -121,6 +122,6 @@ class RegFile {
   std::vector<Reg<u16>*>::iterator end()   { return reg_vec_.end(); }
 
  private:
-  u8 _dat[12]{0}; // Shared data of the registers.
-  std::vector<Reg<u16>*> reg_vec_{&AF, &BC, &DE, &HL, &SP, &PC}; // See begin() and end().
+  u8 _dat[12]{0};  // Shared data of the registers.
+  std::vector<Reg<u16>*> reg_vec_{&AF, &BC, &DE, &HL, &SP, &PC};  // See begin() and end().
 };

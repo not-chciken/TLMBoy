@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2021 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2022 chciken/Niko
  *
  * All the debug prints. Feel free to add further ones.
  ******************************************************************************/
@@ -11,7 +11,7 @@
 // #define ENABLE_DEBUG_FUNC
 // #define ENABLE_DBG_LOG_INST
 // #define ENABLE_DBG_LOG_CPU
-// #define ENABLE_DBG_LOG_CPU_REG
+// #define ENABLE_DBG_LOG_CPU_REG // Register file after each instruction
 // #define ENABLE_DBG_LOG_GDB // GDB extension
 // #define ENABLE_DBG_LOG_PPU // Pixel Processing Unit
 // #define ENABLE_DBG_LOG_BSM // Bank Switch Memory
