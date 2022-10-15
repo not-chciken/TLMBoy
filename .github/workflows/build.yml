@@ -27,6 +27,7 @@ jobs:
       run: |
            cmake --build . --target tlmboy --config Release
            cmake --build . --target tlmboy_test
+           cmake --build . --target tlmboy_static_test
     - name: build tests
       working-directory: ./build
       run: cmake --build . --target tests
@@ -34,6 +35,7 @@ jobs:
       working-directory: ./build/tests
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
+            ./test_bus
             ./test_cpu
             ./test_ppu --headless
             ./test_blarrg_cpuinstr01 --headless

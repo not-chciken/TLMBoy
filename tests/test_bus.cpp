@@ -4,7 +4,9 @@
  * MIT License
  *
  * Collection of unit test which test the functionality of the bus and
- * the payload factory
+ * the payload factory.
+ * The system comprises a "BusMaster" which is connected to two "BusSlaves"
+ * (slave0: 0x0000-0x0FFF, slave1: 0x1000-0x1FFF) via a "Bus".
  ******************************************************************************/
 
 #include <gtest/gtest.h>
@@ -46,14 +48,24 @@ struct BusMaster : public sc_module {
     ASSERT_EQ(data, 69) << "data is " << data;
     wait(5, SC_NS);
 
+    // Test debug transport .
     payload->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-    payload->set_address(0x1FFF);  // this should arrive at test_slave_1
+    init_socket->transport_dbg(*payload);
+    ASSERT_EQ(payload->get_response_status(), tlm::TLM_OK_RESPONSE);
+    ASSERT_EQ(data, 23) << "data is " << data;
+
+    // This should arrive at test_slave_1.
+    payload->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+    payload->set_address(0x1FFF);
     init_socket->b_transport(*payload, delay);
     ASSERT_EQ(payload->get_response_status(), tlm::TLM_OK_RESPONSE);
 
+    // Accessing an unassigned address.
     payload->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     payload->set_address(0x3000);
     init_socket->b_transport(*payload, delay);
+    ASSERT_EQ(payload->get_response_status(), tlm::TLM_ADDRESS_ERROR_RESPONSE);
+    init_socket->transport_dbg(*payload);
     ASSERT_EQ(payload->get_response_status(), tlm::TLM_ADDRESS_ERROR_RESPONSE);
 
     tlm::tlm_dmi dmi_data;
@@ -66,7 +78,7 @@ struct BusMaster : public sc_module {
     ASSERT_EQ(dmi_data.get_start_address(), static_cast<sc_dt::uint64>(0));
     ASSERT_EQ(dmi_data.get_end_address(), static_cast<sc_dt::uint64>(0xFFF));
     data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
-    for (uint i = 0; i < 0x1000; i++) {
+    for (int i = 0; i < 0x1000; ++i) {
       data_ptr[i] = 23;
     }
 
@@ -75,7 +87,7 @@ struct BusMaster : public sc_module {
     ASSERT_EQ(dmi_data.get_start_address(), static_cast<sc_dt::uint64>(0x0000));
     ASSERT_EQ(dmi_data.get_end_address(), static_cast<sc_dt::uint64>(0xFFF));
     data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
-    for (uint i = 0; i < 0x1000; i++) {
+    for (int i = 0; i < 0x1000; ++i) {
       data_ptr[i] = 23;
     }
   }
@@ -89,6 +101,7 @@ struct BusSlave : public sc_module {
   explicit BusSlave(sc_module_name name): sc_module(name), target_socket("target_socket") {
     SC_THREAD(BusSlaveThread);
     target_socket.register_b_transport(this, &BusSlave::b_transport);
+    target_socket.register_transport_dbg(this, &BusSlave::transport_dbg);
     target_socket.register_get_direct_mem_ptr(this, &BusSlave::get_direct_mem_ptr);
   }
 
@@ -119,8 +132,19 @@ struct BusSlave : public sc_module {
     ASSERT_EQ(addr, 0x0FFF);
     ASSERT_EQ(cmd, tlm::TLM_READ_COMMAND);
   }
-};
 
+  uint transport_dbg(tlm::tlm_generic_payload& trans) {
+    tlm::tlm_command cmd = trans.get_command();
+    u16 addr = static_cast<u16>(trans.get_address());
+    int* ptr = reinterpret_cast<int*>(trans.get_data_ptr());
+    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    *ptr = 23;
+
+    [&]() -> void { ASSERT_EQ(addr, 0x0FFF); }();
+    [&]() -> void { ASSERT_EQ(cmd, tlm::TLM_READ_COMMAND); }();
+    return 0;
+  }
+};
 
 struct Top : public sc_module {
   SC_HAS_PROCESS(Top);

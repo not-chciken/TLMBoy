@@ -1,7 +1,9 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2022 chciken/Niko
 ******************************************************************************/
+#include <string>
+
 #include "bus.h"
 
 Bus::Bus(sc_module_name name) : sc_module(name) {

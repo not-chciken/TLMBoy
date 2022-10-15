@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2022 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2022 chciken/Niko
  *
  * A generic bus model using TLM socket.
  * Use AddBusMaster to add a master socket and AddBusSlave to register slave sockets.
