@@ -28,7 +28,6 @@
 
 #define TILE_BYTES 16  // Number of bytes per tile.
 
-// TODO(niko): remove makros, make include guards prettx. realtime settings, interrupts
 // Sources: https://www.youtube.com/watch?v=zQE1K074v3s -> cool video for v blank and h blank interrupt
 
 struct Ppu : public sc_module {
@@ -142,6 +141,9 @@ struct Ppu : public sc_module {
   const uint MapBgCols(const uint val);
   void DrawBgToLine(uint line_num);
   void DrawSpriteToLine(int line_num);
+  void DrawWndwToLine(int line_num);
+
+  void CheckLycInterrupt();
 
   // interleaves two selected bits of two bit vectors
   // and arranges them in a screen buffer friendly way
@@ -150,15 +152,6 @@ struct Ppu : public sc_module {
   // pos e [0,7]
   // return value is always e[0,3]
   static const u8 InterleaveBits(u8 a, u8 b, const uint pos);
-
-  // Here the background, the window and the sprites are drawn into the screen buffer.
-  // The code is mildly complex since the gameboy's pixel format is adventurous
-  // A tile is 8x8 pixels and 16 byte whereby two consequent bytes always make up one horizontal line
-  // Each pixel references one bit in each byte.
-  // For example: 0b11000000 and 0b11000000
-  // The pixels values you would see are: "3300 0000"
-  // It's not "3000 3000" as one may think at first
-  void DrawToBuffer();
 
   void RenderLoop();
 
@@ -208,4 +201,7 @@ struct Ppu : public sc_module {
     void DrawToScreen(Ppu &ppu) override {};  // Do nothing.
     void SaveScreenshot(const std::filesystem::path file_path) override {};  // Do nothing.
   };
+
+ private:
+  int window_line_; // Internal window line counter.
 };
