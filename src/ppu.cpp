@@ -157,12 +157,12 @@ void Ppu::DrawWndwToLine(int line_num) {
       i32 x_tile_pixel = (i - x_pos) % 8;
       i32 pixel_ind = static_cast<i32>(tile_ind) * TILE_BYTES + 2 * y_tile_pixel;
       i32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
-      window_buffer[line_num][i] = res;
+      bg_buffer[line_num][i] = res;
       assert(wndw_tile_ind < 1024);
     }
   } else {
     for (i32 i = 0; i < 160; ++i) {
-      window_buffer[line_num][i] = 0;
+      bg_buffer[line_num][i] = 0;
     }
   }
   ++window_line_;
@@ -239,9 +239,12 @@ void Ppu::RenderLoop() {
       // Mode = H-Blank (00).
       SetBit(reg_0xFF41, false, 0);
       SetBit(reg_0xFF41, false, 1);
-      DrawBgToLine(i);
-      DrawSpriteToLine(i);
-      DrawWndwToLine(i);
+      if (uiRenderBg)
+        DrawBgToLine(i);
+      if (uiRenderSprites)
+        DrawSpriteToLine(i);
+      if (uiRenderWndw)
+        DrawWndwToLine(i);
       ++(*reg_lcdc_y);
       if (*reg_0xFF41 & gb_const::kMaskBit3) {
         *reg_intr_pending_dmi |= kMaskLcdcStatIf;
@@ -259,9 +262,9 @@ void Ppu::RenderLoop() {
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
     for (int i = 0; i < 10; ++i) {
+      wait(456);  // The vblank period is 4560 cycles.
       ++(*reg_lcdc_y);
       CheckLycInterrupt();
-      wait(456);  // The vblank period is 4560 cycles.
     }
     *reg_lcdc_y = 0;
     CheckLycInterrupt();
@@ -330,7 +333,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
     return;
   }
 
-  // Background loop
+  // Background and window loop.
   if (uiRenderBg) {
     for (uint j = 0; j < log_height; ++j) {
       for (uint i = 0; i < log_width; ++i) {
@@ -348,23 +351,6 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
     for (uint j = 0; j < log_height; ++j)
       for (uint i = 0; i < log_width; ++i)
         SDL_RenderDrawPoint(renderer, i, j);
-  }
-
-  // Window loop
-  if (uiRenderWndw) {
-    if ((*p.reg_0xFF40 & kMaskWndwDisp) && (*p.reg_0xFF40 & kMaskBgWndwDisp)) {
-      for (uint j = *p.reg_wndw_y; j < kGbScreenHeight; ++j) {
-        for (uint i = *p.reg_wndw_x; i < kGbScreenWidth; ++i) {
-          val = p.window_buffer[j][i];
-          val = p.MapBgCols(val);
-          SDL_SetRenderDrawColor(renderer,
-                                renderColor[val][0],
-                                renderColor[val][1],
-                                renderColor[val][2], 255);
-          SDL_RenderDrawPoint(renderer, i, j);
-        }
-      }
-    }
   }
 
   // Sprite loop
