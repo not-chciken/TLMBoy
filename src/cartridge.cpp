@@ -4,6 +4,7 @@
  ******************************************************************************/
 #include "cartridge.h"
 
+#include <format>
 #include <string>
 
 Cartridge::BankSwitchedMem::BankSwitchedMem(sc_module_name name, uint num_banks, uint bank_size)
@@ -263,7 +264,7 @@ Cartridge::Cartridge(sc_module_name name,
           || cr_type == "MBC5+BAT+RAM")
     mbc = std::make_unique<Mbc5>(game_path, boot_path);
   else
-    throw std::runtime_error(fmt::format("Cartidge type {} not implemented", cr_type));
+    throw std::runtime_error(std::format("Cartidge type {} not implemented", cr_type));
 
   SC_METHOD(SigHandler);
   dont_initialize();

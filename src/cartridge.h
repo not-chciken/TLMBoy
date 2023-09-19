@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "common.h"
-#include "fmt/format.h"
 #include "game_info.h"
 #include "generic_memory.h"
 

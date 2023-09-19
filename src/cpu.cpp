@@ -6,9 +6,9 @@
 #include "cpu.h"
 
 #include <bitset>
+#include <format>
 #include <string>
 
-#include "fmt/format.h"
 #include "cpu_jumptable.cpp"
 #include "cpu_ops.cpp"
 
@@ -81,7 +81,7 @@ u8 Cpu::ReadBus(u16 addr) {
   init_socket->b_transport(*payload, delay);
   if (payload->is_response_error()) {
     DBG_LOG_CPU("Transport status is:" << payload->get_response_string());
-    throw std::runtime_error(fmt::format("Response error from transport_dbg!\n"
+    throw std::runtime_error(std::format("Response error from transport_dbg!\n"
                              "Address=0x{:04x} Data=0x{:02x}", addr, data).c_str());
   }
   return data;
@@ -95,7 +95,7 @@ u8 Cpu::ReadBusDebug(u16 addr) {
   init_socket->transport_dbg(*payload);
   if (payload->is_response_error()) {
     data = 0;
-    std::cout << fmt::format("Warning: Reading unmapped address at 0x{:04x}\n", addr);
+    std::cout << std::format("Warning: Reading unmapped address at 0x{:04x}\n", addr);
   }
   return data;
 }

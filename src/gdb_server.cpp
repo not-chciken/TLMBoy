@@ -7,6 +7,7 @@
 
 #include <bit>
 #include <byteswap.h>
+#include <format>
 #include <functional>
 #include <iomanip>
 #include <regex>
@@ -14,7 +15,6 @@
 #include <stdexcept>
 
 #include "cpu.h"
-#include "fmt/format.h"
 
 GdbServer::GdbServer(Cpu *cpu) : cpu_(cpu), is_attached_(false) {
   cmd_map["?"] = std::bind(&GdbServer::CmdHalted, this, std::placeholders::_1);
@@ -128,7 +128,7 @@ std::string GdbServer::GetChecksumStr(const std::string &msg) {
     checksum += static_cast<uint>(c);
   }
   checksum &= 0xff;
-  return fmt::format("{:02x}", checksum);
+  return std::format("{:02x}", checksum);
 }
 
 // This function packetifies your message by prepending "$"
@@ -171,7 +171,7 @@ bool GdbServer::BpReached(const u16 address) {
 
 // Breakpoint reached indicated by sending a SIGTRAP signal.
 void GdbServer::SendBpReached() {
-  std::string msg_resp = Packetify(fmt::format("S{:02x}", SIGTRAP));
+  std::string msg_resp = Packetify(std::format("S{:02x}", SIGTRAP));
   DBG_LOG_GDB("sending breakpoint reached");
   tcp_server_.SendMsg(msg_resp.c_str());
 }
@@ -205,7 +205,7 @@ void GdbServer::CmdAttached(const std::vector<std::string> &msg_split) {
 
 // "?"
 void GdbServer::CmdHalted(const std::vector<std::string> &msg_split) {
-  std::string msg_resp = Packetify(fmt::format("S{:02x}", SIGTRAP));
+  std::string msg_resp = Packetify(std::format("S{:02x}", SIGTRAP));
   cpu_->Halt();
   tcp_server_.SendMsg(msg_resp.c_str());
 }
@@ -218,7 +218,7 @@ void GdbServer::CmdNotFound(const std::vector<std::string> &msg_split) {
 // "g": Read general registers.
 void GdbServer::CmdReadReg(const std::vector<std::string> &msg_split) {
   std::string msg_resp;
-  msg_resp = fmt::format("{:04x}{:04x}{:04x}{:04x}{:04x}{:04x}{:x>{}}",
+  msg_resp = std::format("{:04x}{:04x}{:04x}{:04x}{:04x}{:04x}{:x>{}}",
                          std::rotl(cpu_->reg_file.AF.val(), 8), std::rotl(cpu_->reg_file.BC.val(), 8),
                          std::rotl(cpu_->reg_file.DE.val(), 8), std::rotl(cpu_->reg_file.HL.val(), 8),
                          std::rotl(cpu_->reg_file.SP.val(), 8), std::rotl(cpu_->reg_file.PC.val(), 8),
@@ -252,7 +252,7 @@ void GdbServer::CmdReadMem(const std::vector<std::string> &msg_split) {
   uint length = std::stoi(length_str, nullptr, 16);
   for (uint i = 0; i < length; ++i) {
     u8 data = cpu_->ReadBusDebug(addr + i);
-    msg_resp.append(fmt::format("{:02x}", data));
+    msg_resp.append(std::format("{:02x}", data));
   }
   DBG_LOG_GDB("reading 0x" << length_str << " bytes at address 0x" << addr_str);
   msg_resp = Packetify(msg_resp);

@@ -13,7 +13,7 @@ RUN  apt-get install -yq \
      gdb \
      gcovr \
      g++-10 \
-     libfmt-dev \
+     g++-13 \
      libgtest-dev \
      libsdl2-dev \
      netcat \
@@ -54,5 +54,8 @@ RUN rm -rf binutils-gdb
 ENV SYSTEMC_PATH=/usr/local/systemc-2.3.3
 ENV LD_LIBRARY_PATH="${SYSTEMC_PATH}/lib-linux64:${LD_LIBRARY_PATH}"
 ENV PATH="/opt/gdb/bin:${PATH}"
+
+# More recent g++ for "std::format"
+RUN ln -sf /usr/bin/g++-13 /usr/bin/g++
 
 ENTRYPOINT bash

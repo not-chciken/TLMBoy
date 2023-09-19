@@ -105,8 +105,8 @@ struct Ppu : public sc_module {
   u8 *reg_ly_comp;
   u8 *reg_dma;       // direct memory access TODO(me)
   u8 *reg_bgp;       // bg and window palette data TODO(me)
-  u8 *reg_obp_0;     // object palette 0 data TODO(me)
-  u8 *reg_obp_1;     // object palette 1 data TODO(me)
+  u8 *reg_obp_0;     // object palette 0 data
+  u8 *reg_obp_1;     // object palette 1 data
   u8 *reg_wndw_y;    // window y position
   u8 *reg_wndw_x;    // window x position
   u8 *reg_ie;        // interrupt enable TODO(me)
@@ -138,7 +138,7 @@ struct Ppu : public sc_module {
   u8* oam_table;
 
   // Maps the colours for the background and the window according to register rBGP (0xff47).
-  const uint MapBgCols(const uint val);
+  const u8 MapBgCols(const u8 &val);
   void DrawBgToLine(uint line_num);
   void DrawSpriteToLine(int line_num);
   void DrawWndwToLine(int line_num);
@@ -151,7 +151,7 @@ struct Ppu : public sc_module {
   // returns 0b00000010
   // pos e [0,7]
   // return value is always e[0,3]
-  static const u8 InterleaveBits(u8 a, u8 b, const uint pos);
+  static const u8 InterleaveBits(const u8 &a, const u8 &b, const uint pos);
 
   void RenderLoop();
 
@@ -197,11 +197,12 @@ struct Ppu : public sc_module {
   // For the headless mode. Doesn't create any windows, hence renders nothing.
   class DummyWindow : public RenderWindow {
    public:
-    DummyWindow():RenderWindow(){}
+    DummyWindow():RenderWindow() {}
     void DrawToScreen(Ppu &ppu) override {};  // Do nothing.
     void SaveScreenshot(const std::filesystem::path file_path) override {};  // Do nothing.
   };
 
  private:
-  int window_line_; // Internal window line counter.
+  int window_line_;  // Internal window line counter.
+  const u8 MapSpriteCols(const u8 &val, const u8* reg);
 };

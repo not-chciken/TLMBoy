@@ -3,6 +3,8 @@
  * MIT License
  ******************************************************************************/
 
+#include <format>
+
 #include "generic_memory.h"
 
 GenericMemory::GenericMemory(size_t memory_size, sc_module_name name, u8 *data)
@@ -37,7 +39,7 @@ u8* GenericMemory::GetDataPtr() {
 void GenericMemory::LoadFromFile(std::filesystem::path path, int offset) {
   std::ifstream file(path.string(), std::ios::binary | std::ios::ate);
   if (!file) {
-    throw std::runtime_error(fmt::format("Could not read file '{}'!", path.string()));
+    throw std::runtime_error(std::format("Could not read file '{}'!", path.string()));
   }
   std::streamsize size = file.tellg();
   assert(size >= offset);

@@ -12,7 +12,14 @@ include(CTest)
 include(CPack)
 enable_testing()
 
-set(CMAKE_CXX_FLAGS "-Wall")
+# Need at least g++ v13.1 for featues like std::format.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "13.1")
+    message(FATAL_ERROR "Insufficient gcc version (${CMAKE_CXX_COMPILER_VERSION}). Need at least 13.1.")
+  endif()
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_STANDARD 20)
 add_definitions(-DSC_DISABLE_API_VERSION_CHECK) # "Fix" c++ version issue.
 add_definitions(-DSC_INCLUDE_DYNAMIC_PROCESSES)
@@ -41,7 +48,7 @@ add_executable(tlmboy src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy -lsystemc -lSDL2 -lfmt)
-target_compile_options(tlmboy PUBLIC -Ofast -flto)
+target_compile_options(tlmboy PUBLIC -O3 -flto)
 
 # For test purposes
 add_executable(tlmboy_test src/main.cpp ${ALL_CPPS})

@@ -3,7 +3,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=not-chciken/TLMBoy&amp;utm_campaign=Badge_Grade)
 # TLMBoy
 A Game Boy Simulator written in C++/SystemC TLM-2.0. <br>
-This project also acts as my personal playground for new C++20 features.
+This project also acts as my personal playground for new C++ features.
 Hence, a quite recent version of gcc or clang is required to compile it.
 __Note: This project is currently under construction ;)__
 
@@ -32,7 +32,6 @@ cmake --build . --target tlmboy --config Release
 ```
 Dependencies:
 -  [SystemC 2.3.3](https://github.com/accellera-official/systemc)
--  [fmt](https://github.com/fmtlib/fmt)
 -  [SDL2](https://github.com/libsdl-org/SDL)
 -  [googletest](https://github.com/google/googletest)
 
@@ -67,7 +66,6 @@ Keyboard 2 = Do not render window
 - BankSwitchMemory: Use seperate functions for loading of the boot ROM and the game.
 - BankSwitchMemory: Implement enable/disable RAM
 - BankSwitchMemory: Implement all MBC
-- fmt::Format: use native c++ implementation once available
 - use native c++ implementation for ranges once available (maybe with c++23)
 - Fix bank size of ram
 - Gzip golden trace files

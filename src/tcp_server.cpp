@@ -6,12 +6,11 @@
 #include "tcp_server.h"
 
 #include <errno.h>
+#include <format>
 #include <sys/ioctl.h>
 
 #include <stdexcept>
 #include <sstream>
-
-#include "fmt/format.h"
 
 TcpServer::TcpServer() {
 }
@@ -61,7 +60,7 @@ std::string TcpServer::RecvBlocking(uint length) {
   ssize_t num_bytes = recv(client_fd_, msg, length, 0);
   msg[length] = '\0';
   if (num_bytes < 0) {
-    throw std::runtime_error(fmt::format("recv failed with errno: {}\n", strerror(errno)));
+    throw std::runtime_error(std::format("recv failed with errno: {}\n", strerror(errno)));
   }
   return std::string(msg);
 }
@@ -69,7 +68,7 @@ std::string TcpServer::RecvBlocking(uint length) {
 void TcpServer::SendMsg(const char *msg) {
   int succ = ::send(client_fd_, msg, strlen(msg), 0);
   if (succ == -1) {
-    throw std::runtime_error(fmt::format("SendMsg failed with errno: {}\n", strerror(errno)));
+    throw std::runtime_error(std::format("SendMsg failed with errno: {}\n", strerror(errno)));
   }
 }
 

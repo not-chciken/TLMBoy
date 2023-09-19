@@ -11,7 +11,6 @@
 #include <string>
 
 #include "common.h"
-#include "fmt/format.h"
 #include "game_info.h"
 #include "gb_const.h"
 

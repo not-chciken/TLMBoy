@@ -57,7 +57,8 @@ struct PpuStimulus : public sc_module {
     targ_socket.register_get_direct_mem_ptr(this, &PpuStimulus::get_direct_mem_ptr);
     memset(memory, 0, 0x10000);
     memory[Ppu::kAdrRegLcdc] = 0b11110011;
-    memory[Ppu::kAdrRegBgp]  = 0b11100100;
+    memory[Ppu::kAdrRegBgp] = 0b11011000;
+    memory[Ppu::kAdrRegObp0] = 0b11011000;
 
     for (uint i = 0; i < sizeof(tile_data); ++i)
         memory[0x8000+i] = tile_data[i];
@@ -72,13 +73,14 @@ struct PpuStimulus : public sc_module {
     memory[Ppu::kAdrTilemapHigh + 5] = 6;
     memory[Ppu::kAdrTilemapHigh + 6] = 0;
     memory[Ppu::kAdrTilemapHigh + 7] = 7;
-    memory[Ppu::kAdrRegWndwY] = 100;  // window y position = 100;
+    memory[Ppu::kAdrRegWndwY] = 100;
+    memory[Ppu::kAdrRegWndwX] = 7;
 
     // Display a '6' as a sprite.
-    memory[0xFE00] = 50;
-    memory[0xFE01] = 50;
-    memory[0xFE02] = 1;
-    memory[0xFE03] = 0;
+    memory[0xFE00] = 50;  // y position
+    memory[0xFE01] = 50;  // x position
+    memory[0xFE02] = 1;  // sprite index
+    memory[0xFE03] = 0;  // flags
 
     SC_THREAD(StimulusLoop);
     sensitive << clk.pos();

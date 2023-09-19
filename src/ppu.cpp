@@ -1,10 +1,14 @@
 /*******************************************************************************
- * Copyright (C) 2021 chciken
+ * Copyright (C) 2023 chciken
  * MIT License
  ******************************************************************************/
-#include <memory>
 
 #include "ppu.h"
+
+#include <memory>
+#include <ranges>
+#include <utility>
+#include <vector>
 
 bool Ppu::uiRenderBg = true;
 bool Ppu::uiRenderSprites = true;
@@ -99,8 +103,12 @@ void Ppu::start_of_simulation() {
   }
 }
 
-const uint Ppu::MapBgCols(const uint val) {
-  return ((0b11 << val*2) & *reg_bgp) >> val*2;
+const u8 Ppu::MapBgCols(const u8 &val) {
+  return (*reg_bgp >> val*2) & 0b11;
+}
+
+const u8 Ppu::MapSpriteCols(const u8 &val, const u8* reg) {
+  return (*reg >> val*2) & 0b11;
 }
 
 void Ppu::DrawBgToLine(uint line_num) {
@@ -120,6 +128,7 @@ void Ppu::DrawBgToLine(uint line_num) {
       i32 x_tile_pixel = (*reg_scroll_x + i) % 8;
       i32 pixel_ind = static_cast<i32>(tile_ind) * TILE_BYTES + 2 * y_tile_pixel;
       i32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
+      res = MapBgCols(res);
       bg_buffer[line_num][i] = res;
       assert(bg_tile_ind < 1024);
     }
@@ -157,6 +166,7 @@ void Ppu::DrawWndwToLine(int line_num) {
       i32 x_tile_pixel = (i - x_pos) % 8;
       i32 pixel_ind = static_cast<i32>(tile_ind) * TILE_BYTES + 2 * y_tile_pixel;
       i32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
+      res = MapBgCols(res);
       bg_buffer[line_num][i] = res;
       assert(wndw_tile_ind < 1024);
     }
@@ -172,26 +182,39 @@ void Ppu::DrawSpriteToLine(int line_num) {
   if (!(kMaskObjSpriteDisp & *reg_0xFF40))
     return;
 
-  int num_rendered_sprites = 0;  // Stop at a maximum of 10 sprites per line.
-  u8* tile_data_table = tile_data_table_low;  // Sprites always use the low data table.
-  for (int i = kNumOamEntries - 1; i >= 0; --i) {
-    int pos_y            = oam_table[i*kOamEntryBytes] - 16;      // byte0 = y pos
-    int pos_x            = oam_table[i*kOamEntryBytes + 1] - 8;   // byte1 = x pos
-    int sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];       // byte2 = tile index
-    int sprite_flags     = oam_table[i*kOamEntryBytes + 3];       // byte3 = flags //TODO(niko)
-    const bool palette = IsBitSet(sprite_flags, 4);
-    const bool x_flip = IsBitSet(sprite_flags, 5);
-    const bool y_flip = IsBitSet(sprite_flags, 6);
-    const bool obj_prio = IsBitSet(sprite_flags, 7);
-
+  std::vector<std::pair<int, int>> sorted_oam;
+  for (int i = 0; i < kNumOamEntries; ++i) {
+    int x_pos = oam_table[i*kOamEntryBytes + 1];
+    int pos_y            = oam_table[i*kOamEntryBytes] - 16;
+    int pos_x            = oam_table[i*kOamEntryBytes + 1] - 8;
     const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
     const int sprite_height = is_big_sprite ? 16 : 8;  // Width of a sprite in pixels.
 
     if (((pos_y > line_num) || ((pos_y + sprite_height) <= line_num))
-        || ((pos_x < -7) || (pos_x >= kGbScreenWidth))
-        || (num_rendered_sprites >= 10))
-    continue;
-    ++num_rendered_sprites;
+        || ((pos_x < -7) || (pos_x >= kGbScreenWidth)))
+      continue;
+
+    sorted_oam.push_back(std::make_pair(i, x_pos));
+  }
+
+  std::stable_sort(sorted_oam.begin(), sorted_oam.end(),
+            [](std::pair<int, int> a, std::pair<int, int> b) {return a.second < b.second;});
+  if (sorted_oam.size() > 10)
+    sorted_oam.resize(10);  // Maximum 10 sprites per line.
+
+
+  u8* tile_data_table = tile_data_table_low;  // Sprites always use the low data table.
+  for (auto &p : std::ranges::views::reverse(sorted_oam)) {
+    int i = p.first;
+    int pos_y            = oam_table[i*kOamEntryBytes] - 16;      // byte0 = y pos
+    int pos_x            = oam_table[i*kOamEntryBytes + 1] - 8;   // byte1 = x pos
+    int sprite_tile_ind  = oam_table[i*kOamEntryBytes + 2];       // byte2 = tile index
+    int sprite_flags     = oam_table[i*kOamEntryBytes + 3];       // byte3 = flags
+    const bool is_big_sprite = static_cast<bool>(KMaskObjSpriteSize & *reg_0xFF40);
+    const bool palette = IsBitSet(sprite_flags, 4);
+    const bool x_flip = IsBitSet(sprite_flags, 5);
+    const bool y_flip = IsBitSet(sprite_flags, 6);
+    const bool obj_prio = IsBitSet(sprite_flags, 7);
 
     if (is_big_sprite) {
       sprite_tile_ind &= 0xFE;  // Ignore the last bit in 8x16 mode.
@@ -204,12 +227,17 @@ void Ppu::DrawSpriteToLine(int line_num) {
     for (int j = 0; j < 8; ++j) {
       int x_draw = (pos_x + j);
       if (x_draw < 0 || x_draw >= kGbScreenWidth)
-          continue;
-
+        continue;
       u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], (x_flip ? j : 7 - j));
       if (res == 0)  // Color 0 is transparent.
-          continue;
-      sprite_buffer[line_num][x_draw] = res;
+        continue;
+      res = MapSpriteCols(res, palette ? reg_obp_1 : reg_obp_0);
+      if (obj_prio) {
+        if (bg_buffer[line_num][x_draw] == 0)
+          bg_buffer[line_num][x_draw] = res;
+      } else {
+        sprite_buffer[line_num][x_draw] = res;
+      }
     }
   }
 }
@@ -241,10 +269,10 @@ void Ppu::RenderLoop() {
       SetBit(reg_0xFF41, false, 1);
       if (uiRenderBg)
         DrawBgToLine(i);
-      if (uiRenderSprites)
-        DrawSpriteToLine(i);
       if (uiRenderWndw)
         DrawWndwToLine(i);
+      if (uiRenderSprites)
+        DrawSpriteToLine(i);
       ++(*reg_lcdc_y);
       if (*reg_0xFF41 & gb_const::kMaskBit3) {
         *reg_intr_pending_dmi |= kMaskLcdcStatIf;
@@ -288,13 +316,11 @@ std::string Ppu::PpuStateStr() {
   return ss.str();
 }
 
-const u8 Ppu::InterleaveBits(u8 a, u8 b, const uint pos) {
-  u8 mask = 0b00000001 << pos;
-  a &= mask;
-  b &= mask;
-  a = (pos ? a >> (pos-1) : a << 1);
-  b = b >> pos;
-  return a | b;
+const u8 Ppu::InterleaveBits(const u8 &a, const u8 &b, const uint pos) {
+  const u8 mask = 1u << pos;
+  u8 res = (a & mask) == mask;
+  res |= (b & mask) == mask ? 2 : 0;
+  return res;
 }
 
 Ppu::RenderWindow::RenderWindow(const uint width, const uint height, const uint log_width, const uint log_height)
@@ -338,7 +364,6 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
     for (uint j = 0; j < log_height; ++j) {
       for (uint i = 0; i < log_width; ++i) {
         val = p.bg_buffer[j][i];
-        val = p.MapBgCols(val);
         SDL_SetRenderDrawColor(renderer,
                               renderColor[val][0],
                               renderColor[val][1],
