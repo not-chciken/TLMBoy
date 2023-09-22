@@ -6,7 +6,7 @@
 #include "cpu.h"
 
 void Cpu::DoMachineCycle() {
-  if (attachGdb) {
+  if (attach_gdb_) {
     std::cout << "waiting for gdb to attach on port " << gdb_port_ << "..." << std::endl;
     gdb_server.InitBlocking(gdb_port_);
     std::cout << "gdb attached!" << std::endl;
@@ -32,8 +32,13 @@ void Cpu::DoMachineCycle() {
 
     HandleInterrupts();  // This disables IME and sets the PC in case of an interrupt.
 
-    DBG_LOG_INST(sc_core::sc_time_stamp() << ": PC 0x" << std::hex
-      << static_cast<uint>(reg_file.PC.val()) << " "<< std::dec);
+    if (single_step_) {
+      const u64 cycles = (u64)(sc_core::sc_time_stamp().to_default_time_units() / gb_const::kNsPerMachineCycle);
+      for (const auto reg : reg_file) {
+        std::cout << std::format("{}:0x{:04x},", reg->name, reg->val());
+      }
+      std::cout << "c:" << cycles << std::endl;
+    }
 
     // Fetch.
     u8 instr_byte = FetchNextInstrByte();

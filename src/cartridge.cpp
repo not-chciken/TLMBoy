@@ -19,7 +19,7 @@ void Cartridge::BankSwitchedMem::DoBankSwitch(u8 index) {
   bank_data_ = &data_[index * bank_size_];
 }
 
-void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
+void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
   unsigned char* ptr = trans.get_data_ptr();
@@ -107,7 +107,7 @@ void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& d
 
 // There's no RAM for rom-only games.
 // Yet some games like Alleyway try to write in the non-existing RAM...
-void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) {
+void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   u16 adr = static_cast<uint16_t>(trans.get_address());
   tlm::tlm_command cmd = trans.get_command();
   assert(adr < 0x8000);

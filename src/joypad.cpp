@@ -128,7 +128,7 @@ void JoyPad::WriteReg(u8 dat) {
   reg_0xFF00 |= dat & 0b1111000;
 }
 
-void JoyPad::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
+void JoyPad::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
   u8* ptr = trans.get_data_ptr();

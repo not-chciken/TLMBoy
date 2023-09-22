@@ -114,7 +114,7 @@ static_assert(std::endian::native == std::endian::little, "RegFile is not big en
       DE("DE", reinterpret_cast<u16&>(_dat[4])),
       HL("HL", reinterpret_cast<u16&>(_dat[6])),
       SP("SP", reinterpret_cast<u16&>(_dat[8])),
-      PC("SP", reinterpret_cast<u16&>(_dat[10])) {
+      PC("PC", reinterpret_cast<u16&>(_dat[10])) {
   }
 
   // For the pupose of range-based for-loops á la "for (auto reg : reg_file)".

@@ -177,7 +177,7 @@ void GdbServer::SendBpReached() {
 }
 
 // "D": for detaching.
-void GdbServer::CmdDetach(const std::vector<std::string> &msg_split) {
+void GdbServer::CmdDetach(const std::vector<std::string> &msg_split [[maybe_unused]]) {
   is_attached_ = false;
   cpu_->Continue();
   DBG_LOG_GDB("detaching");
@@ -196,7 +196,7 @@ void GdbServer::CmdSupported(const std::vector<std::string> &msg_split) {
 }
 
 // "qAttached"
-void GdbServer::CmdAttached(const std::vector<std::string> &msg_split) {
+void GdbServer::CmdAttached(const std::vector<std::string> &msg_split [[maybe_unused]]) {
   std::string msg_resp = Packetify("1");
   is_attached_ = true;
   DBG_LOG_GDB("replying server is attached to process");
@@ -204,19 +204,19 @@ void GdbServer::CmdAttached(const std::vector<std::string> &msg_split) {
 }
 
 // "?"
-void GdbServer::CmdHalted(const std::vector<std::string> &msg_split) {
+void GdbServer::CmdHalted(const std::vector<std::string> &msg_split [[maybe_unused]]) {
   std::string msg_resp = Packetify(std::format("S{:02x}", SIGTRAP));
   cpu_->Halt();
   tcp_server_.SendMsg(msg_resp.c_str());
 }
 
 // Command not found.
-void GdbServer::CmdNotFound(const std::vector<std::string> &msg_split) {
+void GdbServer::CmdNotFound(const std::vector<std::string> &msg_split [[maybe_unused]]) {
   tcp_server_.SendMsg(kMsgEmpty);
 }
 
 // "g": Read general registers.
-void GdbServer::CmdReadReg(const std::vector<std::string> &msg_split) {
+void GdbServer::CmdReadReg(const std::vector<std::string> &msg_split [[maybe_unused]]) {
   std::string msg_resp;
   msg_resp = std::format("{:04x}{:04x}{:04x}{:04x}{:04x}{:04x}{:x>{}}",
                          std::rotl(cpu_->reg_file.AF.val(), 8), std::rotl(cpu_->reg_file.BC.val(), 8),
@@ -306,6 +306,6 @@ void GdbServer::CmdRemoveBp(const std::vector<std::string> &msg_split) {
 }
 
 // "c": Continue execution.
-void GdbServer::CmdContinue(const std::vector<std::string> &msg_split) {
+void GdbServer::CmdContinue(const std::vector<std::string> &msg_split [[maybe_unused]]) {
   cpu_->Continue();
 }

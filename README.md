@@ -33,7 +33,7 @@ cmake --build . --target tlmboy --config Release
 Dependencies:
 -  [SystemC 2.3.3](https://github.com/accellera-official/systemc)
 -  [SDL2](https://github.com/libsdl-org/SDL)
--  [googletest](https://github.com/google/googletest)
+- For tests: [googletest](https://github.com/google/googletest)
 
 # Controls
 | Keyboard  | Game Boy  |
@@ -44,20 +44,25 @@ Dependencies:
 | O         | Select    |
 | P         | Start     |
 
+
 Utilities:
-Keyboard 0 = Do not render background
-Keyboard 1 = Do not render sprites
-Keyboard 2 = Do not render window
-# Documentation
-- [Overview] (https://www.chciken.com/tlmboy/2022/02/19/gameboy-systemc.html)
-- [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
+| Keyboard  | Description                   |
+|-----------|-------------------------------|
+| 1         | Hold to not render background |
+| 2         | Hold to not render sprites    |
+| 3         | Hold to not render window     |
 
 # Command Line Arguments
 - `--boot-rom-path=P`: Specifies the path `P` of the boot ROM. Points to "../roms/DMG_ROM.bin" by default.
 - `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
 - `--max-cycles=X`: Only execute a maximum number of `X` machine cycles.
 - `--rom-path=P`: Specifies the ROM/game `P` that shall be executed.
+- `--single-step`: Prints the CPU state before the execution pf each instruction.
 - `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
+
+# Documentation
+- [Overview] (https://www.chciken.com/tlmboy/2022/02/19/gameboy-systemc.html)
+- [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
 
 # TODO
 - Show full tile map in window (currently only the lower tile map is shown)
@@ -66,8 +71,6 @@ Keyboard 2 = Do not render window
 - BankSwitchMemory: Use seperate functions for loading of the boot ROM and the game.
 - BankSwitchMemory: Implement enable/disable RAM
 - BankSwitchMemory: Implement all MBC
-- use native c++ implementation for ranges once available (maybe with c++23)
+- Use native c++ implementation for ranges once available (maybe with c++23)
 - Fix bank size of ram
-- Gzip golden trace files
-- Find a simple and non-hacky way to get the number of clock cycles
 - Checkpointing system

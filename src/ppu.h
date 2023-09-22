@@ -22,8 +22,8 @@
 #include <sstream>
 #include <string>
 
-#include "debug.h"
 #include "common.h"
+#include "debug.h"
 #include "SDL2/SDL.h"
 
 #define TILE_BYTES 16  // Number of bytes per tile.
@@ -138,7 +138,7 @@ struct Ppu : public sc_module {
   u8* oam_table;
 
   // Maps the colours for the background and the window according to register rBGP (0xff47).
-  const u8 MapBgCols(const u8 &val);
+  constexpr u8 MapBgCols(const u8 val);
   void DrawBgToLine(uint line_num);
   void DrawSpriteToLine(int line_num);
   void DrawWndwToLine(int line_num);
@@ -151,11 +151,11 @@ struct Ppu : public sc_module {
   // returns 0b00000010
   // pos e [0,7]
   // return value is always e[0,3]
-  static const u8 InterleaveBits(const u8 &a, const u8 &b, const uint pos);
+  static u8 InterleaveBits(const u8 a, const u8 b, const uint pos);
 
   void RenderLoop();
 
-  std::string PpuStateStr();
+  std::string StateStr();
 
   class RenderWindow {
    public:
@@ -198,11 +198,11 @@ struct Ppu : public sc_module {
   class DummyWindow : public RenderWindow {
    public:
     DummyWindow():RenderWindow() {}
-    void DrawToScreen(Ppu &ppu) override {};  // Do nothing.
-    void SaveScreenshot(const std::filesystem::path file_path) override {};  // Do nothing.
+    void DrawToScreen(Ppu &ppu [[maybe_unused]]) override {};  // Do nothing.
+    void SaveScreenshot(const std::filesystem::path file_path [[maybe_unused]]) override {};  // Do nothing.
   };
 
  private:
   int window_line_;  // Internal window line counter.
-  const u8 MapSpriteCols(const u8 &val, const u8* reg);
+  constexpr u8 MapSpriteCols(const u8 val, const u8* reg);
 };

@@ -103,11 +103,11 @@ void Ppu::start_of_simulation() {
   }
 }
 
-const u8 Ppu::MapBgCols(const u8 &val) {
+constexpr u8 Ppu::MapBgCols(const u8 val) {
   return (*reg_bgp >> val*2) & 0b11;
 }
 
-const u8 Ppu::MapSpriteCols(const u8 &val, const u8* reg) {
+constexpr u8 Ppu::MapSpriteCols(const u8 val, const u8* reg) {
   return (*reg >> val*2) & 0b11;
 }
 
@@ -286,7 +286,7 @@ void Ppu::RenderLoop() {
     SetBit(reg_0xFF41, true, 0);
     game_wndw->DrawToScreen(*this);
     window_wndw->DrawToScreen(*this);
-    DBG_LOG_PPU(std::endl << PpuStateStr());
+    DBG_LOG_PPU(std::endl << StateStr());
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
     for (int i = 0; i < 10; ++i) {
@@ -299,7 +299,7 @@ void Ppu::RenderLoop() {
   }
 }
 
-std::string Ppu::PpuStateStr() {
+std::string Ppu::StateStr() {
   std::stringstream ss;
   ss << "#### PPU State ####" << std::dec <<std::endl
     << "LCD control: "          << static_cast<bool>(*reg_0xFF40 & kMaskLcdControl) << std::endl
@@ -316,7 +316,7 @@ std::string Ppu::PpuStateStr() {
   return ss.str();
 }
 
-const u8 Ppu::InterleaveBits(const u8 &a, const u8 &b, const uint pos) {
+u8 Ppu::InterleaveBits(const u8 a, const u8 b, const uint pos) {
   const u8 mask = 1u << pos;
   u8 res = (a & mask) == mask;
   res |= (b & mask) == mask ? 2 : 0;

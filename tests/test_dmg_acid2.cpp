@@ -1,26 +1,27 @@
+
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
- * This test checks blarrg's cpuinst08
+ * Testing the PPU using the Acid2 test from:
+ * https://github.com/mattcurrie/dmg-acid2
  ******************************************************************************/
+
 #include <getopt.h>
 #include <gtest/gtest.h>
 #include "gb_top.h"
 #include "options.h"
 #include "utils.h"
 
-TEST(BlarrgTest, cpuinstr08) {
+TEST(PpuTest, DmgAcid2) {
   std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-  GbTop test_top("test_top", tlm_boy_root + "/roms/gb-test-roms/cpu_instrs/individual/08-misc instrs.gb",
+
+  GbTop test_top("test_top", tlm_boy_root + "/roms/dmg-acid2.gb",
                              tlm_boy_root + "/roms/DMG_ROM.bin", options::headless);
-  sc_start(8, SC_SEC);
-  test_top.gb_ppu.game_wndw->SaveScreenshot("blarrgs_cpuinstr08.bmp");
-  if (options::headless == true) {
-    ASSERT_EQ(test_top.gb_cpu.cpu_state, Cpu::CpuState::kTestPassed);
-  } else {
-    ASSERT_TRUE(CompareFiles("blarrgs_cpuinstr08.bmp", tlm_boy_root + "/tests/golden_files/blarrgs_cpuinstr08.bmp"));
-  }
+  sc_start(5, SC_SEC);
+  test_top.gb_ppu.game_wndw->SaveScreenshot("dmg-acid2.bmp");
+
+  ASSERT_TRUE(CompareFiles("dmg-acid2.bmp", tlm_boy_root + "/tests/golden_files/dmg-acid2.bmp"));
 }
 
 int sc_main(int argc, char* argv[]) {

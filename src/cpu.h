@@ -1,10 +1,11 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2022 chciken/Niko
+ * Copyright (c) 2023 chciken/Niko
  *
  * The SM83 CPU of the gameboy. Basically a Z80 clone with some special instructions
-********************************************************************************/
+ ********************************************************************************/
+
 #include <stdlib.h>
 
 #include <iostream>
@@ -12,10 +13,10 @@
 #include <string>
 
 #include "common.h"
-#include "reg_file.h"
 #include "gb_const.h"
 #include "gdb_server.h"
 #include "interrupt_module.h"
+#include "reg_file.h"
 
 class Cpu : public InterruptModule<Cpu>, sc_module {
  public:
@@ -26,14 +27,14 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   // The Game Boy's register file.
   RegFile reg_file;
 
-  // The states are a semihosting feature intended to communicate fail or success of tests.
+  // The states are a semihosting feature intended to communicate failure or success of tests.
   enum CpuState {
     kNominal,
     kTestPassed,
     kTestFailed,
   } cpu_state = kNominal;
 
-  explicit Cpu(sc_module_name name, bool attachGdb = false);
+  explicit Cpu(sc_module_name name, bool attach_gdb = false, bool singel_step = false);
 
  private:
   void start_of_simulation() override;
@@ -46,10 +47,10 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   void SetFlagH(bool val);
   void SetFlagN(bool val);
   void SetFlagZ(bool val);
-  const bool GetFlagC();
-  const bool GetFlagH();
-  const bool GetFlagN();
-  const bool GetFlagZ();
+  bool GetFlagC() const;
+  bool GetFlagH() const;
+  bool GetFlagN() const;
+  bool GetFlagZ() const;
 
   // Write to bus/memory.
   void WriteBus(u16 addr, u8 data);
@@ -74,10 +75,13 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   void Halt();
   // Continue after halt. Used by the GDB server.
   void Continue();
+
   // If true, wait for a GDB remote connection before starting.
-  bool attachGdb;
+  bool attach_gdb_;
   // If true, GDB is currently halting the CPU
   bool halted_ = false;
+  // In single step mode the CPU state is printed after each instruction.
+  bool single_step_ = false;
   // TCP port for the GDB stub.
   const i32 gdb_port_ = 1337;
 

@@ -24,7 +24,7 @@ const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 
 TEST(BootTests, BootState) {
   GbTop test_top("test_top", tlm_boy_root + "/roms/dummy.bin",
-                             tlm_boy_root + "/roms/DMG_ROM.bin");
+                             tlm_boy_root + "/roms/DMG_ROM.bin", false, false, true);
   std::ofstream out("boot_states.txt");
   std::cout.rdbuf(out.rdbuf());
 

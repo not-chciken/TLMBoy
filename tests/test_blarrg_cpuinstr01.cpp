@@ -1,7 +1,7 @@
 
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2022 chciken/Niko
  *
  * This test checks blarrg's cpuinst01 (special instructions)
  ******************************************************************************/
@@ -30,7 +30,8 @@ int sc_main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
 
   const struct option long_opts[] = {
-    {"headless", no_argument, 0, 'l'}, 0
+    {"headless", no_argument, 0, 'l'},
+    {nullptr, 0, nullptr, 0}
   };
 
   for (;;) {
