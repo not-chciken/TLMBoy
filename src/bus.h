@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "common.h"
 #include "gb_const.h"
 #include "sysc/kernel/sc_simcontext.h"
 #include "systemc.h"

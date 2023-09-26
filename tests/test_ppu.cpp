@@ -147,28 +147,6 @@ struct Top : public sc_module {
   }
 };
 
-TEST(PpuTests, InterleaveBitsTest1) {
-  u8 res, a, b, gold;
-  uint pos;
-  a = 0b00001111;
-  b = 0b00001111;
-  gold = 0b00000011;
-  pos = 0;
-  res = Ppu::InterleaveBits(a, b, pos);
-  ASSERT_EQ(res, gold);
-}
-
-TEST(PpuTests, InterleaveBitsTest2) {
-  u8 res, a, b, gold;
-  uint pos;
-  a = 0b00001111;
-  b = 0b00001111;
-  gold = 0b00000011;
-  pos = 0;
-  res = Ppu::InterleaveBits(a, b, pos);
-  ASSERT_EQ(res, gold);
-}
-
 // A PPU smoke test; if you see a screen with a scrolling 69 then everything is fine.
 TEST(PpuTests, SmokeTest) {
   Top test_top("test_top");

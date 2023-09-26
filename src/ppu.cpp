@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (C) 2023 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  ******************************************************************************/
 
 #include "ppu.h"
@@ -14,14 +14,31 @@ bool Ppu::uiRenderBg = true;
 bool Ppu::uiRenderSprites = true;
 bool Ppu::uiRenderWndw = true;
 
+// Interleaves two selected bits of two bit vectors and arranges them in a screen buffer friendly way.
+// example a=0b00001000, b=00000000, pos=3, returns 0b00000010
+// pos e [0,7], return value is always e[0,3]
+constexpr u8 InterleaveBits(u8 a, u8 b, uint pos) {
+  const u8 mask = 1u << pos;
+  u8 res = (a & mask) == mask;
+  res |= (b & mask) == mask ? 2 : 0;
+  return res;
+}
+
+// Map val according to color palette given in reg.
+constexpr u8 MapColors(u8 val, u8 const *reg) {
+  return (*reg >> val*2) & 0b11;
+}
+
 Ppu::Ppu(sc_module_name name, bool headless)
   : sc_module(name) ,
     init_socket("init_socket"),
     clk("clk") {
   SC_CTHREAD(RenderLoop, clk);
-  memset(window_buffer, 0, kGbScreenBufferHeight*kGbScreenBufferWidth);
-  memset(bg_buffer, 0, kGbScreenBufferHeight*kGbScreenBufferWidth);
-  memset(sprite_buffer, 0, kGbScreenWidth*kGbScreenHeight);
+
+  memset(window_buffer, 0, kGbScreenBufferHeight * kGbScreenBufferWidth);
+  memset(bg_buffer, 0, kGbScreenBufferHeight * kGbScreenBufferWidth);
+  memset(sprite_buffer, 0, kGbScreenWidth * kGbScreenHeight);
+
   if (headless) {
     game_wndw = std::make_unique<DummyWindow>();
     window_wndw = std::make_unique<DummyWindow>();
@@ -42,6 +59,7 @@ void Ppu::start_of_simulation() {
   uint dummy;
   auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x0FFF, reinterpret_cast<void*>(&dummy));
   payload->set_address(0xFF40);  //  start of IO registers
+
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     assert(dmi_data.get_end_address() >= 0x0B);
@@ -63,7 +81,7 @@ void Ppu::start_of_simulation() {
     throw std::runtime_error("Could not get DMI for IO registers!");
   }
 
-  payload->set_address(0x8000);  // start of video ram
+  payload->set_address(0x8000);  // Start of video RAM.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     assert(dmi_data.get_end_address() >= 0x1C00);
@@ -76,7 +94,7 @@ void Ppu::start_of_simulation() {
     throw std::runtime_error("Could not get DMI for video RAM!");
   }
 
-  payload->set_address(0xFE00);  // start of oam table
+  payload->set_address(0xFE00);  // Start of OAM table.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
@@ -85,7 +103,7 @@ void Ppu::start_of_simulation() {
     throw std::runtime_error("Could not get DMI for OAM table!");
   }
 
-  payload->set_address(0xFFFF);  // interrupt register
+  payload->set_address(0xFFFF);  // Interrupt register.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
@@ -94,7 +112,7 @@ void Ppu::start_of_simulation() {
     throw std::runtime_error("Could not get DMI for the interrupt register!");
   }
 
-  payload->set_address(0xFF0F);  // interrupt pending register
+  payload->set_address(0xFF0F);  // Interrupt pending register.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
@@ -103,15 +121,7 @@ void Ppu::start_of_simulation() {
   }
 }
 
-constexpr u8 Ppu::MapBgCols(const u8 val) {
-  return (*reg_bgp >> val*2) & 0b11;
-}
-
-constexpr u8 Ppu::MapSpriteCols(const u8 val, const u8* reg) {
-  return (*reg >> val*2) & 0b11;
-}
-
-void Ppu::DrawBgToLine(uint line_num) {
+void Ppu::DrawBgToLine(int line_num) {
   u8* tile_data_table;
   u8* bg_tile_map;
 
@@ -126,9 +136,9 @@ void Ppu::DrawBgToLine(uint line_num) {
       if (tile_data_table == tile_data_table_up)
         tile_ind += 128;  // Using wraparound.
       i32 x_tile_pixel = (*reg_scroll_x + i) % 8;
-      i32 pixel_ind = static_cast<i32>(tile_ind) * TILE_BYTES + 2 * y_tile_pixel;
+      i32 pixel_ind = static_cast<i32>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
       i32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
-      res = MapBgCols(res);
+      res = MapColors(res, reg_bgp);
       bg_buffer[line_num][i] = res;
       assert(bg_tile_ind < 1024);
     }
@@ -164,9 +174,9 @@ void Ppu::DrawWndwToLine(int line_num) {
       if (tile_data_table == tile_data_table_up)
         tile_ind += 128;  // Using wraparound.
       i32 x_tile_pixel = (i - x_pos) % 8;
-      i32 pixel_ind = static_cast<i32>(tile_ind) * TILE_BYTES + 2 * y_tile_pixel;
+      i32 pixel_ind = static_cast<i32>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
       i32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind+1], 7-x_tile_pixel);
-      res = MapBgCols(res);
+      res = MapColors(res, reg_bgp);
       bg_buffer[line_num][i] = res;
       assert(wndw_tile_ind < 1024);
     }
@@ -231,7 +241,7 @@ void Ppu::DrawSpriteToLine(int line_num) {
       u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], (x_flip ? j : 7 - j));
       if (res == 0)  // Color 0 is transparent.
         continue;
-      res = MapSpriteCols(res, palette ? reg_obp_1 : reg_obp_0);
+      res = MapColors(res, palette ? reg_obp_1 : reg_obp_0);
       if (obj_prio) {
         if (bg_buffer[line_num][x_draw] == 0)
           bg_buffer[line_num][x_draw] = res;
@@ -316,14 +326,7 @@ std::string Ppu::StateStr() {
   return ss.str();
 }
 
-u8 Ppu::InterleaveBits(const u8 a, const u8 b, const uint pos) {
-  const u8 mask = 1u << pos;
-  u8 res = (a & mask) == mask;
-  res |= (b & mask) == mask ? 2 : 0;
-  return res;
-}
-
-Ppu::RenderWindow::RenderWindow(const uint width, const uint height, const uint log_width, const uint log_height)
+Ppu::RenderWindow::RenderWindow(uint width, uint height, uint log_width, uint log_height)
     : width(width), height(height), log_width(log_width), log_height(log_height) {
   SDL_Init(SDL_INIT_VIDEO);
   SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
@@ -341,7 +344,7 @@ Ppu::RenderWindow::~RenderWindow() {
   SDL_Quit();
 }
 
-void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path file_path) {
+void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path &file_path) {
   const Uint32 format = SDL_PIXELFORMAT_ARGB8888;
   SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format);
   SDL_RenderReadPixels(renderer, NULL, format, surface->pixels, surface->pitch);
@@ -404,9 +407,9 @@ void Ppu::WindowWindow::DrawToScreen(Ppu &p) {
     for (uint i = 0; i < 8; ++i) {
       for (uint j = 0; j < 16; ++j) {
         for (uint k = 0; k < 8; ++k) {
-          uint val = p.InterleaveBits(p.tile_data_table_low[t*256+j*16+2*i],
-                                      p.tile_data_table_low[t*256+j*16+2*i+1], 7-k);
-          val = p.MapBgCols(val);
+          uint val = InterleaveBits(p.tile_data_table_low[t*256+j*16+2*i],
+                                    p.tile_data_table_low[t*256+j*16+2*i+1], 7-k);
+          val = MapColors(val, p.reg_bgp);
           SDL_SetRenderDrawColor(renderer,
                                renderColor[val][0],
                                renderColor[val][1],
