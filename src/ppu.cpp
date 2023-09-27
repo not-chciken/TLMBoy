@@ -5,8 +5,11 @@
 
 #include "ppu.h"
 
+#include <chrono>
+#include <format>
 #include <memory>
 #include <ranges>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -29,7 +32,7 @@ constexpr u8 MapColors(u8 val, u8 const *reg) {
   return (*reg >> val * 2) & 0b11;
 }
 
-Ppu::Ppu(sc_module_name name, bool headless) : sc_module(name), init_socket("init_socket"), clk("clk") {
+Ppu::Ppu(sc_module_name name, bool headless, int fps_cap) : sc_module(name), init_socket("init_socket"), clk("clk") {
   SC_CTHREAD(RenderLoop, clk);
 
   memset(bg_buffer, 0, kGbScreenBufferHeight * kGbScreenBufferWidth);
@@ -42,8 +45,8 @@ Ppu::Ppu(sc_module_name name, bool headless) : sc_module(name), init_socket("ini
   } else {
     // Need typecast to create some temporaries with addresses for unique pointer reference arguments :/
     game_wndw = std::make_unique<GameWindow>((int)kRenderWndwWidth, (int)kRenderWndwHeight, (int)kGbScreenWidth,
-                                             (int)kGbScreenHeight);
-    window_wndw = std::make_unique<WindowWindow>(128 * 2, 128 * 2, 128, 128);
+                                             (int)kGbScreenHeight, "TLMBoy", fps_cap);
+    window_wndw = std::make_unique<WindowWindow>(128 * 2, 128 * 2, 128, 128, "Tile Data Table");
   }
 }
 
@@ -329,10 +332,11 @@ std::string Ppu::StateStr() {
   return ss.str();
 }
 
-Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_height)
-    : width(width), height(height), log_width(log_width), log_height(log_height) {
+Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_height, const char* title)
+    : width(width), height(height), log_width(log_width), log_height(log_height), title(title) {
   SDL_Init(SDL_INIT_VIDEO);
   SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
+  SDL_SetWindowTitle(window, title);
   SDL_RenderSetLogicalSize(renderer, log_width, log_height);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderClear(renderer);
@@ -355,7 +359,29 @@ void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path &file_path) {
   SDL_FreeSurface(surface);
 }
 
+Ppu::GameWindow::GameWindow(int width, int height, int log_width, int log_height, const char* title, int fps_cap)
+    : RenderWindow(width, height, log_width, log_height, title), fps_cap(fps_cap) {
+}
+
 void Ppu::GameWindow::DrawToScreen(Ppu &p) {
+  static u64 last_time = 0;
+
+  u64 new_time = SDL_GetTicks64();
+  u64 delta_time = new_time - last_time;
+  int fps = 1000 / delta_time;
+
+  if (fps > fps_cap) {
+    int target_delta = 1000 / fps_cap;
+    int sleep_time = target_delta - delta_time;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+    new_time = SDL_GetTicks64();
+    fps = 1000 / (new_time - last_time);
+  }
+
+  last_time = new_time;
+
+  SDL_SetWindowTitle(window, std::format("{}   FPS: {:02}", title, fps).c_str());
+
   // If the screen is off, just draw a red background.
   if (!((*p.reg_lcdc) & kMaskLcdControl)) {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -375,10 +401,12 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
   } else {
     SDL_SetRenderDrawColor(renderer, 242, 255, 217, 255);
     for (int j = 0; j < log_height; ++j)
-      for (int i = 0; i < log_width; ++i) SDL_RenderDrawPoint(renderer, i, j);
+      for (int i = 0; i < log_width; ++i) {
+        SDL_RenderDrawPoint(renderer, i, j);
+      }
   }
 
-  // Sprite loop
+  // Sprite loop.
   if (uiRenderSprites) {
     for (int j = 0; j < kGbScreenHeight; ++j) {
       for (int i = 0; i < kGbScreenWidth; ++i) {

@@ -53,10 +53,11 @@ Utilities:
 | 3         | Hold to not render window     |
 
 # Command Line Arguments
-- `--boot-rom-path=P`: Specifies the path `P` of the boot ROM. Points to "../roms/DMG_ROM.bin" by default.
+- `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG_ROM.bin" by default.
+- `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
 - `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
-- `--max-cycles=X`: Only execute a maximum number of `X` machine cycles.
-- `--rom-path=P`: Specifies the ROM/game `P` that shall be executed.
+- `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
+- `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
 - `--single-step`: Prints the CPU state before the execution pf each instruction.
 - `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
 

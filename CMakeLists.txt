@@ -38,6 +38,7 @@ set(ALL_CPPS
   ${CMAKE_SOURCE_DIR}/src/generic_memory.cpp
   ${CMAKE_SOURCE_DIR}/src/io_registers.cpp
   ${CMAKE_SOURCE_DIR}/src/joypad.cpp
+  ${CMAKE_SOURCE_DIR}/src/options.cpp
   ${CMAKE_SOURCE_DIR}/src/ppu.cpp
   ${CMAKE_SOURCE_DIR}/src/tcp_server.cpp
   ${CMAKE_SOURCE_DIR}/src/timer.cpp

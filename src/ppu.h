@@ -88,7 +88,7 @@ struct Ppu : public sc_module {
   static bool uiRenderSprites;
   static bool uiRenderWndw;
 
-  explicit Ppu(sc_module_name name, bool headless = false);
+  explicit Ppu(sc_module_name name, bool headless = false, int fps_cap = 60);
   ~Ppu();
 
   // PPU IO registers.
@@ -134,7 +134,7 @@ struct Ppu : public sc_module {
 
   class RenderWindow {
    public:
-    RenderWindow(int width, int height, int log_width, int log_height);
+    RenderWindow(int width, int height, int log_width, int log_height, const char* title);
     RenderWindow();
     virtual ~RenderWindow();
 
@@ -148,6 +148,7 @@ struct Ppu : public sc_module {
     int height;
     int log_width;  // Logical width.
     int log_height;  // Logical height.
+    string title;
   };
 
   std::unique_ptr<RenderWindow> game_wndw;
@@ -156,8 +157,10 @@ struct Ppu : public sc_module {
   // This the main window.
   class GameWindow : public RenderWindow {
    public:
-    using RenderWindow::RenderWindow;
+    GameWindow(int width, int height, int log_width, int log_height, const char* title, int fps_cap);
     void DrawToScreen(Ppu &ppu) override;
+   protected:
+    int fps_cap;
   };
 
   // Used for displaying the window tiles. Intended for debugging/analysis.
