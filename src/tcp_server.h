@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Implementation of a TCP server.
  * Currently only used for the Remote GDB protocol.

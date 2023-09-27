@@ -1,7 +1,7 @@
 #pragma once
 /*****************************************************************************************
- * Copyright (C) 2022 chiken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Here global constants of the gameboy reside.
  * Like the address of the interrupt registers, the bus width, etc.
@@ -12,7 +12,7 @@
 #include "utils.h"
 
 namespace gb_const {
-const u16 kAdrIntrFlag    = 0xFF0F;  // address of the interrupt flag register
+const u16 kAdrIntrFlag = 0xFF0F;  // address of the interrupt flag register
 const u8 kVBlankIf     = 1;  // bit0: v blank interrupt mask
 const u8 kLCDCIf       = 1 << 1;  // bit1: lcdc interrupt mask TODO
 const u8 kTimerOfIf    = 1 << 2;  // bit2: Timer overflow interrupt.

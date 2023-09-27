@@ -35,7 +35,9 @@ class Reg {
     return *this;
   }
 
-  operator T() const {return value_;}
+  operator T() const {
+    return value_;
+  }
 
   auto operator<=>(const Reg& r) const {
     return value_ <=> r.value_;

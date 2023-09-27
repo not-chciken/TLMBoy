@@ -1,10 +1,10 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2021 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This class implements the Game Boy's joy pad.
- * An important role plays "reg_0xFF00" that is structured as follows:
+ * An important role plays "reg_p1_" that is structured as follows:
  *
  *
  * bit 7-6: not used
@@ -24,10 +24,10 @@
  * A key = A button; S key = B button
  * O key = Select button; P key = Start Button
  ******************************************************************************/
-#include "SDL2/SDL.h"
-#include "systemc.h"
-#include "sysc/kernel/sc_simcontext.h"
-#include "tlm.h"
+#include <SDL2/SDL.h>
+#include <sysc/kernel/sc_simcontext.h>
+#include <systemc.h>
+#include <tlm.h>
 
 #include "common.h"
 #include "debug.h"
@@ -36,26 +36,31 @@
 
 struct JoyPad : public InterruptModule<JoyPad>, sc_module {
   SC_HAS_PROCESS(JoyPad);
-  u8 reg_0xFF00 = 0b00111111;
-  const u32 kWaitMs = 10;
-  bool but_up = false;
-  bool but_down = false;
-  bool but_left = false;
-  bool but_right = false;
-  bool but_a = false;
-  bool but_b = false;
-  bool but_start = false;
-  bool but_select = false;
-  SDL_Event event;
-  tlm_utils::simple_target_socket<JoyPad, gb_const::kBusDataWidth> targ_socket;
 
   explicit JoyPad(sc_module_name name);
-  void start_of_simulation() override;
+  JoyPad(JoyPad const&) = delete;
+  void operator=(JoyPad const&) = delete;
 
   void InputLoop();
   void SetButton(SDL_Keycode sym, bool pressed);
   u8 ReadReg();
   void WriteReg(u8 dat);
+
+  // SystemC interfaces.
+  tlm_utils::simple_target_socket<JoyPad, gb_const::kBusDataWidth> targ_socket;
+  void start_of_simulation() override;
   void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
   uint transport_dbg(tlm::tlm_generic_payload& trans);
+
+private:
+  bool but_up_;
+  bool but_down_;
+  bool but_left_;
+  bool but_right_;
+  bool but_a_;
+  bool but_b_;
+  bool but_start_;
+  bool but_select_;
+  u8 reg_p1_; // Register at 0xff00 for reading joy pad info.
+  SDL_Event event;
 };

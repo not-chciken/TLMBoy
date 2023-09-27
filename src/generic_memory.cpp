@@ -1,17 +1,18 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  ******************************************************************************/
-
-#include <format>
 
 #include "generic_memory.h"
 
-GenericMemory::GenericMemory(size_t memory_size, sc_module_name name, u8 *data)
+#include <format>
+
+GenericMemory::GenericMemory(size_t memory_size, sc_module_name name, u8* data)
     : sc_module(name), targ_socket("targ_socket"), memory_size_(memory_size) {
   targ_socket.register_b_transport(this, &GenericMemory::b_transport);
   targ_socket.register_transport_dbg(this, &GenericMemory::transport_dbg);
   targ_socket.register_get_direct_mem_ptr(this, &GenericMemory::get_direct_mem_ptr);
+
   if (data == nullptr) {
     data_ = new u8[memory_size_]{0};
     delete_data_ = true;
@@ -23,31 +24,33 @@ GenericMemory::GenericMemory(size_t memory_size, sc_module_name name, u8 *data)
 
 GenericMemory::~GenericMemory() {
   if (delete_data_) {
-    delete [] data_;
+    delete[] data_;
   }
 }
 
-void GenericMemory::SetMemData(u8 *data, size_t size) {
+void GenericMemory::SetMemData(u8* data, size_t size) {
   assert(size < memory_size_);
   std::memcpy(data_, data, size);
 }
 
-u8* GenericMemory::GetDataPtr() {
-  return data_;
-}
+u8* GenericMemory::GetDataPtr() { return data_; }
 
 void GenericMemory::LoadFromFile(std::filesystem::path path, int offset) {
   std::ifstream file(path.string(), std::ios::binary | std::ios::ate);
+
   if (!file) {
     throw std::runtime_error(std::format("Could not read file '{}'!", path.string()));
   }
+
   std::streamsize size = file.tellg();
   assert(size >= offset);
+
   if (size - offset > static_cast<int>(memory_size_)) {
     size = static_cast<int>(memory_size_) - offset;
   } else {
     size = size - offset;
   }
+
   file.seekg(offset, std::ios::beg);
 
   if (file.read(reinterpret_cast<char*>(&data_[0]), size)) {
@@ -55,6 +58,7 @@ void GenericMemory::LoadFromFile(std::filesystem::path path, int offset) {
   } else {
     throw std::runtime_error("could not read file");
   }
+
   file.close();
 }
 
@@ -89,4 +93,3 @@ bool GenericMemory::get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm
   dmi_data.set_dmi_ptr(reinterpret_cast<unsigned char*>(&data_[adr]));
   return true;
 }
-

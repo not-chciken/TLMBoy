@@ -13,6 +13,7 @@
 namespace fs = std::filesystem;
 
 namespace options {
+
 bool headless = false;
 bool single_step = false;
 bool wait_for_gdb = false;
@@ -20,8 +21,7 @@ fs::path rom_path = "";
 fs::path boot_rom_path = "../roms/DMG_ROM.bin";
 i64 max_cycles = -1;
 
-// Parses the arguments from the CLI and sets option variables
-// accordingly for the TLMBoy's main.
+// Parses the arguments from the CLI and sets option variables accordingly for the TLMBoy's main.
 inline void GetMainOptions(int argc, char* argv[]) {
   const struct option long_opts[] = {{"boot-rom-path", required_argument, 0, 'b'},
                                      {"help", no_argument, 0, 'h'},

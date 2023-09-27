@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This files serves the testing of the Pixel Processing Unit.
  * It includes some simple unit tests which do not include SystemC

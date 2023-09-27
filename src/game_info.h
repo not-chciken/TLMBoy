@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (C) 2022 chiken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This class holds general information about the game.
  * The information is obtained by reading the certain regions

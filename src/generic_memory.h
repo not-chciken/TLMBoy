@@ -1,9 +1,9 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2020 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
- * This class implements a generic memory module
+ * This class implements a generic memory module.
  ******************************************************************************/
 #include <cstdint>
 #include <filesystem>
@@ -18,11 +18,13 @@ struct GenericMemory : public sc_module {
   SC_HAS_PROCESS(GenericMemory);
   tlm_utils::simple_target_socket<GenericMemory, gb_const::kBusDataWidth> targ_socket;
 
-  GenericMemory(uint64_t memory_size, sc_module_name name, u8 *data = nullptr);
+  GenericMemory(size_t memory_size, sc_module_name name, u8* data = nullptr);
   ~GenericMemory();
+  GenericMemory(GenericMemory const&) = delete;
+  void operator=(GenericMemory const&) = delete;
 
   u8* GetDataPtr();
-  void SetMemData(u8 *data, size_t size);
+  void SetMemData(u8* data, size_t size);
   virtual void LoadFromFile(std::filesystem::path path, int offset = 0);
 
   // SystemC interfaces
@@ -31,7 +33,7 @@ struct GenericMemory : public sc_module {
   unsigned int transport_dbg(tlm::tlm_generic_payload& trans);
 
  protected:
-  u8 *data_;
+  u8* data_;
   size_t memory_size_;
   bool delete_data_;
 };

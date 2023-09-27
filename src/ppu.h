@@ -31,9 +31,9 @@ struct Ppu : public sc_module {
   SC_HAS_PROCESS(Ppu);
 
   static constexpr u8 renderColor[4][3] = {{242, 255, 217}, {170, 170, 170}, {85, 85, 85}, {0, 0, 0}};
-  static const int kOamEntryBytes = 4;   // Bytes per OAM entry.
+  static const int kOamEntryBytes = 4;  // Bytes per OAM entry.
   static const int kNumOamEntries = 40;  // Number of OAM entries. Hence, 40 sprites can be displayed at max.
-  static const int kTileLength = 8;      // Length of a normal tile in pixels.
+  static const int kTileLength = 8;  // Length of a normal tile in pixels.
   static const int kBytesPerTile = 16;
 
   static const int kGbScreenWidth = 160;
@@ -44,7 +44,7 @@ struct Ppu : public sc_module {
   static const int kRenderWndwWidth = kGbScreenWidth * kRenderScaling;
   static const int kRenderWndwHeight = kGbScreenHeight * kRenderScaling;
 
-  // Masks for reg_0xFF40.
+  // Masks for reg_lcdc.
   static const u8 kMaskLcdControl = 0b10000000;          // bit 7; 1 -> operate
   static const u8 kMaskWndwTileMapSlct = 0b01000000;     // bit 6; 0 -> 0x9800-0x9BFF. 1 -> 0x9C00-0x9FFF
   static const u8 kMaskWndwDisp = 0b00100000;            // bit 5; 0 -> off, 1 -> on
@@ -92,32 +92,32 @@ struct Ppu : public sc_module {
   ~Ppu();
 
   // PPU IO registers.
-  u8 *reg_0xFF40;    // LCDC flags.
-  u8 *reg_0xFF41;    // STAT flags.
+  u8 *reg_lcdc;  // LCDC flags.
+  u8 *reg_stat;  // STAT flags.
   u8 *reg_scroll_y;  // Y scroll background.
   u8 *reg_scroll_x;  // X scroll background
-  u8 *reg_lcdc_y;    // LCDC Y coordinate.
-  u8 *reg_ly_comp;   // LY compare
-  u8 *reg_dma;       // Direct memory access.
-  u8 *reg_bgp;       // Background and window palette data.
-  u8 *reg_obp_0;     // Object palette 0 data.
-  u8 *reg_obp_1;     // Object palette 1 data.
-  u8 *reg_wndw_y;    // Window y position.
-  u8 *reg_wndw_x;    // Window x position.
-  u8 *reg_ie;        // Interrupt enable.
+  u8 *reg_lcdc_y;  // LCDC Y coordinate.
+  u8 *reg_ly_comp;  // LY compare
+  u8 *reg_dma;  // Direct memory access.
+  u8 *reg_bgp;  // Background and window palette data.
+  u8 *reg_obp_0;  // Object palette 0 data.
+  u8 *reg_obp_1;  // Object palette 1 data.
+  u8 *reg_wndw_y;  // Window y position.
+  u8 *reg_wndw_x;  // Window x position.
+  u8 *reg_ie;  // Interrupt enable.
   u8 *reg_intr_pending_dmi;
 
   u8 *tile_data_table_low;  // Lower tile data table: 0x8000-0x8FFF (overlaps with upper!).
-  u8 *tile_data_table_up;   // Upper tile data table from 0x8800-0x97FF (overlaps with lower!).
+  u8 *tile_data_table_up;  // Upper tile data table from 0x8800-0x97FF (overlaps with lower!).
 
   u8 *tile_map_low;  // Lower background and window tile map: 0x9800-0x9BFF.
-  u8 *tile_map_up;   // Upper background and window tile map: 0x9C00-0x9FFF.
+  u8 *tile_map_up;  // Upper background and window tile map: 0x9C00-0x9FFF.
 
   u8 *oam_table;  // Object Attribute Memory (OAM) has 40x4 Byte blocks residing at 0xFE00-0xFE9F.
 
   u8 bg_buffer[kGbScreenHeight][kGbScreenWidth];
-  u8 window_buffer[kGbScreenBufferHeight][kGbScreenBufferWidth];
   u8 sprite_buffer[kGbScreenHeight][kGbScreenWidth];
+  u8 window_buffer[kGbScreenBufferHeight][kGbScreenBufferWidth];
 
   void CheckLycInterrupt();
   void DrawBgToLine(int line_num);
@@ -134,7 +134,7 @@ struct Ppu : public sc_module {
 
   class RenderWindow {
    public:
-    RenderWindow(uint width, uint height, uint log_width, uint log_height);
+    RenderWindow(int width, int height, int log_width, int log_height);
     RenderWindow();
     virtual ~RenderWindow();
 
@@ -144,10 +144,10 @@ struct Ppu : public sc_module {
    protected:
     SDL_Renderer *renderer;
     SDL_Window *window;
-    uint width;
-    uint height;
-    uint log_width;   // Logical width.
-    uint log_height;  // Logical height.
+    int width;
+    int height;
+    int log_width;  // Logical width.
+    int log_height;  // Logical height.
   };
 
   std::unique_ptr<RenderWindow> game_wndw;
@@ -171,7 +171,7 @@ struct Ppu : public sc_module {
   class DummyWindow : public RenderWindow {
    public:
     DummyWindow() : RenderWindow() {}
-    void DrawToScreen(Ppu &ppu [[maybe_unused]]) override{};                                  // Do nothing.
+    void DrawToScreen(Ppu &ppu [[maybe_unused]]) override{};  // Do nothing.
     void SaveScreenshot(const std::filesystem::path &file_path [[maybe_unused]]) override{};  // Do nothing.
   };
 
