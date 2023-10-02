@@ -21,10 +21,14 @@
 #include "utils.h"
 
 const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+Options options;
 
 TEST(BootTests, BootState) {
-  GbTop test_top("test_top", tlm_boy_root + "/roms/dummy.bin",
-                             tlm_boy_root + "/roms/DMG_ROM.bin", false, false, true);
+  options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
+  options.rom_path = tlm_boy_root + "/roms/dummy.bin";
+  options.single_step = true;
+  GbTop test_top("test_top", options);
+
   std::ofstream out("boot_states.txt");
   std::cout.rdbuf(out.rdbuf());
 

@@ -13,11 +13,15 @@
 #include "options.h"
 #include "utils.h"
 
+Options options;
+
 TEST(PpuTest, DmgAcid2) {
   std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+  options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
+  options.rom_path = tlm_boy_root + "/roms/dmg-acid2.gb";
+  options.headless = true;
 
-  GbTop test_top("test_top", tlm_boy_root + "/roms/dmg-acid2.gb",
-                             tlm_boy_root + "/roms/DMG_ROM.bin", options::headless);
+  GbTop test_top("test_top", options);
   sc_start(5, SC_SEC);
   test_top.gb_ppu.game_wndw->SaveScreenshot("dmg-acid2.bmp");
 
@@ -36,7 +40,7 @@ int sc_main(int argc, char* argv[]) {
     int index;
     switch (getopt_long(argc, argv, "l", long_opts, &index)) {
       case 'l':
-        options::headless = true; break;
+        options.headless = true; break;
         continue;
       default :
         break;
