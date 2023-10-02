@@ -32,7 +32,7 @@ add_executable(test_ppu test_ppu.cpp)
 set(TEST_INCLUDE_PATHS ${SYSTEMC_PATH}/include
                        src/)
 set(TEST_LIB_PATHS -L${SYSTEMC_PATH}/lib-linux64)
-set(TEST_LIBS -lsystemc -lgtest -lpthread -lfmt -lSDL2 -lgcov tlmboy_static_test)
+set(TEST_LIBS -lsystemc -lgtest -lpthread -lSDL2 -lgcov tlmboy_static_test)
 set(TEST_COMPILE_OPTS --coverage -g -O0)
 
 macro(create_test_case test_name)
