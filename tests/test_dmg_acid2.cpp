@@ -19,7 +19,6 @@ TEST(PpuTest, DmgAcid2) {
   std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
   options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
   options.rom_path = tlm_boy_root + "/roms/dmg-acid2.gb";
-  options.headless = true;
 
   GbTop test_top("test_top", options);
   sc_start(5, SC_SEC);
