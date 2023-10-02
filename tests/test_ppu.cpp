@@ -22,6 +22,7 @@
 #include "utils.h"
 
 const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+Options options;
 
 struct PpuStimulus : public sc_module {
   SC_HAS_PROCESS(PpuStimulus);
@@ -155,7 +156,7 @@ TEST(PpuTests, SmokeTest) {
 
   ASSERT_TRUE(test_top.test_ppu.StateStr().size() != 0);
 
-  if (options::headless == false) {
+  if (options.headless == false) {
     ASSERT_TRUE(CompareFiles("test_ppu.bmp", tlm_boy_root + "/tests/golden_files/test_ppu.bmp"));
   }
 }
@@ -172,7 +173,7 @@ int sc_main(int argc, char* argv[]) {
     int index;
     switch (getopt_long(argc, argv, "l", long_opts, &index)) {
       case 'l':
-        options::headless = true; break;
+        options.headless = true; break;
         continue;
       default :
         break;
