@@ -49,21 +49,21 @@ set(ALL_CPPS
 add_executable(tlmboy src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy -lsystemc -lSDL2 -lfmt)
+target_link_libraries(tlmboy -lsystemc -lSDL2)
 target_compile_options(tlmboy PUBLIC -O3 -flto)
 
 # For test purposes
 add_executable(tlmboy_test src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy_test PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy_test "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy_test -lgcov -lsystemc -lSDL2 -lfmt)
+target_link_libraries(tlmboy_test -lgcov -lsystemc -lSDL2)
 target_compile_options(tlmboy_test PUBLIC -O0 -g --coverage)
 
 # Static tlmboy lib for faster compilation of tests.
 add_library(tlmboy_static_test STATIC ${ALL_CPPS})
 target_include_directories(tlmboy_static_test PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy_static_test "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy_static_test -lgcov -lsystemc -lSDL2 -lfmt)
+target_link_libraries(tlmboy_static_test -lgcov -lsystemc -lSDL2)
 target_compile_options(tlmboy_static_test PUBLIC -O0 -g --coverage)
 
 # Add system tests and unit tests.
