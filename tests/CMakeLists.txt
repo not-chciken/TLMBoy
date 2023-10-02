@@ -42,6 +42,7 @@ macro(create_test_case test_name)
   target_compile_options(${test_name} PUBLIC ${TEST_COMPILE_OPTS})
   target_link_libraries(${test_name} ${TEST_LIBS})
   add_test(NAME ${test_name} COMMAND ${test_name})
+  set_tests_properties(${test_name} PROPERTIES TIMEOUT 300)
 endmacro()
 
 create_test_case(test_blarrg_cpuinstr01)
