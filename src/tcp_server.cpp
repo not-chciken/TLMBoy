@@ -1,19 +1,18 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  ******************************************************************************/
 
 #include "tcp_server.h"
 
 #include <errno.h>
+#include <format>
 #include <sys/ioctl.h>
 
 #include <stdexcept>
 #include <sstream>
 
-#include "fmt/format.h"
-
-TcpServer::TcpServer() {
+TcpServer::TcpServer() : socket_fd_(0), client_fd_(0) {
 }
 
 TcpServer::~TcpServer() {
@@ -21,8 +20,21 @@ TcpServer::~TcpServer() {
   close(client_fd_);
 }
 
-void TcpServer::Start(const int port) {
-  socket_fd_ = 0;
+bool TcpServer::DataAvailable() {
+  int count;
+  ioctl(client_fd_, FIONREAD, &count);
+  return static_cast<bool>(count);
+}
+
+void TcpServer::AcceptClient() {
+  socklen_t cli_addr_size   = sizeof(client_addr_);
+  client_fd_ = ::accept(socket_fd_, (struct sockaddr*)&client_addr_, &cli_addr_size);
+  if (client_fd_ == -1) {  // Accept failed.
+    throw std::runtime_error("accept failed");
+  }
+}
+
+void TcpServer::Start(int port) {
   socket_fd_ = socket(PF_INET, SOCK_STREAM, 0);  // Only local addresses.
   if (socket_fd_ == -1) {
     throw std::runtime_error("creating socket failed");
@@ -47,34 +59,20 @@ void TcpServer::Start(const int port) {
   }
 }
 
-void TcpServer::AcceptClient() {
-  socklen_t cli_addr_size   = sizeof(client_addr_);
-  client_fd_ = ::accept(socket_fd_, (struct sockaddr*)&client_addr_, &cli_addr_size);
-  if (client_fd_ == -1) {  // Accept failed.
-    throw std::runtime_error("accept failed");
+void TcpServer::SendMsg(const char *msg) {
+  int succ = ::send(client_fd_, msg, strlen(msg), 0);
+  if (succ == -1) {
+    throw std::runtime_error(std::format("SendMsg failed with errno: {}\n", strerror(errno)));
   }
 }
 
-std::string TcpServer::RecvBlocking(uint length) {
+string TcpServer::RecvBlocking(uint length) {
   assert(length < kMaxPacketSize);
   char msg[kMaxPacketSize];
   ssize_t num_bytes = recv(client_fd_, msg, length, 0);
   msg[length] = '\0';
   if (num_bytes < 0) {
-    throw std::runtime_error(fmt::format("recv failed with errno: {}\n", strerror(errno)));
+    throw std::runtime_error(std::format("recv failed with errno: {}\n", strerror(errno)));
   }
-  return std::string(msg);
-}
-
-void TcpServer::SendMsg(const char *msg) {
-  int succ = ::send(client_fd_, msg, strlen(msg), 0);
-  if (succ == -1) {
-    throw std::runtime_error(fmt::format("SendMsg failed with errno: {}\n", strerror(errno)));
-  }
-}
-
-bool TcpServer::DataAvailable() {
-  int count;
-  ioctl(client_fd_, FIONREAD, &count);
-  return static_cast<bool>(count);
+  return string(msg);
 }

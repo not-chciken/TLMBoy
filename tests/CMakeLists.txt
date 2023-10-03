@@ -24,6 +24,7 @@ add_executable(test_boot test_boot.cpp)
 add_executable(test_boot_states test_boot_states.cpp)
 add_executable(test_bus test_bus.cpp)
 add_executable(test_cpu test_cpu.cpp)
+add_executable(test_dmg_acid2 test_dmg_acid2.cpp)
 add_executable(test_gdb test_gdb.cpp)
 add_executable(test_memory test_memory.cpp)
 add_executable(test_ppu test_ppu.cpp)
@@ -31,7 +32,7 @@ add_executable(test_ppu test_ppu.cpp)
 set(TEST_INCLUDE_PATHS ${SYSTEMC_PATH}/include
                        src/)
 set(TEST_LIB_PATHS -L${SYSTEMC_PATH}/lib-linux64)
-set(TEST_LIBS -lsystemc -lgtest -lpthread -lfmt -lSDL2 -lgcov tlmboy_static_test)
+set(TEST_LIBS -lsystemc -lgtest -lpthread -lSDL2 -lgcov tlmboy_static_test)
 set(TEST_COMPILE_OPTS --coverage -g -O0)
 
 macro(create_test_case test_name)
@@ -41,6 +42,7 @@ macro(create_test_case test_name)
   target_compile_options(${test_name} PUBLIC ${TEST_COMPILE_OPTS})
   target_link_libraries(${test_name} ${TEST_LIBS})
   add_test(NAME ${test_name} COMMAND ${test_name})
+  set_tests_properties(${test_name} PROPERTIES TIMEOUT 300)
 endmacro()
 
 create_test_case(test_blarrg_cpuinstr01)
@@ -58,6 +60,7 @@ create_test_case(test_boot)
 create_test_case(test_boot_states)
 create_test_case(test_bus)
 create_test_case(test_cpu)
+create_test_case(test_dmg_acid2)
 create_test_case(test_gdb)
 create_test_case(test_memory)
 create_test_case(test_ppu)
@@ -68,6 +71,7 @@ target_compile_options(test_boot_states PUBLIC ${TEST_COMPILE_OPTS} -DENABLE_DBG
 set_tests_properties(
   test_cpu
   test_bus
+  test_dmg_acid2
   test_gdb
   test_memory
   test_ppu

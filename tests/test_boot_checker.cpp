@@ -1,7 +1,7 @@
 
 /*******************************************************************************
- * Copyright (C) 2020 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Collection of unit test which test the functionality of the bus and
  * the payload factory

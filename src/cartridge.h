@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2022 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Collection of classes that are all associated to the Game Boy's cartridge.
  * See: https://gbdev.gg8.se/wiki/articles/Memory_Bank_Controllers
@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "common.h"
-#include "fmt/format.h"
 #include "game_info.h"
 #include "generic_memory.h"
 

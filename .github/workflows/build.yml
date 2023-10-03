@@ -25,18 +25,20 @@ jobs:
     - name: build tlmboy
       working-directory: ./build
       run: |
-           cmake --build . --target tlmboy --config Release
-           cmake --build . --target tlmboy_test
-           cmake --build . --target tlmboy_static_test
+           cmake --build . --target tlmboy --config Release -j$(nproc)
+           cmake --build . --target tlmboy_test -j$(nproc)
+           cmake --build . --target tlmboy_static_test -j$(nproc)
     - name: build tests
       working-directory: ./build
-      run: cmake --build . --target tests
+      run: cmake --build . --target tests -j$(nproc)
     - name: run tests
       working-directory: ./build/tests
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
             ./test_bus
             ./test_cpu
+            ./test_gdb
+            ./test_memory
             ./test_ppu --headless
             ./test_blarrg_cpuinstr01 --headless
             ./test_blarrg_cpuinstr02 --headless
@@ -49,7 +51,6 @@ jobs:
             ./test_blarrg_cpuinstr09 --headless
             ./test_blarrg_cpuinstr10 --headless
             ./test_blarrg_cpuinstr11 --headless
-            ./test_gdb
     - name: coverage report
       run: |
            export CODACY_PROJECT_TOKEN=${{secrets.CODACY_TOKEN}}

@@ -18,8 +18,8 @@
 template<typename T>
 class Reg {
  public:
-  const std::string name;
-  Reg(std::string name, T &value) : name(name), value_(value) {}
+  const string name;
+  Reg(string name, T &value) : name(name), value_(value) {}
   Reg(const Reg&) = delete;
   Reg& operator=(Reg& other) {
     value_ = other.value_;
@@ -35,7 +35,9 @@ class Reg {
     return *this;
   }
 
-  operator T() const {return value_;}
+  operator T() const {
+    return value_;
+  }
 
   auto operator<=>(const Reg& r) const {
     return value_ <=> r.value_;
@@ -114,7 +116,7 @@ static_assert(std::endian::native == std::endian::little, "RegFile is not big en
       DE("DE", reinterpret_cast<u16&>(_dat[4])),
       HL("HL", reinterpret_cast<u16&>(_dat[6])),
       SP("SP", reinterpret_cast<u16&>(_dat[8])),
-      PC("SP", reinterpret_cast<u16&>(_dat[10])) {
+      PC("PC", reinterpret_cast<u16&>(_dat[10])) {
   }
 
   // For the pupose of range-based for-loops á la "for (auto reg : reg_file)".

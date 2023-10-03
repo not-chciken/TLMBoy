@@ -1,21 +1,22 @@
 /**********************************************
- * MIT License
- * Copyright (c) 2020 chciken/Niko
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
 **********************************************/
 
 #include "cpu.h"
 
 #include <bitset>
+#include <format>
 #include <string>
 
-#include "fmt/format.h"
 #include "cpu_jumptable.cpp"
 #include "cpu_ops.cpp"
 
-Cpu::Cpu(sc_module_name name, bool attachGdb):
+Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step):
     sc_module(name),
     gdb_server(this),
-    attachGdb(attachGdb) {
+    attach_gdb_(attach_gdb),
+    single_step_(single_step) {
   SC_CTHREAD(DoMachineCycle, clk);
   payload = MakeSharedPayloadPtr(tlm::TLM_IGNORE_COMMAND, 0x0000, nullptr);
 }
@@ -36,19 +37,19 @@ void Cpu::SetFlagZ(bool val) {
   reg_file.F = SetBit(reg_file.F, val, kIndZFlag);
 }
 
-const bool Cpu::GetFlagC() {
+bool Cpu::GetFlagC() const {
   return static_cast<bool>(kMaskCFlag & reg_file.F);
 }
 
-const bool Cpu::GetFlagH() {
+bool Cpu::GetFlagH() const {
   return static_cast<bool>(kMaskHFlag & reg_file.F);
 }
 
-const bool Cpu::GetFlagN() {
+bool Cpu::GetFlagN() const {
   return static_cast<bool>(kMaskNFlag & reg_file.F);
 }
 
-const bool Cpu::GetFlagZ() {
+bool Cpu::GetFlagZ() const {
   return static_cast<bool>(kMaskZFlag & reg_file.F);
 }
 
@@ -81,7 +82,7 @@ u8 Cpu::ReadBus(u16 addr) {
   init_socket->b_transport(*payload, delay);
   if (payload->is_response_error()) {
     DBG_LOG_CPU("Transport status is:" << payload->get_response_string());
-    throw std::runtime_error(fmt::format("Response error from transport_dbg!\n"
+    throw std::runtime_error(std::format("Response error from transport_dbg!\n"
                              "Address=0x{:04x} Data=0x{:02x}", addr, data).c_str());
   }
   return data;
@@ -95,7 +96,7 @@ u8 Cpu::ReadBusDebug(u16 addr) {
   init_socket->transport_dbg(*payload);
   if (payload->is_response_error()) {
     data = 0;
-    std::cout << fmt::format("Warning: Reading unmapped address at 0x{:04x}\n", addr);
+    std::cout << std::format("Warning: Reading unmapped address at 0x{:04x}\n", addr);
   }
   return data;
 }

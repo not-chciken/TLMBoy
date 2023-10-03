@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -qq
@@ -13,20 +13,23 @@ RUN  apt-get install -yq \
      gdb \
      gcovr \
      g++-10 \
-     libfmt-dev \
+     g++-13 \
+     python3-pip \
      libgtest-dev \
      libsdl2-dev \
      netcat \
-     python3-dev \
-     python3-six \
-     python-is-python3 \
-     python3-pip \
      libncurses-dev \
      flex \
      bison \
      texinfo
 
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get -yq install python3.8 python3.8-dev python3.8-distutils
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
+
 RUN ln -sf /usr/bin/g++-10 /usr/bin/g++
+RUN ln -sf /usr/bin/gcc-10 /usr/bin/gcc
 
 # Install SystemC
 WORKDIR /tmp
@@ -35,17 +38,18 @@ WORKDIR /tmp/systemc
 RUN mkdir objdir
 WORKDIR /tmp/systemc/objdir
 RUN ../configure --prefix=/usr/local/systemc-2.3.3
-RUN make
+RUN make -j$(nproc)
 RUN make install
 RUN rm -rf /tmp/systemc
 
 # Install Z80 GDB
 WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/b-s-a/binutils-gdb.git
-WORKDIR binutils-gdb
+RUN git clone --depth 1 https://github.com/not-chciken/binutils-gdb.git
+WORKDIR /tmp/binutils-gdb
 RUN mkdir build
-RUN ./configure --target=z80-unknown-elf --prefix=$(pwd)/build --exec-prefix=$(pwd)/build
-RUN make
+RUN ./configure --target=z80-unknown-elf --prefix=$(pwd)/build --exec-prefix=$(pwd)/build \
+                --with-python=yes
+RUN make -j$(nproc)
 RUN make install
 RUN cp -r build /opt/gdb
 WORKDIR /tmp
@@ -55,4 +59,21 @@ ENV SYSTEMC_PATH=/usr/local/systemc-2.3.3
 ENV LD_LIBRARY_PATH="${SYSTEMC_PATH}/lib-linux64:${LD_LIBRARY_PATH}"
 ENV PATH="/opt/gdb/bin:${PATH}"
 
+# More recent g++ for "std::format"
+RUN ln -sf /usr/bin/g++-13 /usr/bin/g++
+RUN ln -sf /usr/bin/gcc-13 /usr/bin/gcc
+RUN ln -sf /usr/bin/gcov-13 /usr/bin/gcov
+
+# TLMBoy; commented out for CI
+# WORKDIR /tmp
+# RUN git clone https://github.com/not-chciken/TLMBoy.git
+# WORKDIR TLMBoy
+# RUN git checkout dev
+# RUN mkdir build
+# WORKDIR build
+# RUN cmake tlmboy ..
+# RUN cmake --build . --target tlmboy --config Release -j$(nproc)
+
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python3
 ENTRYPOINT bash

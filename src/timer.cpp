@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  ******************************************************************************/
 
 #include "timer.h"
@@ -35,7 +35,7 @@ void Timer::TimerLoop() {
   }
 }
 
-void Timer::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
+void Timer::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
   unsigned char* ptr = trans.get_data_ptr();

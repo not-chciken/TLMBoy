@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  ******************************************************************************/
 #include "cartridge.h"
 
+#include <format>
 #include <string>
 
 Cartridge::BankSwitchedMem::BankSwitchedMem(sc_module_name name, uint num_banks, uint bank_size)
@@ -18,7 +19,7 @@ void Cartridge::BankSwitchedMem::DoBankSwitch(u8 index) {
   bank_data_ = &data_[index * bank_size_];
 }
 
-void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
+void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
   unsigned char* ptr = trans.get_data_ptr();
@@ -106,7 +107,7 @@ void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& d
 
 // There's no RAM for rom-only games.
 // Yet some games like Alleyway try to write in the non-existing RAM...
-void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) {
+void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   u16 adr = static_cast<uint16_t>(trans.get_address());
   tlm::tlm_command cmd = trans.get_command();
   assert(adr < 0x8000);
@@ -208,7 +209,6 @@ void Cartridge::Mbc5::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
     } else if (adr >= 0x4000 && adr <= 0x5FFF) {
       ram_bits_ = *ptr & 0x0F;
     }
-    assert(0 <= rom_ind_ && rom_ind_< 512);
     ram_ind_ = ram_enabled_ ? ram_bits_ : 0;
     rom_ind_ = (rom_bank_high_bits_ << 8) & rom_bank_low_bits_;
     rom_high.DoBankSwitch(rom_ind_);  // TODO(niko): Bank 0
@@ -250,7 +250,7 @@ Cartridge::Cartridge(sc_module_name name,
       game_path_(game_path),
       boot_path_(boot_path) {
   game_info = std::make_unique<GameInfo>(game_path_);
-  std::string cr_type = game_info->GetCartridgeType();
+  string cr_type = game_info->GetCartridgeType();
 
   if (cr_type == "ROM ONLY")
     mbc = std::make_unique<Rom>(game_path, boot_path);
@@ -263,7 +263,7 @@ Cartridge::Cartridge(sc_module_name name,
           || cr_type == "MBC5+BAT+RAM")
     mbc = std::make_unique<Mbc5>(game_path, boot_path);
   else
-    throw std::runtime_error(fmt::format("Cartidge type {} not implemented", cr_type));
+    throw std::runtime_error(std::format("Cartidge type {} not implemented", cr_type));
 
   SC_METHOD(SigHandler);
   dont_initialize();

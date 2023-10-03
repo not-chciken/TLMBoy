@@ -1,15 +1,14 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  ******************************************************************************/
 #include "gb_top.h"
 
-GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
-             bool headless, bool wait_for_gdb)
+GbTop::GbTop(sc_module_name name, Options options)
     : sc_module(name),
-      cartridge("cartridge", game_path, boot_path),
+      cartridge("cartridge", options.rom_path, options.boot_rom_path),
       gb_bus("gb_bus"),
-      gb_cpu("gb_cpu", wait_for_gdb),
+      gb_cpu("gb_cpu", options.wait_for_gdb, options.single_step),
       joy_pad("joy_pad"),
       video_ram(8192, "video_ram"),
       work_ram(4096, "work_ram"),
@@ -21,7 +20,7 @@ GbTop::GbTop(sc_module_name name, std::filesystem::path game_path, std::filesyst
       serial_transfer(3, "serial_transfer"),
       reg_if(1, "reg_if"),
       intr_enable(1, "intr_enable"),
-      gb_ppu("gb_ppu", headless),
+      gb_ppu("gb_ppu", options.headless, options.fps_cap),
       gb_timer("gb_timer", reg_if.GetDataPtr()),
       global_clk("global_clock", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
 

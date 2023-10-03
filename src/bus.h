@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2022 chciken/Niko
+ * Copyright (c) 2023 chciken/Niko
  *
  * A generic bus model using TLM socket.
  * Use AddBusMaster to add a master socket and AddBusSlave to register slave sockets.
@@ -16,9 +16,10 @@
 #include <memory>
 #include <vector>
 
+#include "common.h"
 #include "gb_const.h"
-#include "systemc.h"
 #include "sysc/kernel/sc_simcontext.h"
+#include "systemc.h"
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
@@ -30,8 +31,7 @@ struct Bus : public sc_module {
   void operator=(Bus const&) = delete;
 
   void AddBusMaster(tlm::tlm_initiator_socket<gb_const::kBusDataWidth>* init_sock);
-  void AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>* targ_sock,
-                   const u16 addr_from, const u16 addr_to);
+  void AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>* targ_sock, u16 addr_from, u16 addr_to);
 
   // SystemC Interfaces
   void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);

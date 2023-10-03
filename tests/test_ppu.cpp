@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This files serves the testing of the Pixel Processing Unit.
  * It includes some simple unit tests which do not include SystemC
@@ -21,7 +21,8 @@
 #include "ppu.h"
 #include "utils.h"
 
-const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+Options options;
 
 struct PpuStimulus : public sc_module {
   SC_HAS_PROCESS(PpuStimulus);
@@ -57,7 +58,8 @@ struct PpuStimulus : public sc_module {
     targ_socket.register_get_direct_mem_ptr(this, &PpuStimulus::get_direct_mem_ptr);
     memset(memory, 0, 0x10000);
     memory[Ppu::kAdrRegLcdc] = 0b11110011;
-    memory[Ppu::kAdrRegBgp]  = 0b11100100;
+    memory[Ppu::kAdrRegBgp] = 0b11011000;  // bg and wnw color mapping
+    memory[Ppu::kAdrRegObp0] = 0b11011000;  // sprite color mapping
 
     for (uint i = 0; i < sizeof(tile_data); ++i)
         memory[0x8000+i] = tile_data[i];
@@ -72,13 +74,14 @@ struct PpuStimulus : public sc_module {
     memory[Ppu::kAdrTilemapHigh + 5] = 6;
     memory[Ppu::kAdrTilemapHigh + 6] = 0;
     memory[Ppu::kAdrTilemapHigh + 7] = 7;
-    memory[Ppu::kAdrRegWndwY] = 100;  // window y position = 100;
+    memory[Ppu::kAdrRegWndwY] = 100;
+    memory[Ppu::kAdrRegWndwX] = 7;
 
     // Display a '6' as a sprite.
-    memory[0xFE00] = 50;
-    memory[0xFE01] = 50;
-    memory[0xFE02] = 1;
-    memory[0xFE03] = 0;
+    memory[0xFE00] = 50;  // y position
+    memory[0xFE01] = 50;  // x position
+    memory[0xFE02] = 1;  // sprite index
+    memory[0xFE03] = 0;  // flags
 
     SC_THREAD(StimulusLoop);
     sensitive << clk.pos();
@@ -113,7 +116,7 @@ struct PpuStimulus : public sc_module {
       dmi_data.set_end_address(0x9F);
       dmi_data.set_dmi_ptr(reinterpret_cast<unsigned char*>(data));
       return true;
-    } else if (0xFFFF <= adr && adr <= 0xFFFF) {
+    } else if (0xFFFF == adr) {
       u8* data = &memory[0xFFFF];
       dmi_data.set_start_address(0x0);
       dmi_data.set_end_address(0x0);
@@ -133,7 +136,7 @@ struct Top : public sc_module {
   sc_signal<bool> intr_sig;
   u8 memory[0x10000];
 
-  explicit Top(sc_module_name name)
+  explicit Top(sc_module_name name [[maybe_unused]])
       : test_stimulus(memory, "test_stimulus"),
         test_ppu("test_ppu"),
         global_clk("global_clk", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
@@ -145,34 +148,15 @@ struct Top : public sc_module {
   }
 };
 
-TEST(PpuTests, InterleaveBitsTest1) {
-  u8 res, a, b, gold;
-  uint pos;
-  a = 0b00001111;
-  b = 0b00001111;
-  gold = 0b00000011;
-  pos = 0;
-  res = Ppu::InterleaveBits(a, b, pos);
-  ASSERT_EQ(res, gold);
-}
-
-TEST(PpuTests, InterleaveBitsTest2) {
-  u8 res, a, b, gold;
-  uint pos;
-  a = 0b00001111;
-  b = 0b00001111;
-  gold = 0b00000011;
-  pos = 0;
-  res = Ppu::InterleaveBits(a, b, pos);
-  ASSERT_EQ(res, gold);
-}
-
-// A PPU smoke test; if you see a screen with a scrolling 69 then everything is fine
+// A PPU smoke test; if you see a screen with a scrolling 69 then everything is fine.
 TEST(PpuTests, SmokeTest) {
   Top test_top("test_top");
   sc_start(4000, SC_MS);
   test_top.test_ppu.game_wndw->SaveScreenshot("test_ppu.bmp");
-  if (options::headless == false) {
+
+  ASSERT_TRUE(test_top.test_ppu.StateStr().size() != 0);
+
+  if (options.headless == false) {
     ASSERT_TRUE(CompareFiles("test_ppu.bmp", tlm_boy_root + "/tests/golden_files/test_ppu.bmp"));
   }
 }
@@ -181,16 +165,17 @@ int sc_main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
 
   const struct option long_opts[] = {
-    {"headless", no_argument, 0, 'l'}, 0
+    {"headless", no_argument, 0, 'l'},
+    {nullptr, 0, nullptr, 0}
   };
 
   for (;;) {
     int index;
     switch (getopt_long(argc, argv, "l", long_opts, &index)) {
       case 'l':
-        options::headless = true; break;
+        options.headless = true;
         continue;
-      default :
+      default:
         break;
     }
     break;

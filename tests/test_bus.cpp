@@ -1,7 +1,7 @@
 
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Collection of unit test which test the functionality of the bus and
  * the payload factory.
@@ -48,7 +48,7 @@ struct BusMaster : public sc_module {
     ASSERT_EQ(data, 69) << "data is " << data;
     wait(5, SC_NS);
 
-    // Test debug transport .
+    // Test debug transport.
     payload->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     init_socket->transport_dbg(*payload);
     ASSERT_EQ(payload->get_response_status(), tlm::TLM_OK_RESPONSE);
@@ -122,7 +122,7 @@ struct BusSlave : public sc_module {
     return false;
   }
 
-  void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
+  void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
     tlm::tlm_command cmd = trans.get_command();
     u16 addr = static_cast<u16>(trans.get_address());
     int* ptr = reinterpret_cast<int*>(trans.get_data_ptr());

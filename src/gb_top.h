@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This is the top level of the Game Boy.
  ******************************************************************************/
@@ -15,6 +15,7 @@
 #include "generic_memory.h"
 #include "io_registers.h"
 #include "joypad.h"
+#include "options.h"
 #include "ppu.h"
 #include "timer.h"
 
@@ -41,6 +42,5 @@ struct GbTop : public sc_module {
   sc_clock global_clk;
   sc_signal<bool> sig_unmap_rom;
 
-  GbTop(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
-        bool headless = false, bool wait_for_gdb = false);
+  GbTop(sc_module_name name, Options options);
 };

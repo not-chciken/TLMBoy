@@ -1,7 +1,7 @@
 
 /************************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Collection of tests for "gdb_server.(cpp|h)", which implements the GDB
  * remote serial protocol.
@@ -18,20 +18,20 @@
 using namespace std::chrono_literals;
 const std::chrono::seconds kTestTimeoutS = 50s;
 
-const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-const std::string exe = tlm_boy_root + "/build/tlmboy_test";
-const std::string rom_path = tlm_boy_root + "/roms/dummy.bin";
-const std::string boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
-const std::string cmd_test = exe + " --max-cycles=800 --headless --wait-for-gdb -r "
+const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+const string exe = tlm_boy_root + "/build/tlmboy_test";
+const string rom_path = tlm_boy_root + "/roms/dummy.bin";
+const string boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
+const string cmd_test = exe + " --max-cycles=800 --headless --wait-for-gdb -r "
                   + rom_path + " -b " + boot_rom_path;
-const std::string cmd_test_wo_max = exe + " --headless --wait-for-gdb -r "
+const string cmd_test_wo_max = exe + " --headless --wait-for-gdb -r "
                   + rom_path + " -b " + boot_rom_path;
 
 // This test boots up the Gameboy and compares the states of the register
 // against a golden file once per machine cycle using the GDB remote
 TEST(GdbTests, SystemTest) {
-  std::string boot_checker_path = tlm_boy_root + "/tests/gdb/boot_checker_gdb.py";
-  std::string cmd_gdb = "z80-unknown-elf-gdb --batch -x " + boot_checker_path;
+  string boot_checker_path = tlm_boy_root + "/tests/gdb/boot_checker_gdb.py";
+  string cmd_gdb = "z80-unknown-elf-gdb --batch -x " + boot_checker_path;
   std::cout << "Executing: " << cmd_test << std::endl
             << "Executing: " << cmd_gdb << std::endl;
   auto fut_tlm = std::async(std::launch::async, std::system, cmd_test.c_str());
@@ -42,8 +42,8 @@ TEST(GdbTests, SystemTest) {
   ASSERT_EQ(fut_gdb.get(), 0);
 }
 
-void FailTest(std::string script_path) {
-  std::string cmd_script = tlm_boy_root + script_path;
+void FailTest(const string &script_path) {
+  string cmd_script = tlm_boy_root + script_path;
   std::cout << "Executing: " << cmd_script << std::endl
             << "Executing: " << cmd_test_wo_max << std::endl;
   auto fut_tlm = std::async(std::launch::async, std::system, cmd_test_wo_max.c_str());

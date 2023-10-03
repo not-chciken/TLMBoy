@@ -8,7 +8,7 @@
  * Basically provides an initiator socket and the corresponding interupt registers.
  * Calling start_of_simulation() in the child's class start_of_simulation
  * is obligatory.
-********************************************************************************/
+ ********************************************************************************/
 
 #include "common.h"
 
@@ -19,10 +19,8 @@ class InterruptModule {
   tlm_utils::simple_initiator_socket<T, gb_const::kBusDataWidth> init_socket;
 
  protected:
-  // DMI pointer to the interrupt enable register at 0xffff.
-  u8* reg_intr_enable_dmi = nullptr;
-  // DMI pointer to register at 0xff0f indicating pending interrupts.
-  u8* reg_intr_pending_dmi = nullptr;
+  u8* reg_intr_enable_dmi = nullptr;   // DMI pointer to interrupt enable register at 0xffff.
+  u8* reg_intr_pending_dmi = nullptr;  // DMI pointer to register at 0xff0f indicating pending interrupts.
 
   // Initialize interrupt enable and pending DMI.
   void start_of_simulation() {
@@ -30,11 +28,13 @@ class InterruptModule {
       tlm::tlm_dmi dmi_data;
       uint dummy_data;
       auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0xffff, reinterpret_cast<void*>(&dummy_data));
+
       if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
         reg_intr_enable_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
       } else {
         throw std::runtime_error("Could not get interrupt enable register DMI!");
       }
+
       payload->set_address(0xff0f);
       if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
         reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());

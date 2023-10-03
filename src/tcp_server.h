@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * Implementation of a TCP server.
  * Currently only used for the Remote GDB protocol.
@@ -24,24 +24,25 @@
 #include <functional>
 #include <iostream>
 #include <thread>
-#include <string>
 
+#include "common.h"
 #include "debug.h"
 
 class TcpServer {
  public:
-    TcpServer();
-    ~TcpServer();
-    void Start(const int port);
-    void AcceptClient();
-    std::string RecvBlocking(uint length);
-    void SendMsg(const char *msg);
-    bool DataAvailable();
+  TcpServer();
+  ~TcpServer();
+
+  bool DataAvailable();
+  void AcceptClient();
+  void Start(int port);
+  void SendMsg(const char *msg);
+  string RecvBlocking(uint length);
 
  private:
-    const uint kMaxPacketSize = 4096;
-    int socket_fd_;
-    int client_fd_;
-    sockaddr_in server_addr_;
-    sockaddr_in client_addr_;
+  const uint kMaxPacketSize = 4096;
+  int socket_fd_;
+  int client_fd_;
+  sockaddr_in server_addr_;
+  sockaddr_in client_addr_;
 };

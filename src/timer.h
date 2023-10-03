@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This class implements the Game Boy's timer.
  * Don't confuse it with the MBC3 battery buffered real time clock.

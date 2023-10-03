@@ -1,7 +1,7 @@
 
 /*******************************************************************************
- * Copyright (C) 2022 chciken/Niko
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This test boots up the Gameboy and compares the states of the register
  * against a golden file once per machine cycle.
@@ -20,11 +20,15 @@
 #include "ppu.h"
 #include "utils.h"
 
-const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+Options options;
 
 TEST(BootTests, BootState) {
-  GbTop test_top("test_top", tlm_boy_root + "/roms/dummy.bin",
-                             tlm_boy_root + "/roms/DMG_ROM.bin");
+  options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
+  options.rom_path = tlm_boy_root + "/roms/dummy.bin";
+  options.single_step = true;
+  GbTop test_top("test_top", options);
+
   std::ofstream out("boot_states.txt");
   std::cout.rdbuf(out.rdbuf());
 

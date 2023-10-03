@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (C) 2022 chiken
- * MIT License
+ * Apache License, Version 2.0
+ * Copyright (c) 2023 chciken/Niko
  *
  * This class holds general information about the game.
  * The information is obtained by reading the certain regions
@@ -31,7 +31,7 @@
 
 class GameInfo {
  public:
-  const std::map<std::string, std::string> new_license_code_map {
+  const std::map<string, string> new_license_code_map {
     {"00", "none"},              {"01", "Nintendo R&D1"}, {"08", "Capcom"},
     {"13", "Electronic Arts"},   {"18", "Hudon Soft"},    {"19", "b-ai"},
     {"20", "kss"},               {"22", "pow"},           {"24", "PCM Complete"},
@@ -55,7 +55,7 @@ class GameInfo {
     {"96", "Konami (Yu-Gi-Oh!)"}
   };
 
-  const std::map<u8, std::string> old_license_code_map {
+  const std::map<u8, string> old_license_code_map {
     {0x00, "none"},                  {0x01, "nintendo"},         {0x08, "Capcom"},
     {0x09, "hot-b"},                 {0x0A, "jaleco"},           {0x0B, "coconuts"},
     {0x0C, "elite systems"},         {0x13, "Electronic Arts"},  {0x18, "Hudon Soft"},
@@ -108,7 +108,7 @@ class GameInfo {
     {0xFF, "ljn"}
   };
 
-  const std::map<uint, std::string> cartridge_type_map {
+  const std::map<uint, string> cartridge_type_map {
     {0x00, "ROM ONLY"},         {0x01, "MBC1"},          {0x02, "MBC1+RAM"},
     {0x03, "MBC1+BAT+RAM"},     {0x05, "MBC2"},          {0x06, "MBC2+BAT"},
     {0x08, "ROM+RAM"},          {0x09, "ROM+BAT+RAM"},   {0x0B, "MMM01"},
@@ -121,7 +121,7 @@ class GameInfo {
     {0xFF, "HuC1+RAM+BAT"}
   };
 
-  const std::map<uint, std::tuple<std::string, uint>> rom_size_map {
+  const std::map<uint, std::tuple<string, uint>> rom_size_map {
     {0x00, {"32kiB", 0}},              {0x01, {"64kiB (4 banks)", 4}},
     {0x02, {"128kiB (8 banks)", 8}},   {0x03, {"256kiB (16 banks)", 16}},
     {0x04, {"512kiB (32 banks)", 32}}, {0x05, {"1MiB (64 banks)", 64}},
@@ -130,12 +130,12 @@ class GameInfo {
     {0x53, {"1.2MiB (80 banks)", 80}}, {0x54, {"1.5MiB (96 banks)", 96}},
   };
 
-  const std::map<uint, std::tuple<std::string, uint>> ram_size_map {
+  const std::map<uint, std::tuple<string, uint>> ram_size_map {
     {0x00, {"None", 0}},   {0x01, {"2KiB", 2}},     {0x02, {"8kiB", 8}},
     {0x03, {"32KiB", 32}}, {0x04, {"128kiB", 128}}, {0x05, {"64kiB", 64}}
   };
 
-  const std::map<uint, std::string> region_map {
+  const std::map<uint, string> region_map {
     {0x00, "Japanese"}, {0x01, "Non-Japanese"}
   };
 
@@ -152,24 +152,24 @@ class GameInfo {
 
   explicit GameInfo(std::filesystem::path game_path);
 
-  operator std::string() const;
+  operator string() const;
 
   bool GetUsesNewLicense();
   bool GetSgbSupport();
-  std::string GetCartridgeType();
-  std::string GetLicenseCode();
-  std::string GetRegion();
-  std::string GetTitle();
+  string GetCartridgeType();
+  string GetLicenseCode();
+  string GetRegion();
+  string GetTitle();
   uint GetRamSize();
   uint GetRomSize();
 
  private:
   bool uses_new_license_;
   bool sgb_support_;
-  std::string cartridge_type_;
-  std::string license_code_;
-  std::string region_;
-  std::string title_;
-  std::tuple<std::string, uint> ram_size_;
-  std::tuple<std::string, uint> rom_size_;
+  string cartridge_type_;
+  string license_code_;
+  string region_;
+  string title_;
+  std::tuple<string, uint> ram_size_;
+  std::tuple<string, uint> rom_size_;
 };
