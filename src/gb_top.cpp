@@ -4,7 +4,7 @@
  ******************************************************************************/
 #include "gb_top.h"
 
-GbTop::GbTop(sc_module_name name, Options options)
+GbTop::GbTop(sc_module_name name, const Options &options)
     : sc_module(name),
       cartridge("cartridge", options.rom_path, options.boot_rom_path),
       gb_bus("gb_bus"),

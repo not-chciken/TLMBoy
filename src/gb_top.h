@@ -42,5 +42,5 @@ struct GbTop : public sc_module {
   sc_clock global_clk;
   sc_signal<bool> sig_unmap_rom;
 
-  GbTop(sc_module_name name, Options options);
+  GbTop(sc_module_name name, const Options &options);
 };

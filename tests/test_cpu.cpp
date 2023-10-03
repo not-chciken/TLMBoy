@@ -19,7 +19,7 @@ struct Top : public sc_module {
   GenericMemory test_memory;
   sc_clock test_clk;
 
-  Top (sc_module_name name)
+  explicit Top (sc_module_name name)
       : sc_module(name),
         test_bus("test_bus"),
         test_cpu("test_cpu"),

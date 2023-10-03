@@ -9,6 +9,7 @@
 
 #include <getopt.h>
 #include <gtest/gtest.h>
+
 #include "gb_top.h"
 #include "options.h"
 #include "utils.h"
@@ -29,22 +30,7 @@ TEST(PpuTest, DmgAcid2) {
 
 int sc_main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
+  options.InitOpts(argc, argv);
 
-  const struct option long_opts[] = {
-    {"headless", no_argument, 0, 'l'},
-    {nullptr, 0, nullptr, 0}
-  };
-
-  for (;;) {
-    int index;
-    switch (getopt_long(argc, argv, "l", long_opts, &index)) {
-      case 'l':
-        options.headless = true; break;
-        continue;
-      default :
-        break;
-    }
-    break;
-  }
   return RUN_ALL_TESTS();
 }
