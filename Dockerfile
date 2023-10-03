@@ -14,6 +14,7 @@ RUN  apt-get install -yq \
      gcovr \
      g++-10 \
      g++-13 \
+     python3-pip \
      libgtest-dev \
      libsdl2-dev \
      netcat \
@@ -23,7 +24,9 @@ RUN  apt-get install -yq \
      texinfo
 
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get -yq install python3.8 python3.8-dev
+RUN apt-get -yq install python3.8 python3.8-dev python3.8-distutils
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 RUN ln -sf /usr/bin/g++-10 /usr/bin/g++
 RUN ln -sf /usr/bin/gcc-10 /usr/bin/gcc
@@ -42,9 +45,10 @@ RUN rm -rf /tmp/systemc
 # Install Z80 GDB
 WORKDIR /tmp
 RUN git clone --depth 1 https://github.com/not-chciken/binutils-gdb.git
-WORKDIR binutils-gdb
+WORKDIR /tmp/binutils-gdb
 RUN mkdir build
-RUN ./configure --target=z80-unknown-elf --prefix=$(pwd)/build --exec-prefix=$(pwd)/build
+RUN ./configure --target=z80-unknown-elf --prefix=$(pwd)/build --exec-prefix=$(pwd)/build \
+                --with-python=yes
 RUN make -j$(nproc)
 RUN make install
 RUN cp -r build /opt/gdb
@@ -70,4 +74,6 @@ RUN ln -sf /usr/bin/gcov-13 /usr/bin/gcov
 # RUN cmake tlmboy ..
 # RUN cmake --build . --target tlmboy --config Release -j$(nproc)
 
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python3
 ENTRYPOINT bash

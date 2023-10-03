@@ -26,7 +26,7 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
   // License Code
   uses_new_license_ = (data[kAdrOldLicense] == 0x33);
   if (uses_new_license_) {
-    std::string key;
+    string key;
     for (uint i = kAdrNewLicenseStart; i <= kAdrNewLicenseEnd; i++) {
       key += static_cast<char>(data[i]);
     }
@@ -62,7 +62,7 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
   delete [] data;
 }
 
-GameInfo::operator std::string() const {
+GameInfo::operator string() const {
   std::stringstream ss;
   ss << "########## Game Info ###########" << std::endl
      << "Title:          " << title_ << std::endl
@@ -84,19 +84,19 @@ bool GameInfo::GetSgbSupport() {
   return sgb_support_;
 }
 
-std::string GameInfo::GetCartridgeType() {
+string GameInfo::GetCartridgeType() {
   return cartridge_type_;
 }
 
-std::string GameInfo::GetLicenseCode() {
+string GameInfo::GetLicenseCode() {
   return license_code_;
 }
 
-std::string GameInfo::GetRegion() {
+string GameInfo::GetRegion() {
   return region_;
 }
 
-std::string GameInfo::GetTitle() {
+string GameInfo::GetTitle() {
   return title_;
 }
 

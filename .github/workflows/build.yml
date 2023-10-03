@@ -25,12 +25,12 @@ jobs:
     - name: build tlmboy
       working-directory: ./build
       run: |
-           cmake --build . --target tlmboy --config Release
-           cmake --build . --target tlmboy_test
-           cmake --build . --target tlmboy_static_test
+           cmake --build . --target tlmboy --config Release -j$(nproc)
+           cmake --build . --target tlmboy_test -j$(nproc)
+           cmake --build . --target tlmboy_static_test -j$(nproc)
     - name: build tests
       working-directory: ./build
-      run: cmake --build . --target tests
+      run: cmake --build . --target tests -j$(nproc)
     - name: run tests
       working-directory: ./build/tests
       run: |

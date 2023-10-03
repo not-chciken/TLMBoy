@@ -115,7 +115,7 @@ struct Ppu : public sc_module {
 
   u8 *oam_table;  // Object Attribute Memory (OAM) has 40x4 Byte blocks residing at 0xFE00-0xFE9F.
 
-  u8 bg_buffer[kGbScreenHeight][kGbScreenWidth];
+  u8 bg_buffer[kGbScreenBufferHeight][kGbScreenBufferWidth];
   u8 sprite_buffer[kGbScreenHeight][kGbScreenWidth];
   u8 window_buffer[kGbScreenBufferHeight][kGbScreenBufferWidth];
 
@@ -125,7 +125,7 @@ struct Ppu : public sc_module {
   void DrawWndwToLine(int line_num);
   void RenderLoop();
 
-  std::string StateStr();
+  string StateStr();
 
   // SystemC interfaces.
   tlm_utils::simple_initiator_socket<Ppu, gb_const::kBusDataWidth> init_socket;

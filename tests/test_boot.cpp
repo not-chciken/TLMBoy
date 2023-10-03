@@ -19,7 +19,7 @@
 #include "ppu.h"
 #include "utils.h"
 
-const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 Options options{
     .headless = true,
     .rom_path = tlm_boy_root + "/roms/dummy.gb",
@@ -28,7 +28,7 @@ Options options{
 struct Top : public GbTop {
   SC_HAS_PROCESS(Top);
   Top() : GbTop("gb_top", options) {
-    std::cout << static_cast<std::string>(*cartridge.game_info);
+    std::cout << static_cast<string>(*cartridge.game_info);
     SC_METHOD(SigHandler);
     dont_initialize();
     sensitive << io_registers.sig_unmap_rom_out;
@@ -62,7 +62,6 @@ int sc_main(int argc, char* argv[]) {
     switch (getopt_long(argc, argv, "l", long_opts, &index)) {
       case 'l':
         options.headless = true;
-        break;
         continue;
       default:
         break;

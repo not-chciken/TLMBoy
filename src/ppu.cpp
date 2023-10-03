@@ -132,7 +132,7 @@ void Ppu::DrawBgToLine(int line_num) {
     for (int i = 0; i < kGbScreenWidth; ++i) {
       int bg_tile_ind = 32 * (((line_num + *reg_scroll_y) % 256) / 8) + ((*reg_scroll_x + i) % 256) / 8;
       u8 tile_ind = bg_tile_map[bg_tile_ind];
-      if (tile_data_table == tile_data_table_up) tile_ind += 128;  // Using wraparound.
+      tile_ind += tile_data_table == tile_data_table_up ? 128 : 0;  // Using wraparound.
       int x_tile_pixel = (*reg_scroll_x + i) % 8;
       int pixel_ind = static_cast<int>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
       u8 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], 7 - x_tile_pixel);
@@ -167,11 +167,7 @@ void Ppu::DrawWndwToLine(int line_num) {
 
       int wndw_tile_ind = 32 * (window_line_ / 8) + (i - x_pos) / 8;
       u8 tile_ind = wndw_tile_map[wndw_tile_ind];
-
-      if (tile_data_table == tile_data_table_up) {
-        tile_ind += 128;  // Using wraparound.
-      }
-
+      tile_ind += tile_data_table == tile_data_table_up ? 128 : 0; // Using wraparound.
       int x_tile_pixel = (i - x_pos) % 8;
       int pixel_ind = static_cast<int>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
       int res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], 7 - x_tile_pixel);
@@ -315,7 +311,7 @@ void Ppu::RenderLoop() {
   }
 }
 
-std::string Ppu::StateStr() {
+string Ppu::StateStr() {
   std::stringstream ss;
   ss << "#### PPU State ####" << std::dec << std::endl
      << "LCD control: " << static_cast<bool>(*reg_lcdc & kMaskLcdControl) << std::endl
@@ -380,7 +376,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
 
   last_time = new_time;
 
-  SDL_SetWindowTitle(window, std::format("{}   FPS: {:02}", title, fps).c_str());
+  SDL_SetWindowTitle(window, std::format("{}   FPS: {:03}", title, fps).c_str());
 
   // If the screen is off, just draw a red background.
   if (!((*p.reg_lcdc) & kMaskLcdControl)) {

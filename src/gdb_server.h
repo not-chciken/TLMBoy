@@ -31,7 +31,7 @@ class GdbServer {
 
  private:
     bool is_attached_;
-    std::map<std::string, std::function<void(const std::vector<std::string>)>> cmd_map;
+    std::map<string, std::function<void(const std::vector<string>)>> cmd_map;
     std::set<u16> bp_set_;
     TcpServer tcp_server_;
     char const *kMsgEmpty = "+$#00";
@@ -40,23 +40,23 @@ class GdbServer {
 
     uint kMaxMessageLength = 4096;
 
-    std::string RecvMsgBlocking();
-    void DecodeAndCall(const std::string &msg);
-    std::vector<std::string> SplitMsg(const std::string &msg);
-    std::string GetChecksumStr(const std::string &msg);
-    std::string Packetify(std::string msg);
+    string RecvMsgBlocking();
+    void DecodeAndCall(const string &msg);
+    std::vector<string> SplitMsg(const string &msg);
+    string GetChecksumStr(const string &msg);
+    string Packetify(string msg);
 
     // All the commands.
-    void CmdHalted(const std::vector<std::string> &msg_split);
-    void CmdDetach(const std::vector<std::string> &msg_split);
-    void CmdNotFound(const std::vector<std::string> &msg_split);
-    void CmdReadReg(const std::vector<std::string> &msg_split);
-    void CmdWriteReg(const std::vector<std::string> &msg_split);
-    void CmdReadMem(const std::vector<std::string> &msg_split);
-    void CmdWriteMem(const std::vector<std::string> &msg_split);
-    void CmdContinue(const std::vector<std::string> &msg_split);
-    void CmdInsertBp(const std::vector<std::string> &msg_split);
-    void CmdRemoveBp(const std::vector<std::string> &msg_split);
-    void CmdSupported(const std::vector<std::string> &msg_split);
-    void CmdAttached(const std::vector<std::string> &msg_split);
+    void CmdHalted(const std::vector<string> &msg_split);
+    void CmdDetach(const std::vector<string> &msg_split);
+    void CmdNotFound(const std::vector<string> &msg_split);
+    void CmdReadReg(const std::vector<string> &msg_split);
+    void CmdWriteReg(const std::vector<string> &msg_split);
+    void CmdReadMem(const std::vector<string> &msg_split);
+    void CmdWriteMem(const std::vector<string> &msg_split);
+    void CmdContinue(const std::vector<string> &msg_split);
+    void CmdInsertBp(const std::vector<string> &msg_split);
+    void CmdRemoveBp(const std::vector<string> &msg_split);
+    void CmdSupported(const std::vector<string> &msg_split);
+    void CmdAttached(const std::vector<string> &msg_split);
 };

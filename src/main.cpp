@@ -29,7 +29,7 @@ int sc_main(int argc, char* argv[]) {
 
   GbTop gb_top("game_boy_top", options);
 
-  std::cout << static_cast<std::string>(*gb_top.cartridge.game_info);
+  std::cout << static_cast<string>(*gb_top.cartridge.game_info);
 
   if (options.max_cycles < 0) {
     sc_start();

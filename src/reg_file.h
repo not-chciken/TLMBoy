@@ -18,8 +18,8 @@
 template<typename T>
 class Reg {
  public:
-  const std::string name;
-  Reg(std::string name, T &value) : name(name), value_(value) {}
+  const string name;
+  Reg(string name, T &value) : name(name), value_(value) {}
   Reg(const Reg&) = delete;
   Reg& operator=(Reg& other) {
     value_ = other.value_;

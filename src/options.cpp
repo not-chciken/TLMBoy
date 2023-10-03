@@ -25,13 +25,13 @@ void Options::InitOpts(int argc, char* argv[]) {
         boot_rom_path = fs::path(optarg);
         continue;
       case 'f':
-        fps_cap = std::stoll(std::string(optarg));
+        fps_cap = std::stoll(string(optarg));
         continue;
       case 'l':
         headless = true;
         continue;
       case 'm':
-        max_cycles = std::stoll(std::string(optarg));
+        max_cycles = std::stoll(string(optarg));
         continue;
       case 'r':
         rom_path = fs::path(optarg);

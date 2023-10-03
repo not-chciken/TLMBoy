@@ -21,7 +21,7 @@
 #include "ppu.h"
 #include "utils.h"
 
-const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 Options options;
 
 struct PpuStimulus : public sc_module {
@@ -173,9 +173,9 @@ int sc_main(int argc, char* argv[]) {
     int index;
     switch (getopt_long(argc, argv, "l", long_opts, &index)) {
       case 'l':
-        options.headless = true; break;
+        options.headless = true;
         continue;
-      default :
+      default:
         break;
     }
     break;

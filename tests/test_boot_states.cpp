@@ -20,7 +20,7 @@
 #include "ppu.h"
 #include "utils.h"
 
-const std::string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
+const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 Options options;
 
 TEST(BootTests, BootState) {

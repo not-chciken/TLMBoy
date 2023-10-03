@@ -209,7 +209,6 @@ void Cartridge::Mbc5::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
     } else if (adr >= 0x4000 && adr <= 0x5FFF) {
       ram_bits_ = *ptr & 0x0F;
     }
-    assert(0 <= rom_ind_ && rom_ind_< 512);
     ram_ind_ = ram_enabled_ ? ram_bits_ : 0;
     rom_ind_ = (rom_bank_high_bits_ << 8) & rom_bank_low_bits_;
     rom_high.DoBankSwitch(rom_ind_);  // TODO(niko): Bank 0
@@ -251,7 +250,7 @@ Cartridge::Cartridge(sc_module_name name,
       game_path_(game_path),
       boot_path_(boot_path) {
   game_info = std::make_unique<GameInfo>(game_path_);
-  std::string cr_type = game_info->GetCartridgeType();
+  string cr_type = game_info->GetCartridgeType();
 
   if (cr_type == "ROM ONLY")
     mbc = std::make_unique<Rom>(game_path, boot_path);

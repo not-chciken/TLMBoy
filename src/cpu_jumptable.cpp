@@ -5,6 +5,9 @@
 
 #include "cpu.h"
 
+#include <chrono>
+#include <thread>
+
 void Cpu::DoMachineCycle() {
   if (attach_gdb_) {
     std::cout << "waiting for gdb to attach on port " << gdb_port_ << "..." << std::endl;
@@ -15,11 +18,11 @@ void Cpu::DoMachineCycle() {
   while (1) {
     if (gdb_server.IsMsgPending()) {
       gdb_server.HandleMessages();
-      usleep(1000);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     if (halted_) {
-      usleep(1000);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       continue;
     }
 

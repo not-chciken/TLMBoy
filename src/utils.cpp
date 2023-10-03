@@ -5,14 +5,14 @@
 
 #include "utils.h"
 
-std::string GetEnvVariable(std::string name) {
+string GetEnvVariable(const string &name) {
   char *t = std::getenv(name.c_str());
 
   if (t == nullptr) {
     throw std::runtime_error("Environment variable " + name + " not set!");
   }
 
-  return std::string(t);
+  return string(t);
 }
 
 bool CompareFiles(const std::filesystem::path file1, const std::filesystem::path file2) {
