@@ -31,9 +31,9 @@ cmake tlmboy ..
 cmake --build . --target tlmboy --config Release
 ```
 Dependencies:
--  [SystemC 2.3.3](https://github.com/accellera-official/systemc)
--  [SDL2](https://github.com/libsdl-org/SDL)
-- For tests: [googletest](https://github.com/google/googletest)
+  - [SystemC 2.3.3](https://github.com/accellera-official/systemc)
+  - [SDL2](https://github.com/libsdl-org/SDL)
+  - For tests: [googletest](https://github.com/google/googletest)
 
 # Controls
 | Keyboard  | Game Boy  |
@@ -53,25 +53,25 @@ Utilities:
 | 3         | Hold to not render window     |
 
 ## Command Line Arguments
--  `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG_ROM.bin" by default.
--  `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
--  `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
--  `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
--  `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
--  `--single-step`: Prints the CPU state before the execution pf each instruction.
--  `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
+  - `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG_ROM.bin" by default.
+  - `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
+  - `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
+  - `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
+  - `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
+  - `--single-step`: Prints the CPU state before the execution pf each instruction.
+  - `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
 
 ## Documentation
--  [Overview](https://www.chciken.com/tlmboy/2022/02/19/gameboy-systemc.html)
--  [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
+  - [Overview](https://www.chciken.com/tlmboy/2022/02/19/gameboy-systemc.html)
+  - [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
 
 ## TODO
--  Show full tile map in window (currently only the lower tile map is shown)
--  Implement the sound processor
--  Complete instructions (stop)
--  BankSwitchMemory: Use seperate functions for loading of the boot ROM and the game.
--  BankSwitchMemory: Implement enable/disable RAM
--  BankSwitchMemory: Implement all MBC
--  Use native c++ implementation for ranges once available (maybe with c++23)
--  Fix bank size of ram
--  Checkpointing system
+  - Show full tile map in window (currently only the lower tile map is shown)
+  - Implement the sound processor
+  - Complete instructions (stop)
+  - BankSwitchMemory: Use seperate functions for loading of the boot ROM and the game.
+  - BankSwitchMemory: Implement enable/disable RAM
+  - BankSwitchMemory: Implement all MBC
+  - Use native c++ implementation for ranges once available (maybe with c++23)
+  - Fix bank size of ram
+  - Checkpointing system
