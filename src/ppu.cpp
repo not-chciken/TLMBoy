@@ -349,6 +349,7 @@ Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_he
 Ppu::RenderWindow::RenderWindow() {}
 
 Ppu::RenderWindow::~RenderWindow() {
+  SDL_DestroyTexture(texture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();

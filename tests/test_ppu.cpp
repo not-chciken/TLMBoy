@@ -138,7 +138,7 @@ struct Top : public sc_module {
 
   explicit Top(sc_module_name name [[maybe_unused]])
       : test_stimulus(memory, "test_stimulus"),
-        test_ppu("test_ppu"),
+        test_ppu("test_ppu", options.headless, options.fps_cap),
         global_clk("global_clk", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
     test_ppu.init_socket.bind(test_stimulus.targ_socket);
 
