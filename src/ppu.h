@@ -143,6 +143,7 @@ struct Ppu : public sc_module {
 
    protected:
     SDL_Renderer *renderer;
+    SDL_Texture* texture;
     SDL_Window *window;
     int width;
     int height;

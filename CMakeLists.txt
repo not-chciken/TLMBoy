@@ -66,5 +66,8 @@ target_link_libraries(tlmboy_static_test "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy_static_test -lgcov -lsystemc -lSDL2)
 target_compile_options(tlmboy_static_test PUBLIC -O0 -g --coverage)
 
+# Copy the logo.
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/tlmboy_icon.bmp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 # Add system tests and unit tests.
 add_subdirectory(tests)

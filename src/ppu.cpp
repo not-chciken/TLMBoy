@@ -28,9 +28,7 @@ constexpr u8 InterleaveBits(u8 a, u8 b, uint pos) {
 }
 
 // Map "val" according to color palette given in "reg".
-constexpr u8 MapColors(u8 val, u8 const *reg) {
-  return (*reg >> val * 2) & 0b11;
-}
+constexpr u8 MapColors(u8 val, u8 const *reg) { return (*reg >> val * 2) & 0b11; }
 
 Ppu::Ppu(sc_module_name name, bool headless, int fps_cap) : sc_module(name), init_socket("init_socket"), clk("clk") {
   SC_CTHREAD(RenderLoop, clk);
@@ -167,7 +165,7 @@ void Ppu::DrawWndwToLine(int line_num) {
 
       int wndw_tile_ind = 32 * (window_line_ / 8) + (i - x_pos) / 8;
       u8 tile_ind = wndw_tile_map[wndw_tile_ind];
-      tile_ind += tile_data_table == tile_data_table_up ? 128 : 0; // Using wraparound.
+      tile_ind += tile_data_table == tile_data_table_up ? 128 : 0;  // Using wraparound.
       int x_tile_pixel = (i - x_pos) % 8;
       int pixel_ind = static_cast<int>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
       int res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], 7 - x_tile_pixel);
@@ -231,15 +229,15 @@ void Ppu::DrawSpriteToLine(int line_num) {
 
       u32 res = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], (x_flip ? j : 7 - j));
       if (res == 0) {
-        continue; // Color 0 is transparent.
+        continue;  // Color 0 is transparent.
       }
 
       if (obj_prio) {
         if (bg_buffer[line_num][x_draw] == 0) {
-          bg_buffer[line_num][x_draw] = MapColors(res, palette ? reg_obp_1 : reg_obp_0);;
+          bg_buffer[line_num][x_draw] = MapColors(res, palette ? reg_obp_1 : reg_obp_0);
         }
       } else {
-        sprite_buffer[line_num][x_draw] = MapColors(res, palette ? reg_obp_1 : reg_obp_0);;
+        sprite_buffer[line_num][x_draw] = MapColors(res, palette ? reg_obp_1 : reg_obp_0);
       }
     }
   }
@@ -328,7 +326,7 @@ string Ppu::StateStr() {
   return ss.str();
 }
 
-Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_height, const char* title)
+Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_height, const char *title)
     : width(width), height(height), log_width(log_width), log_height(log_height), title(title) {
   SDL_Init(SDL_INIT_VIDEO);
   SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
@@ -337,6 +335,15 @@ Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_he
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+
+  auto icon = SDL_LoadBMP("./tlmboy_icon.bmp");
+  if (icon) {
+    SDL_SetColorKey(icon, true, SDL_MapRGB(icon->format, 0, 0, 0));
+    SDL_SetWindowIcon(window, icon);
+    SDL_FreeSurface(icon);
+  }
+
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, log_width, log_height);
 }
 
 Ppu::RenderWindow::RenderWindow() {}
@@ -355,9 +362,10 @@ void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path &file_path) {
   SDL_FreeSurface(surface);
 }
 
-Ppu::GameWindow::GameWindow(int width, int height, int log_width, int log_height, const char* title, int fps_cap)
-    : RenderWindow(width, height, log_width, log_height, title), fps_cap(fps_cap) {
-}
+Ppu::GameWindow::GameWindow(int width, int height, int log_width, int log_height, const char *title, int fps_cap)
+    : RenderWindow(width, height, log_width, log_height, title), fps_cap(fps_cap) {}
+
+constexpr u32 ToTextureColor(u8 r, u8 g, u8 b) { return ((u32)r << 16) | ((u32)g << 8) | (u32)b; }
 
 void Ppu::GameWindow::DrawToScreen(Ppu &p) {
   static u64 last_time = 0;
@@ -385,52 +393,67 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
     return;
   }
 
+  void *pixels_ptr;
+  int pitch;
+  SDL_LockTexture(texture, nullptr, &pixels_ptr, &pitch);
+  u32 *pixels = static_cast<u32 *>(pixels_ptr);
+
   // Background and window loop.
   if (uiRenderBg) {
-    for (int j = 0; j < log_height; ++j) {
-      for (int i = 0; i < log_width; ++i) {
-        int val = p.bg_buffer[j][i];
-        SDL_SetRenderDrawColor(renderer, renderColor[val][0], renderColor[val][1], renderColor[val][2], 255);
-        SDL_RenderDrawPoint(renderer, i, j);
+    for (int y = 0; y < log_height; ++y) {
+      for (int x = 0; x < log_width; ++x) {
+        int val = p.bg_buffer[y][x];
+        pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
       }
     }
   } else {
-    SDL_SetRenderDrawColor(renderer, 242, 255, 217, 255);
-    for (int j = 0; j < log_height; ++j)
-      for (int i = 0; i < log_width; ++i) {
-        SDL_RenderDrawPoint(renderer, i, j);
+    for (int y = 0; y < log_height; ++y) {
+      for (int x = 0; x < log_width; ++x) {
+        pixels[y * log_width + x] = ToTextureColor(242, 255, 217);
       }
+    }
   }
 
   // Sprite loop.
   if (uiRenderSprites) {
-    for (int j = 0; j < kGbScreenHeight; ++j) {
-      for (int i = 0; i < kGbScreenWidth; ++i) {
-        int val = p.sprite_buffer[j][i];
-        p.sprite_buffer[j][i] = 0;
+    for (int y = 0; y < log_height; ++y) {
+      for (int x = 0; x < log_width; ++x) {
+        int val = p.sprite_buffer[y][x];
+        p.sprite_buffer[y][x] = 0;
         if (val == 0) continue;  // Continues if val is 0, This implements transparency!
-        SDL_SetRenderDrawColor(renderer, renderColor[val][0], renderColor[val][1], renderColor[val][2], 255);
-        SDL_RenderDrawPoint(renderer, i, j);
+        pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
       }
     }
   }
 
+  SDL_UnlockTexture(texture);
+  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
   SDL_RenderPresent(renderer);
 }
 
 void Ppu::WindowWindow::DrawToScreen(Ppu &p) {
+  void *pixels_ptr;
+  int pitch;
+  SDL_LockTexture(texture, nullptr, &pixels_ptr, &pitch);
+  u32 *pixels = static_cast<u32 *>(pixels_ptr);
+
   for (int t = 0; t < 16; ++t) {
     for (int i = 0; i < 8; ++i) {
       for (int j = 0; j < 16; ++j) {
         for (int k = 0; k < 8; ++k) {
           u8 val = InterleaveBits(p.tile_data_table_low[t * 256 + j * 16 + 2 * i],
-                                    p.tile_data_table_low[t * 256 + j * 16 + 2 * i + 1], 7 - k);
+                                  p.tile_data_table_low[t * 256 + j * 16 + 2 * i + 1], 7 - k);
           val = MapColors(val, p.reg_bgp);
           SDL_SetRenderDrawColor(renderer, renderColor[val][0], renderColor[val][1], renderColor[val][2], 255);
-          SDL_RenderDrawPoint(renderer, j * 8 + k, t * 8 + i);
+          const size_t x = j * 8 + k;
+          const size_t y = t * 8 + i;
+          pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
         }
       }
     }
   }
+
+  SDL_UnlockTexture(texture);
+  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
   SDL_RenderPresent(renderer);
 }
