@@ -28,14 +28,16 @@ constexpr u8 InterleaveBits(u8 a, u8 b, uint pos) {
 }
 
 // Map "val" according to color palette given in "reg".
-constexpr u8 MapColors(u8 val, u8 const *reg) { return (*reg >> val * 2) & 0b11; }
+constexpr u8 MapColors(u8 val, u8 const* reg) {
+  return (*reg >> val * 2) & 0b11;
+}
 
 Ppu::Ppu(sc_module_name name, bool headless, int fps_cap) : sc_module(name), init_socket("init_socket"), clk("clk") {
   SC_CTHREAD(RenderLoop, clk);
 
-  memset(bg_buffer, 0, kGbScreenBufferHeight * kGbScreenBufferWidth);
-  memset(sprite_buffer, 0, kGbScreenWidth * kGbScreenHeight);
-  memset(window_buffer, 0, kGbScreenBufferHeight * kGbScreenBufferWidth);
+  memset(bg_buffer, Colors::White, kGbScreenBufferHeight * kGbScreenBufferWidth);
+  memset(sprite_buffer, Colors::Transparent, kGbScreenWidth * kGbScreenHeight);
+  memset(window_buffer, Colors::White, kGbScreenBufferHeight * kGbScreenBufferWidth);
 
   if (headless) {
     game_wndw = std::make_unique<DummyWindow>();
@@ -48,19 +50,20 @@ Ppu::Ppu(sc_module_name name, bool headless, int fps_cap) : sc_module(name), ini
   }
 }
 
-Ppu::~Ppu() {}
+Ppu::~Ppu() {
+}
 
 void Ppu::start_of_simulation() {
   tlm::tlm_dmi dmi_data;
-  u8 *data_ptr;
+  u8* data_ptr;
   uint dummy;
-  auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x0FFF, reinterpret_cast<void *>(&dummy));
+  auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x0FFF, reinterpret_cast<void*>(&dummy));
   payload->set_address(0xFF40);  //  Start of IO registers.
 
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     assert(dmi_data.get_end_address() >= 0x0B);
-    data_ptr = reinterpret_cast<u8 *>(dmi_data.get_dmi_ptr());
+    data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
     reg_lcdc = &data_ptr[0xFF40 - 0xFF40];
     reg_stat = &data_ptr[0xFF41 - 0xFF40];
     reg_scroll_y = &data_ptr[0xFF42 - 0xFF40];
@@ -82,7 +85,7 @@ void Ppu::start_of_simulation() {
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
     assert(dmi_data.get_end_address() >= 0x1C00);
-    data_ptr = reinterpret_cast<u8 *>(dmi_data.get_dmi_ptr());
+    data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
     tile_data_table_low = &data_ptr[0x8000 - 0x8000];
     tile_data_table_up = &data_ptr[0x8800 - 0x8000];
     tile_map_low = &data_ptr[0x9800 - 0x8000];
@@ -94,7 +97,7 @@ void Ppu::start_of_simulation() {
   payload->set_address(0xFE00);  // Start of OAM table.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    data_ptr = reinterpret_cast<u8 *>(dmi_data.get_dmi_ptr());
+    data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
     oam_table = &data_ptr[0xFE00 - 0xFE00];
   } else {
     throw std::runtime_error("Could not get DMI for OAM table!");
@@ -103,7 +106,7 @@ void Ppu::start_of_simulation() {
   payload->set_address(0xFFFF);  // Interrupt register.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    data_ptr = reinterpret_cast<u8 *>(dmi_data.get_dmi_ptr());
+    data_ptr = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
     reg_ie = &data_ptr[0xFFFF - 0xFFFF];
   } else {
     throw std::runtime_error("Could not get DMI for the interrupt register!");
@@ -112,15 +115,15 @@ void Ppu::start_of_simulation() {
   payload->set_address(0xFF0F);  // Interrupt pending register.
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    reg_intr_pending_dmi = reinterpret_cast<u8 *>(dmi_data.get_dmi_ptr());
+    reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
   } else {
     throw std::runtime_error("Could not get DMI for interrupt pending register!");
   }
 }
 
 void Ppu::DrawBgToLine(int line_num) {
-  u8 *tile_data_table;
-  u8 *bg_tile_map;
+  u8* tile_data_table;
+  u8* bg_tile_map;
 
   tile_data_table = (*reg_lcdc & kMaskBgWndwTileDataSlct) ? tile_data_table_low : tile_data_table_up;
   bg_tile_map = (*reg_lcdc & kMaskBgTileSlct) ? tile_map_up : tile_map_low;
@@ -151,8 +154,8 @@ void Ppu::DrawWndwToLine(int line_num) {
   if (!(*reg_lcdc & kMaskWndwDisp) || (y_pos >= kGbScreenHeight) || (x_pos >= kGbScreenWidth) || (line_num < y_pos))
     return;
 
-  u8 *tile_data_table;
-  u8 *wndw_tile_map;
+  u8* tile_data_table;
+  u8* wndw_tile_map;
   tile_data_table = (*reg_lcdc & kMaskBgWndwTileDataSlct) ? tile_data_table_low : tile_data_table_up;
   wndw_tile_map = (*reg_lcdc & kMaskWndwTileMapSlct) ? tile_map_up : tile_map_low;
 
@@ -181,7 +184,8 @@ void Ppu::DrawWndwToLine(int line_num) {
 }
 
 void Ppu::DrawSpriteToLine(int line_num) {
-  if (!(kMaskObjSpriteDisp & *reg_lcdc)) return;
+  if (!(kMaskObjSpriteDisp & *reg_lcdc))
+    return;
 
   std::vector<std::pair<int, int>> sorted_oam;
   for (int i = 0; i < kNumOamEntries; ++i) {
@@ -199,10 +203,11 @@ void Ppu::DrawSpriteToLine(int line_num) {
 
   std::stable_sort(sorted_oam.begin(), sorted_oam.end(),
                    [](std::pair<int, int> a, std::pair<int, int> b) { return a.second < b.second; });
-  if (sorted_oam.size() > 10) sorted_oam.resize(10);  // Maximum 10 sprites per line.
+  if (sorted_oam.size() > 10)
+    sorted_oam.resize(10);  // Maximum 10 sprites per line.
 
-  u8 *tile_data_table = tile_data_table_low;  // Sprites always use the low data table.
-  for (auto &p : std::ranges::views::reverse(sorted_oam)) {
+  u8* tile_data_table = tile_data_table_low;  // Sprites always use the low data table.
+  for (auto& p : std::ranges::views::reverse(sorted_oam)) {
     int i = p.first;
     int pos_y = oam_table[i * kOamEntryBytes] - 16;           // byte0 = y pos
     int pos_x = oam_table[i * kOamEntryBytes + 1] - 8;        // byte1 = x pos
@@ -326,7 +331,7 @@ string Ppu::StateStr() {
   return ss.str();
 }
 
-Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_height, const char *title)
+Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_height, const char* title)
     : width(width), height(height), log_width(log_width), log_height(log_height), title(title) {
   SDL_Init(SDL_INIT_VIDEO);
   SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
@@ -346,7 +351,8 @@ Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_he
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, log_width, log_height);
 }
 
-Ppu::RenderWindow::RenderWindow() {}
+Ppu::RenderWindow::RenderWindow() {
+}
 
 Ppu::RenderWindow::~RenderWindow() {
   SDL_DestroyTexture(texture);
@@ -355,20 +361,23 @@ Ppu::RenderWindow::~RenderWindow() {
   SDL_Quit();
 }
 
-void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path &file_path) {
+void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path& file_path) {
   const Uint32 format = SDL_PIXELFORMAT_ARGB8888;
-  SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format);
+  SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format);
   SDL_RenderReadPixels(renderer, NULL, format, surface->pixels, surface->pitch);
   SDL_SaveBMP(surface, file_path.string().c_str());
   SDL_FreeSurface(surface);
 }
 
-Ppu::GameWindow::GameWindow(int width, int height, int log_width, int log_height, const char *title, int fps_cap)
-    : RenderWindow(width, height, log_width, log_height, title), fps_cap(fps_cap) {}
+Ppu::GameWindow::GameWindow(int width, int height, int log_width, int log_height, const char* title, int fps_cap)
+    : RenderWindow(width, height, log_width, log_height, title), fps_cap(fps_cap) {
+}
 
-constexpr u32 ToTextureColor(u8 r, u8 g, u8 b) { return ((u32)r << 16) | ((u32)g << 8) | (u32)b; }
+constexpr u32 ToTextureColor(u8 r, u8 g, u8 b) {
+  return ((u32)r << 16) | ((u32)g << 8) | (u32)b;
+}
 
-void Ppu::GameWindow::DrawToScreen(Ppu &p) {
+void Ppu::GameWindow::DrawToScreen(Ppu& p) {
   static u64 last_time = 0;
 
   u64 new_time = SDL_GetTicks64();
@@ -394,10 +403,10 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
     return;
   }
 
-  void *pixels_ptr;
+  void* pixels_ptr;
   int pitch;
   SDL_LockTexture(texture, nullptr, &pixels_ptr, &pitch);
-  u32 *pixels = static_cast<u32 *>(pixels_ptr);
+  u32* pixels = static_cast<u32*>(pixels_ptr);
 
   // Background and window loop.
   if (uiRenderBg) {
@@ -420,8 +429,9 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
     for (int y = 0; y < log_height; ++y) {
       for (int x = 0; x < log_width; ++x) {
         int val = p.sprite_buffer[y][x];
-        p.sprite_buffer[y][x] = 0;
-        if (val == 0) continue;  // Continues if val is 0, This implements transparency!
+        if (val == Colors::Transparent)
+          continue;
+        p.sprite_buffer[y][x] = Colors::Transparent;
         pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
       }
     }
@@ -432,11 +442,11 @@ void Ppu::GameWindow::DrawToScreen(Ppu &p) {
   SDL_RenderPresent(renderer);
 }
 
-void Ppu::WindowWindow::DrawToScreen(Ppu &p) {
-  void *pixels_ptr;
+void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
+  void* pixels_ptr;
   int pitch;
   SDL_LockTexture(texture, nullptr, &pixels_ptr, &pitch);
-  u32 *pixels = static_cast<u32 *>(pixels_ptr);
+  u32* pixels = static_cast<u32*>(pixels_ptr);
 
   for (int t = 0; t < 16; ++t) {
     for (int i = 0; i < 8; ++i) {
