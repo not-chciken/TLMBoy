@@ -3,8 +3,8 @@
 
 <svg
    width="82mm"
-   height="82mm"
-   viewBox="0 0 82 82"
+   height="67.686737mm"
+   viewBox="0 0 82 67.686737"
    version="1.1"
    id="svg5"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
@@ -29,8 +29,8 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:zoom="1.423824"
-     inkscape:cx="217.72353"
-     inkscape:cy="89.196415"
+     inkscape:cx="217.72354"
+     inkscape:cy="61.805392"
      inkscape:window-width="1920"
      inkscape:window-height="1012"
      inkscape:window-x="0"
@@ -90,7 +90,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-7.8862346,-6.2294897)">
+     transform="translate(-7.8862346,-13.38612)">
     <g
        inkscape:label="Layer 1"
        id="layer1-6"

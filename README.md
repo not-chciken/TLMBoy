@@ -2,27 +2,10 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=not-chciken/TLMBoy\&utm_campaign=Badge_Coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=not-chciken/TLMBoy\&utm_campaign=Badge_Grade)
 
-# TLMBoy
 
-A Game Boy Simulator written in C++/SystemC TLM-2.0. <br>
-This project also acts as my personal playground for new C++ features.
-Hence, a quite recent version of gcc or clang is required to compile it.
-**Note: This project is currently under construction ;)**
+# TLMBoy <img src="./assets/tlmboy_icon.svg" width="4%"><br>
 
-The project is structured as follows:
-
-```
-├── roms/
-|   # This directory includes some example ROMs/games and the boot ROM.
-|   # Also used by the tests.
-├── src/
-│   # The heart of the project: the source code of every Game Boy
-│   # module can be found here.
-└── tests/
-    # Collection of unit tests and system tests.
-    └── golden_files
-        # Golden files like screenshots.
-```
+A Game Boy Simulator written in C++/SystemC TLM-2.0.
 
 ## Building
 
@@ -41,6 +24,16 @@ Dependencies:
 * [SystemC 2.3.3](https://github.com/accellera-official/systemc)
 * [SDL2](https://github.com/libsdl-org/SDL)
 * For tests: [googletest](https://github.com/google/googletest)
+
+## Screenshots
+Alleyway | Super Mario Land
+:-------------------------:|:-------------------------:
+<img src="./assets/alleyway.png" width="95%"> |  <img src="./assets/super_mario_land.png" width="95%">
+
+Tetris | The Jungle Book
+:-------------------------:|:-------------------------:
+<img src="./assets/tetris.png" width="95%"> |  <img src="./assets/jungle_book.png" width="95%">
+
 
 # Controls
 
@@ -71,7 +64,7 @@ Utilities:
 
 ## Documentation
 
-* [Overview](https://www.chciken.com/tlmboy/2022/02/19/gameboy-systemc.html)
+* [Overview](https://www.chciken.com/tlmboy/2022/02/02/gameboy-systemc.html)
 * [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
 
 ## TODO
