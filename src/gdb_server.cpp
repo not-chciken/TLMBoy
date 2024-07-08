@@ -42,8 +42,13 @@ void GdbServer::InitBlocking(const int port) {
   }
 }
 
+// Returns true if a message is pending.
 bool GdbServer::IsMsgPending() {
-  return tcp_server_.DataAvailable() && is_attached_;
+  // Check for 'is_attached' first to avoid expensive system calls.
+  if (!is_attached_)
+    return false;
+
+  return tcp_server_.DataAvailable();
 }
 
 void GdbServer::HandleMessages() {
