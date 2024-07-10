@@ -40,6 +40,7 @@ set(ALL_CPPS
   ${CMAKE_SOURCE_DIR}/src/joypad.cpp
   ${CMAKE_SOURCE_DIR}/src/options.cpp
   ${CMAKE_SOURCE_DIR}/src/ppu.cpp
+  ${CMAKE_SOURCE_DIR}/src/symfile_tracer.cpp
   ${CMAKE_SOURCE_DIR}/src/tcp_server.cpp
   ${CMAKE_SOURCE_DIR}/src/timer.cpp
   ${CMAKE_SOURCE_DIR}/src/utils.cpp
@@ -65,6 +66,13 @@ target_include_directories(tlmboy_static_test SYSTEM PUBLIC "${SYSTEMC_PATH}/inc
 target_link_libraries(tlmboy_static_test "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy_static_test -lgcov -lsystemc -lSDL2)
 target_compile_options(tlmboy_static_test PUBLIC -O0 -g --coverage)
+
+# For performance analysis.
+add_executable(tlmboy_performance src/main.cpp ${ALL_CPPS})
+target_include_directories(tlmboy_performance SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
+target_link_libraries(tlmboy_performance "-L${SYSTEMC_PATH}/lib-linux64")
+target_link_libraries(tlmboy_performance -lgcov -lsystemc -lSDL2)
+target_compile_options(tlmboy_performance PUBLIC -O3 -lprofiler -g)
 
 # Copy the logo.
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/tlmboy_icon.bmp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

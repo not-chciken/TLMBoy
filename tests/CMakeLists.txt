@@ -28,6 +28,7 @@ add_executable(test_dmg_acid2 test_dmg_acid2.cpp)
 add_executable(test_gdb test_gdb.cpp)
 add_executable(test_memory test_memory.cpp)
 add_executable(test_ppu test_ppu.cpp)
+add_executable(test_symfile_tracer test_symfile_tracer.cpp)
 
 set(TEST_INCLUDE_PATHS ${SYSTEMC_PATH}/include
                        src/)
@@ -64,6 +65,7 @@ create_test_case(test_dmg_acid2)
 create_test_case(test_gdb)
 create_test_case(test_memory)
 create_test_case(test_ppu)
+create_test_case(test_symfile_tracer)
 
 target_compile_options(test_boot_states PUBLIC ${TEST_COMPILE_OPTS} -DENABLE_DBG_LOG_CPU_REG)
 
