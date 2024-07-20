@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 
 struct Options {
   bool headless = false;
+  bool symbol_file = false;
   bool single_step = false;
   bool wait_for_gdb = false;
   fs::path rom_path = "";

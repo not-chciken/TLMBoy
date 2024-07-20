@@ -15,6 +15,7 @@ void Options::InitOpts(int argc, char* argv[]) {
                                      {"max-cycles", required_argument, 0, 'm'},
                                      {"rom-path", required_argument, 0, 'r'},
                                      {"single-step", no_argument, 0, 's'},
+                                     {"symbol-file", no_argument, 0, 'y'},
                                      {"wait-for-gdb", no_argument, 0, 'w'},
                                      {nullptr, 0, nullptr, 0}};
 
@@ -42,6 +43,9 @@ void Options::InitOpts(int argc, char* argv[]) {
       case 'w':
         wait_for_gdb = true;
         continue;
+      case 'y':
+        symbol_file = true;
+        continue;
       case '?':
       case 'h':
       default:
@@ -56,6 +60,8 @@ void Options::InitOpts(int argc, char* argv[]) {
                   << "          Maximum number of clock cycles to run. Default -1 = infinite." << std::endl
                   << "          --single-step" << std::endl
                   << "          Prints the CPU state before each instruction" << std::endl
+                  << "          --symbole-file" << std::endl
+                  << "          Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit." << std::endl
                   << "          --wait-for-gdb" << std::endl
                   << "          Wait for a GDB remote connection on port 1337." << std::endl;
         exit(1);

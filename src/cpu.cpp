@@ -18,7 +18,10 @@ Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step):
     attach_gdb_(attach_gdb),
     single_step_(single_step) {
   SC_CTHREAD(DoMachineCycle, clk);
-  payload = MakeSharedPayloadPtr(tlm::TLM_IGNORE_COMMAND, 0x0000, nullptr);
+}
+
+Cpu::~Cpu() {
+  payload->clear_extension<GbCommand>();
 }
 
 void Cpu::SetFlagC(bool val) {
@@ -73,7 +76,8 @@ void Cpu::WriteBusDebug(u16 addr, u8 data) {
   }
 }
 
-u8 Cpu::ReadBus(u16 addr) {
+u8 Cpu::ReadBus(u16 addr, GbCommand::Cmd cmd) {
+  this->gbcmd.cmd = cmd;
   static sc_time delay = sc_time(0, SC_NS);  // Dummy delay.
   u8 data;
   payload->set_command(tlm::TLM_READ_COMMAND);
@@ -102,15 +106,16 @@ u8 Cpu::ReadBusDebug(u16 addr) {
 }
 
 u8 Cpu::FetchNextInstrByte() {
-  u8 val = ReadBus(reg_file.PC);
+  u8 val = ReadBus(reg_file.PC, GbCommand::kGbReadInst);
   ++reg_file.PC;
   return val;
 }
 
 u16 Cpu::FetchNext2InstrBytes() {
-  u16 lsb = static_cast<u16>(ReadBus(reg_file.PC));
+  gbcmd.cmd = GbCommand::kGbReadInst;
+  u16 lsb = static_cast<u16>(ReadBus(reg_file.PC, GbCommand::kGbReadInst));
   ++reg_file.PC;
-  u16 msb = static_cast<u16>(ReadBus(reg_file.PC)) << 8;
+  u16 msb = static_cast<u16>(ReadBus(reg_file.PC, GbCommand::kGbReadInst)) << 8;
   ++reg_file.PC;
   return msb | lsb;
 }
@@ -132,6 +137,8 @@ void Cpu::Continue() {
 // Initialize interrupt enable and pending DMI.
 void Cpu::start_of_simulation() {
   InterruptModule::start_of_simulation();
+  payload = MakeSharedPayloadPtr(tlm::TLM_IGNORE_COMMAND, 0x0000, nullptr);
+  payload->set_extension(&gbcmd);
 }
 
 // TODO(niko): What happens if there are multiple interrupts???

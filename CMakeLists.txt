@@ -31,6 +31,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 set(ALL_CPPS
   ${CMAKE_SOURCE_DIR}/src/bus.cpp
   ${CMAKE_SOURCE_DIR}/src/cartridge.cpp
+  ${CMAKE_SOURCE_DIR}/src/common.cpp
   ${CMAKE_SOURCE_DIR}/src/cpu.cpp
   ${CMAKE_SOURCE_DIR}/src/game_info.cpp
   ${CMAKE_SOURCE_DIR}/src/gb_top.cpp

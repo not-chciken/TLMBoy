@@ -25,4 +25,16 @@ using i64 = int64_t;
 
 using string = std::string;
 
+struct GbCommand : public tlm::tlm_extension<GbCommand> {
+  explicit GbCommand();
+  enum Cmd {
+    kGbReadInst,
+    kGbReadData,
+    kGbWriteData,
+  } cmd;
+
+  virtual tlm::tlm_extension_base* clone() const override;
+  virtual void copy_from(tlm::tlm_extension_base const &ext) override;
+};
+
 #include "gb_const.h"

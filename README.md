@@ -60,6 +60,7 @@ Utilities:
 * `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
 * `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
 * `--single-step`: Prints the CPU state before the execution pf each instruction.
+* `--symbol-file`: Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit.
 * `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
 
 ## Documentation

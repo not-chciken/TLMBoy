@@ -12,6 +12,7 @@
 #include "common.h"
 #include "game_info.h"
 #include "generic_memory.h"
+#include "symfile_tracer.h"
 
 class Cartridge : public sc_module {
   SC_HAS_PROCESS(Cartridge);
@@ -21,6 +22,7 @@ class Cartridge : public sc_module {
     BankSwitchedMem(sc_module_name name, uint num_banks, uint bank_size);
 
     void DoBankSwitch(u8 index);
+    u8 GetCurrentBankIndex();
     void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
     uint transport_dbg(tlm::tlm_generic_payload& trans);
 
@@ -33,7 +35,8 @@ class Cartridge : public sc_module {
 
   class MemoryBankCtrler {
    public:
-    MemoryBankCtrler(uint num_rom_banks, uint num_ram_banks);
+    MemoryBankCtrler(uint num_rom_banks, uint num_ram_banks, bool symbol_file);
+    ~MemoryBankCtrler();
     GenericMemory rom_low;
     BankSwitchedMem rom_high;
     BankSwitchedMem ext_ram;
@@ -50,18 +53,19 @@ class Cartridge : public sc_module {
 
    protected:
     std::filesystem::path game_path_;
+    std::unique_ptr<SymfileTracer> symfile_tracer_;
   };
 
   class Rom : public MemoryBankCtrler {
    public:
-    Rom(std::filesystem::path game_path, std::filesystem::path boot_path);
+    Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
   };
 
   class Mbc1 : public MemoryBankCtrler {
    public:
-    Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path);
+    Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
    private:
@@ -75,7 +79,7 @@ class Cartridge : public sc_module {
 
   class Mbc5 : public MemoryBankCtrler {
    public:
-    Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path);
+    Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     uint transport_dbg_ram(tlm::tlm_generic_payload& trans) override;
@@ -93,7 +97,7 @@ class Cartridge : public sc_module {
   std::unique_ptr<MemoryBankCtrler> mbc;
   sc_in<bool> sig_unmap_rom_in;
 
-  Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path);
+  Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file = false);
 
   void SigHandler();
 

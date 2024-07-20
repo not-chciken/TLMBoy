@@ -35,6 +35,7 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   } cpu_state = kNominal;
 
   explicit Cpu(sc_module_name name, bool attach_gdb = false, bool singel_step = false);
+  ~Cpu();
 
  private:
   void start_of_simulation() override;
@@ -57,11 +58,12 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   // Write to bus/memory in debug mode. Also used by GDB.
   void WriteBusDebug(u16 addr, u8 data);
   // Read from bus/memory.
-  u8 ReadBus(u16 addr);
+  u8 ReadBus(u16 addr, GbCommand::Cmd cmd);
   // Read from bus/memory in debug mode. Also used by GDB.
   u8 ReadBusDebug(u16 addr);
   // TODO(Niko): maybe static payload per function?
   std::shared_ptr<tlm::tlm_generic_payload> payload;
+  GbCommand gbcmd;
 
   // Executes on machine cycle (interrupts, fetch, decode, execute)
   void DoMachineCycle();
