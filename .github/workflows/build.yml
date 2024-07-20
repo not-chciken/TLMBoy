@@ -40,6 +40,7 @@ jobs:
             ./test_gdb
             ./test_memory
             ./test_ppu --headless
+            ./test_symfile_tracer
             ./test_blarrg_cpuinstr01 --headless
             ./test_blarrg_cpuinstr02 --headless
             ./test_blarrg_cpuinstr03 --headless
