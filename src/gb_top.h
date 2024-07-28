@@ -7,6 +7,7 @@
  ******************************************************************************/
 #include <filesystem>
 
+#include "apu.h"
 #include "bus.h"
 #include "cartridge.h"
 #include "cpu.h"
@@ -23,6 +24,7 @@ struct GbTop : public sc_module {
   SC_HAS_PROCESS(GbTop);
   u8 reg_ie;  // Interrupt Enable at 0xFFFF.
   Cartridge cartridge;
+  Apu gb_apu;
   Bus gb_bus;
   Cpu gb_cpu;
   JoyPad joy_pad;
@@ -41,6 +43,10 @@ struct GbTop : public sc_module {
   Timer gb_timer;
   sc_clock global_clk;
   sc_signal<bool> sig_unmap_rom;
+  sc_signal<bool> sig_reload_length_square1;
+  sc_signal<bool> sig_reload_length_square2;
+  sc_signal<bool> sig_reload_length_wave;
+  sc_signal<bool> sig_reload_length_noise;
 
   GbTop(sc_module_name name, const Options &options);
 };
