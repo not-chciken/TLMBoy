@@ -7,6 +7,7 @@
 GbTop::GbTop(sc_module_name name, const Options &options)
     : sc_module(name),
       cartridge("cartridge", options.rom_path, options.boot_rom_path, options.symbol_file),
+      gb_apu("gb_apu"),
       gb_bus("gb_bus"),
       gb_cpu("gb_cpu", options.wait_for_gdb, options.single_step),
       joy_pad("joy_pad"),
@@ -24,12 +25,21 @@ GbTop::GbTop(sc_module_name name, const Options &options)
       gb_timer("gb_timer", reg_if.GetDataPtr()),
       global_clk("global_clock", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
 
+  gb_bus.AddBusMaster(&gb_apu.init_socket);
   gb_bus.AddBusMaster(&gb_cpu.init_socket);
   gb_bus.AddBusMaster(&gb_ppu.init_socket);
   gb_bus.AddBusMaster(&joy_pad.init_socket);
   gb_bus.AddBusMaster(&io_registers.init_socket);
   cartridge.sig_unmap_rom_in(sig_unmap_rom);
+  gb_apu.sig_reload_length_square1_in(sig_reload_length_square1);
+  gb_apu.sig_reload_length_square2_in(sig_reload_length_square2);
+  gb_apu.sig_reload_length_noise_in(sig_reload_length_noise);
+  gb_apu.sig_reload_length_wave_in(sig_reload_length_wave);
   io_registers.sig_unmap_rom_out(sig_unmap_rom);
+  io_registers.sig_reload_length_square1_out(sig_reload_length_square1);
+  io_registers.sig_reload_length_square2_out(sig_reload_length_square2);
+  io_registers.sig_reload_length_noise_out(sig_reload_length_noise);
+  io_registers.sig_reload_length_wave_out(sig_reload_length_wave);
 
   gb_bus.AddBusSlave(&cartridge.mbc->rom_socket_in, 0x0000, 0x7FFF);
   gb_bus.AddBusSlave(&video_ram.targ_socket,        0x8000, 0x9FFF);
@@ -47,6 +57,7 @@ GbTop::GbTop(sc_module_name name, const Options &options)
   gb_bus.AddBusSlave(&high_ram.targ_socket,         0xFF80, 0xFFFE);
   gb_bus.AddBusSlave(&intr_enable.targ_socket,      0xFFFF, 0xFFFF);
 
+  gb_apu.clk(global_clk);
   gb_cpu.clk(global_clk);
   gb_ppu.clk(global_clk);
   gb_timer.clk(global_clk);

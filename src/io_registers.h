@@ -18,6 +18,11 @@ struct IoRegisters : public GenericMemory {
 
   // SystemC interfaces.
   sc_out<bool> sig_unmap_rom_out;  // Unmaps the boot ROM.
+  sc_out<bool> sig_reload_length_square1_out; // Sound length register Square 1.
+  sc_out<bool> sig_reload_length_square2_out; // Sound length register Square 2.
+  sc_out<bool> sig_reload_length_wave_out; // Sound length register Wave.
+  sc_out<bool> sig_reload_length_noise_out; // Sound length register Noise.
+
   tlm_utils::simple_initiator_socket<IoRegisters, gb_const::kBusDataWidth> init_socket;
   void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) override;
 };
