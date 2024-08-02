@@ -21,7 +21,6 @@ Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step):
 }
 
 Cpu::~Cpu() {
-  payload->clear_extension<GbCommand>();
 }
 
 void Cpu::SetFlagC(bool val) {
