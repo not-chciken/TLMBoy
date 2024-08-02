@@ -35,11 +35,19 @@ GbTop::GbTop(sc_module_name name, const Options &options)
   gb_apu.sig_reload_length_square2_in(sig_reload_length_square2);
   gb_apu.sig_reload_length_noise_in(sig_reload_length_noise);
   gb_apu.sig_reload_length_wave_in(sig_reload_length_wave);
+  gb_apu.sig_trigger_square1_in(sig_trigger_square1);
+  gb_apu.sig_trigger_square2_in(sig_trigger_square2);
+  gb_apu.sig_trigger_noise_in(sig_trigger_noise);
+  gb_apu.sig_trigger_wave_in(sig_trigger_wave);
   io_registers.sig_unmap_rom_out(sig_unmap_rom);
   io_registers.sig_reload_length_square1_out(sig_reload_length_square1);
   io_registers.sig_reload_length_square2_out(sig_reload_length_square2);
   io_registers.sig_reload_length_noise_out(sig_reload_length_noise);
   io_registers.sig_reload_length_wave_out(sig_reload_length_wave);
+  io_registers.sig_trigger_square1_out(sig_trigger_square1);
+  io_registers.sig_trigger_square2_out(sig_trigger_square2);
+  io_registers.sig_trigger_noise_out(sig_trigger_noise);
+  io_registers.sig_trigger_wave_out(sig_trigger_wave);
 
   gb_bus.AddBusSlave(&cartridge.mbc->rom_socket_in, 0x0000, 0x7FFF);
   gb_bus.AddBusSlave(&video_ram.targ_socket,        0x8000, 0x9FFF);

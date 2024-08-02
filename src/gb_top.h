@@ -47,6 +47,10 @@ struct GbTop : public sc_module {
   sc_signal<bool> sig_reload_length_square2;
   sc_signal<bool> sig_reload_length_wave;
   sc_signal<bool> sig_reload_length_noise;
+  sc_signal<bool> sig_trigger_square1;
+  sc_signal<bool> sig_trigger_square2;
+  sc_signal<bool> sig_trigger_wave;
+  sc_signal<bool> sig_trigger_noise;
 
   GbTop(sc_module_name name, const Options &options);
 };

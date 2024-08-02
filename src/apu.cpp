@@ -5,14 +5,21 @@
 
 #include "apu.h"
 
+#include <algorithm>
+
 Apu::Apu(sc_module_name name)
     : sc_module(name),
       sig_reload_length_square1_in("sig_reload_length_square1_in"),
       sig_reload_length_square2_in("sig_reload_length_square2_in"),
       sig_reload_length_wave_in("sig_reload_length_wave_in"),
-      sig_reload_length_noise_in("sig_reload_length_noise_in") {
+      sig_reload_length_noise_in("sig_reload_length_noise_in"),
+      sig_trigger_square1_in("sig_trigger_square1_in"),
+      sig_trigger_square2_in("sig_trigger_square2_in"),
+      sig_trigger_wave_in("sig_trigger_wave_in"),
+      sig_trigger_noise_in("sig_trigger_noise_in") {
   SC_CTHREAD(AudioLoop, clk);
   dont_initialize();
+
   SC_METHOD(ReloadLengthSquare1);
   sensitive << sig_reload_length_square1_in;
   dont_initialize();
@@ -24,6 +31,19 @@ Apu::Apu(sc_module_name name)
   dont_initialize();
   SC_METHOD(ReloadLengthNoise);
   sensitive << sig_reload_length_noise_in;
+  dont_initialize();
+
+  SC_METHOD(TriggerEventSquare1);
+  sensitive << sig_trigger_square1_in;
+  dont_initialize();
+  SC_METHOD(TriggerEventSquare2);
+  sensitive << sig_trigger_square2_in;
+  dont_initialize();
+  SC_METHOD(TriggerEventWave);
+  sensitive << sig_trigger_wave_in;
+  dont_initialize();
+  SC_METHOD(TriggerEventNoise);
+  sensitive << sig_trigger_noise_in;
   dont_initialize();
 }
 
@@ -53,16 +73,16 @@ void Apu::AudioLoop() {
 
     int period_length = (double)kSampleRate / real_frequency;  // use real_frequency
 
-    int square1_duty_stop = (period_length / 8);
-    switch (square1_duty) {
+    int square2_duty_stop = (period_length / 8);
+    switch (square2_duty) {
     case 1:
-      square1_duty_stop *= 2;
+      square2_duty_stop *= 2;
       break;
     case 2:
-      square1_duty_stop *= 4;
+      square2_duty_stop *= 4;
       break;
     case 3:
-      square1_duty_stop *= 6;
+      square2_duty_stop *= 6;
       break;
     }
 
@@ -70,12 +90,12 @@ void Apu::AudioLoop() {
     for (int j = 0; j < length / 2; ++j, ++i) {
       int x = i % period_length;
       Sint16 sample;
-      if (x < square1_duty_stop)
-        sample = SDL_MIN_SINT16;
+      if (x < square2_duty_stop)
+        sample = SDL_MIN_SINT16 / (((float)apu->volume_sq1) / 15.f);
       else
-        sample = SDL_MAX_SINT16;
+        sample = SDL_MAX_SINT16 / (((float)apu->volume_sq1) / 15.f);
       stream[j] = sample;
-      if (apu->square1_length_load == 0)
+      if (apu->square2_length_load == 0)
         stream[j] = 0;
     }
   };
@@ -94,7 +114,7 @@ void Apu::AudioLoop() {
     DecrementLengths();
     // DoSweep();
     wait(gb_const::kNsPerClkCycle * 8192);
-    // Do Envelope();
+    UpdateEnvelopes();
     wait(gb_const::kNsPerClkCycle * 8192);
   }
 }
@@ -156,6 +176,35 @@ void Apu::DecrementLengths() {
     --noise_length_load;
 }
 
+void Apu::UpdateEnvelopes() {
+  static u32 i = 0;
+  u8 envelope_add_mode_sq1 = *reg_nr12 & 0b1000u;
+  u8 period_sq1 = *reg_nr12 & 0b111u;
+
+  if (period_sq1) {
+    if (!(i % period_sq1)) {
+      if (envelope_add_mode_sq1)
+        volume_sq1 = std::min(volume_sq1 + 1, 15);
+      else
+        volume_sq1 = std::max(volume_sq1 - 1, 0);
+    }
+  }
+
+  u8 envelope_add_mode_sq2 = *reg_nr22 & 0b1000u;
+  u8 period_sq2 = *reg_nr22 & 0b111u;
+
+  if (period_sq2) {
+    if (!(i % period_sq2)) {
+      if (envelope_add_mode_sq2)
+        volume_sq2 = std::min(volume_sq2 + 1, 15);
+      else
+        volume_sq2 = std::max(volume_sq2 - 1, 0);
+    }
+  }
+
+  ++i;
+}
+
 void Apu::ReloadLengthSquare1() {
   square1_length_load = 64u - (*reg_nr11 & 0b111111u);
 }
@@ -170,4 +219,38 @@ void Apu::ReloadLengthWave() {
 
 void Apu::ReloadLengthNoise() {
   noise_length_load = 64u - (*reg_nr41 & 0b111111u);
+}
+
+void Apu::TriggerEventSquare1() {
+  if (square1_length_load == 0)
+    square1_length_load = 64;
+
+  volume_sq1 = *reg_nr12 >> 4;
+  //  Channel is enabled (see length counter).
+  // If length counter is zero, it is set to 64 (256 for wave channel). DONE
+  // Frequency timer is reloaded with period.
+  // Volume envelope timer is reloaded with period.
+  // Channel volume is reloaded from NRx2. DONE
+  // Noise channel's LFSR bits are all set to 1.
+  // Wave channel's position is set to 0 but sample buffer is NOT refilled.
+  // Square 1's sweep does several things (see frequency sweep).
+}
+
+void Apu::TriggerEventSquare2() {
+  if (square2_length_load == 0)
+    square2_length_load = 64;
+
+  volume_sq2 = *reg_nr22 >> 4;
+}
+
+void Apu::TriggerEventWave() {
+  if (wave_length_load == 0)
+    wave_length_load = 256;
+}
+
+void Apu::TriggerEventNoise() {
+  if (noise_length_load == 0)
+    noise_length_load = 64;
+
+  volume_ns = *reg_nr42 >> 4;
 }
