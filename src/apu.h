@@ -62,11 +62,13 @@ struct Apu : public sc_module {
   // Clocked at 256Hz. Only counts down with length_enable = true.
   u8 square1_length_load;
   u8 square2_length_load;
-  u8 wave_length_load;
+  u16 wave_length_load;
   u8 noise_length_load;
 
-  // Starting volume of the envelope [0,15].
-  u8 starting_volume;
+  // Current volume, which is not exposed.
+  i32 volume_sq1;
+  i32 volume_sq2;
+  i32 volume_ns;
 
   // Envelope: true = amplify, false = attenuate;
   bool envelope_add_mode;
@@ -92,15 +94,25 @@ struct Apu : public sc_module {
   sc_in<bool> sig_reload_length_square2_in;
   sc_in<bool> sig_reload_length_wave_in;
   sc_in<bool> sig_reload_length_noise_in;
+  sc_in<bool> sig_trigger_square1_in;
+  sc_in<bool> sig_trigger_square2_in;
+  sc_in<bool> sig_trigger_wave_in;
+  sc_in<bool> sig_trigger_noise_in;
 
   void ReloadLengthSquare1();
   void ReloadLengthSquare2();
   void ReloadLengthWave();
   void ReloadLengthNoise();
 
+  void TriggerEventSquare1();
+  void TriggerEventSquare2();
+  void TriggerEventWave();
+  void TriggerEventNoise();
+
  protected:
   SDL_AudioSpec audio_spec_;
   SDL_AudioDeviceID audio_device_;
 
   void DecrementLengths();
+  void UpdateEnvelopes();
 };

@@ -43,16 +43,30 @@ void IoRegisters::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[
   } else if (cmd == tlm::TLM_WRITE_COMMAND) {
     switch (adr) {
     case 0x00:  // 0xFF10
+      memcpy(&data_[adr], ptr, 1);
       sig_reload_length_square1_out.write(true);
       break;
+    case 0x04:  // 0xFF14
+      memcpy(&data_[adr], ptr, 1);
+      if (*ptr & 0b10000000u)
+        sig_trigger_square1_out.write(true);
+      break;
     case 0x06:  // 0xFF16
+      memcpy(&data_[adr], ptr, 1);
       sig_reload_length_square2_out.write(true);
+      break;
+    case 0x09:  // 0xFF19
+      memcpy(&data_[adr], ptr, 1);
+      if (*ptr & 0b10000000u)
+        sig_trigger_square2_out.write(true);
       break;
     case 0x0B:  // 0xFF1B
       sig_reload_length_wave_out.write(true);
+      memcpy(&data_[adr], ptr, 1);
       break;
     case 0x10:  // 0xFF20
       sig_reload_length_noise_out.write(true);
+      memcpy(&data_[adr], ptr, 1);
       break;
     case 0x31:  // 0xFF41
       // Mode (first two bits) is read-only. Hence, some masking.
