@@ -20,11 +20,11 @@ struct Apu : public sc_module {
 
   // APU IO registers.
   // Square 1.
-  u8* reg_nr10;
-  u8* reg_nr11;
-  u8* reg_nr12;
-  u8* reg_nr13;
-  u8* reg_nr14;
+  u8* reg_nr10;  // -PPP NSSS Sweep period, negate, shift
+  u8* reg_nr11;  // DDLL LLLL Duty, Length load (64-L).
+  u8* reg_nr12;  // VVVV APPP Starting volume, Envelope add mode, period.
+  u8* reg_nr13;  // FFFF FFFF Frequency LSB.
+  u8* reg_nr14;  // TL-- -FFF Trigger, Length enable, Frequency MSB.
 
   // Square 2.
   u8* reg_nr21;  // DDLL LLLL Duty, Length load (64-L).
@@ -33,56 +33,49 @@ struct Apu : public sc_module {
   u8* reg_nr24;  // TL-- -FFF Trigger, Length enable, Frequency MSB.
 
   // Wave.
-  u8* reg_nr30;
-  u8* reg_nr31;
-  u8* reg_nr32;
-  u8* reg_nr33;
-  u8* reg_nr34;
+  u8* reg_nr30;  // E--- ---- DAC power
+  u8* reg_nr31;  // LLLL LLLL Length load (256-L)
+  u8* reg_nr32;  // -VV- ---- Volume code (00=0%, 01=100%, 10=50%, 11=25%)
+  u8* reg_nr33;  // FFFF FFFF Frequency LSB
+  u8* reg_nr34;  // TL-- -FFF Trigger, Length enable, Frequency MSB
 
   // Noise.
-  u8* reg_nr41;
-  u8* reg_nr42;
-  u8* reg_nr43;
-  u8* reg_nr44;
+  u8* reg_nr41;  // --LL LLLL Length load (64-L)
+  u8* reg_nr42;  // VVVV APPP Starting volume, Envelope add mode, period
+  u8* reg_nr43;  // SSSS WDDD Clock shift, Width mode of LFSR, Divisor code
+  u8* reg_nr44;  // TL-- ---- Trigger, Length enable
 
   // Control/Status.
-  u8* reg_nr50;
-  u8* reg_nr51;
-  u8* reg_nr52;
+  u8* reg_nr50;  //  ALLL BRRR Vin L enable, Left vol, Vin R enable, Right vol
+  u8* reg_nr51;  //  NW21 NW21 Left enables, Right enables
+  u8* reg_nr52;  //  P--- NW21 Power control/status, Channel length statuses
 
-  // Wavde duty:
-  // 0 (12.5%) = _-------
-  // 1 (25%)   = __------
-  // 2 (50%)   = ____----
-  // 3 (75%)   = ______--
-  u8 duty;
-
-  // Writing into regX1 loads the counter with (64-length) (256-length for wave).
-  // The internal counter decrements this to zero.
-  // Clocked at 256Hz. Only counts down with length_enable = true.
-  u8 square1_length_load;
-  u8 square2_length_load;
   u16 wave_length_load;
   u8 noise_length_load;
 
   // Current volume, which is not exposed.
-  i32 volume_sq1;
-  i32 volume_sq2;
   i32 volume_ns;
 
-  // Envelope: true = amplify, false = attenuate;
-  bool envelope_add_mode;
+  struct Osc {
+    bool length_enable;  // If true, internal counter starts decreasing.
+    bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
 
-  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation.)
-  u8 period;
+    i32 volume;  // Sound volume (e [0,15]).
 
-  u16 frequency;
-  u32 real_frequency;
+    u8 duty;  // 0 (12.5%) = _-------; 1 (25%)   = __------; 2 (50%)   = ____----; 3 (75%)   = ______--
 
-  bool trigger;
+    // Writing into regX1 loads the counter with (64-length) (256-length for wave).
+    // The internal counter decrements this to zero.
+    // Clocked at 256Hz. Only counts down with length_enable = true.
+    u8 length_load;
 
-  // If true, internal counter starts decreasing.
-  bool length_enable;
+    u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
+  };
+
+  struct Square1 : public Osc {
+  } square1;
+  struct Square2 : public Osc {
+  } square2;
 
   // SystemC interfaces.
   void start_of_simulation() override;

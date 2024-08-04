@@ -63,8 +63,8 @@ void Apu::AudioLoop() {
     Apu* apu = (Apu*)userData;
     static uint64_t i = 0;
 
-    u8 square1_duty = *(apu->reg_nr11) >> 6;
-    u8 square2_duty = *(apu->reg_nr21) >> 6;
+    apu->square1.duty = *(apu->reg_nr11) >> 6;
+    apu->square2.duty = *(apu->reg_nr21) >> 6;
 
     u8 frequency_lsb = *(apu->reg_nr23);
     u8 frequency_msb = *(apu->reg_nr24) & 0b111u;
@@ -74,7 +74,7 @@ void Apu::AudioLoop() {
     int period_length = (double)kSampleRate / real_frequency;  // use real_frequency
 
     int square2_duty_stop = (period_length / 8);
-    switch (square2_duty) {
+    switch (apu->square2.duty) {
     case 1:
       square2_duty_stop *= 2;
       break;
@@ -91,11 +91,11 @@ void Apu::AudioLoop() {
       int x = i % period_length;
       Sint16 sample;
       if (x < square2_duty_stop)
-        sample = SDL_MIN_SINT16 / (((float)apu->volume_sq1) / 15.f);
+        sample = SDL_MIN_SINT16 / (((float)apu->square2.volume) / 15.f);
       else
-        sample = SDL_MAX_SINT16 / (((float)apu->volume_sq1) / 15.f);
+        sample = SDL_MAX_SINT16 / (((float)apu->square2.volume) / 15.f);
       stream[j] = sample;
-      if (apu->square2_length_load == 0)
+      if (apu->square2.length_load == 0)
         stream[j] = 0;
     }
   };
@@ -105,17 +105,17 @@ void Apu::AudioLoop() {
 
   while (true) {
     DecrementLengths();
-    wait(gb_const::kNsPerClkCycle * 16384);
+    wait(16384);
     DecrementLengths();
     // DoSweep();
-    wait(gb_const::kNsPerClkCycle * 16384);
+    wait(16384);
     DecrementLengths();
-    wait(gb_const::kNsPerClkCycle * 16384);
+    wait(16384);
     DecrementLengths();
     // DoSweep();
-    wait(gb_const::kNsPerClkCycle * 8192);
+    wait(8192);
     UpdateEnvelopes();
-    wait(gb_const::kNsPerClkCycle * 8192);
+    wait(8192);
   }
 }
 
@@ -161,15 +161,15 @@ void Apu::start_of_simulation() {
 }
 
 void Apu::DecrementLengths() {
-  bool square1_length_enable = *reg_nr14 & 0b01000000u;
-  bool square2_length_enable = *reg_nr24 & 0b01000000u;
+  square1.length_enable = *reg_nr14 & 0b01000000u;
+  square2.length_enable = *reg_nr24 & 0b01000000u;
   bool wave_length_enable = *reg_nr34 & 0b01000000u;
   bool noise_length_enable = *reg_nr44 & 0b01000000u;
 
-  if (square1_length_enable && (square1_length_load > 1u))
-    --square1_length_load;
-  if (square2_length_enable && (square2_length_load > 1u))
-    --square2_length_load;
+  if (square1.length_enable && (square1.length_load > 1u))
+    --square1.length_load;
+  if (square2.length_enable && (square2.length_load > 1u))
+    --square2.length_load;
   if (wave_length_enable && (wave_length_load > 1u))
     --wave_length_load;
   if (noise_length_enable && (noise_length_load > 1u))
@@ -178,27 +178,27 @@ void Apu::DecrementLengths() {
 
 void Apu::UpdateEnvelopes() {
   static u32 i = 0;
-  u8 envelope_add_mode_sq1 = *reg_nr12 & 0b1000u;
-  u8 period_sq1 = *reg_nr12 & 0b111u;
+  square1.envelope_mode = *reg_nr12 & 0b1000u;
+  square1.period = *reg_nr12 & 0b111u;
 
-  if (period_sq1) {
-    if (!(i % period_sq1)) {
-      if (envelope_add_mode_sq1)
-        volume_sq1 = std::min(volume_sq1 + 1, 15);
+  if (square1.period) {
+    if (!(i % square1.period)) {
+      if (square1.envelope_mode)
+        square1.volume = std::min(square1.volume + 1, 15);
       else
-        volume_sq1 = std::max(volume_sq1 - 1, 0);
+        square1.volume = std::max(square1.volume - 1, 0);
     }
   }
 
-  u8 envelope_add_mode_sq2 = *reg_nr22 & 0b1000u;
-  u8 period_sq2 = *reg_nr22 & 0b111u;
+  square2.envelope_mode = *reg_nr22 & 0b1000u;
+  square2.period = *reg_nr22 & 0b111u;
 
-  if (period_sq2) {
-    if (!(i % period_sq2)) {
-      if (envelope_add_mode_sq2)
-        volume_sq2 = std::min(volume_sq2 + 1, 15);
+  if (square2.period) {
+    if (!(i % square2.period)) {
+      if (square2.envelope_mode)
+        square2.volume = std::min(square2.volume + 1, 15);
       else
-        volume_sq2 = std::max(volume_sq2 - 1, 0);
+        square2.volume = std::max(square2.volume - 1, 0);
     }
   }
 
@@ -206,11 +206,11 @@ void Apu::UpdateEnvelopes() {
 }
 
 void Apu::ReloadLengthSquare1() {
-  square1_length_load = 64u - (*reg_nr11 & 0b111111u);
+  square1.length_load = 64u - (*reg_nr11 & 0b111111u);
 }
 
 void Apu::ReloadLengthSquare2() {
-  square2_length_load = 64u - (*reg_nr21 & 0b111111u);
+  square2.length_load = 64u - (*reg_nr21 & 0b111111u);
 }
 
 void Apu::ReloadLengthWave() {
@@ -222,10 +222,10 @@ void Apu::ReloadLengthNoise() {
 }
 
 void Apu::TriggerEventSquare1() {
-  if (square1_length_load == 0)
-    square1_length_load = 64;
+  if (square1.length_load == 0)
+    square1.length_load = 64;
 
-  volume_sq1 = *reg_nr12 >> 4;
+  square1.volume = *reg_nr12 >> 4;
   //  Channel is enabled (see length counter).
   // If length counter is zero, it is set to 64 (256 for wave channel). DONE
   // Frequency timer is reloaded with period.
@@ -237,10 +237,10 @@ void Apu::TriggerEventSquare1() {
 }
 
 void Apu::TriggerEventSquare2() {
-  if (square2_length_load == 0)
-    square2_length_load = 64;
+  if (square2.length_load == 0)
+    square2.length_load = 64;
 
-  volume_sq2 = *reg_nr22 >> 4;
+  square2.volume = *reg_nr22 >> 4;
 }
 
 void Apu::TriggerEventWave() {
