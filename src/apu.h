@@ -70,6 +70,10 @@ struct Apu : public sc_module {
     u8 length_load;
 
     u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
+
+    u32 frequency;
+
+    void WriteDataIntoStream(Sint16* stream, int length, int i);
   };
 
   struct Square1 : public Osc {

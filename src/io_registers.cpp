@@ -53,12 +53,12 @@ void IoRegisters::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[
       break;
     case 0x06:  // 0xFF16
       memcpy(&data_[adr], ptr, 1);
-      sig_reload_length_square2_out.write(true);
+      sig_reload_length_square2_out.write(!sig_reload_length_square2_out.read());
       break;
     case 0x09:  // 0xFF19
       memcpy(&data_[adr], ptr, 1);
       if (*ptr & 0b10000000u)
-        sig_trigger_square2_out.write(true);
+        sig_trigger_square2_out.write(!sig_trigger_square2_out.read());
       break;
     case 0x0B:  // 0xFF1B
       sig_reload_length_wave_out.write(true);
