@@ -25,6 +25,32 @@ Dependencies:
 * [SDL2](https://github.com/libsdl-org/SDL)
 * For tests: [googletest](https://github.com/google/googletest)
 
+## Usage
+
+After building TLMBoy, emulating a game is a simple as:
+```bash
+cd build
+./tlmboy -r <PATH_TO_GAME_ROM>
+```
+
+Currently, the homebrew game [FlappyBoy](https://github.com/bitnenfer/flappy-boy-asm.git) is included as an example.
+The example can be launched with:
+```bash
+cd build
+./tlmboy -r ../roms/flappyboy.gb
+```
+
+## Command Line Arguments
+
+* `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG\_ROM.bin" by default.
+* `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
+* `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
+* `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
+* `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
+* `--single-step`: Prints the CPU state before the execution pf each instruction.
+* `--symbol-file`: Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit.
+* `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
+
 ## Screenshots
 Alleyway | Super Mario Land
 :-------------------------:|:-------------------------:
@@ -52,16 +78,6 @@ Utilities:
 | 2         | Hold to not render sprites    |
 | 3         | Hold to not render window     |
 
-## Command Line Arguments
-
-* `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG\_ROM.bin" by default.
-* `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
-* `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
-* `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
-* `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
-* `--single-step`: Prints the CPU state before the execution pf each instruction.
-* `--symbol-file`: Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit.
-* `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
 
 ## Documentation
 
