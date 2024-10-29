@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Apache License, Version 2.0
  * Copyright (c) 2023 chciken/Niko
-******************************************************************************/
+ ******************************************************************************/
 
 #include "game_info.h"
 
@@ -12,7 +12,7 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
   }
   std::streamsize size = file.tellg();
   file.seekg(0, std::ios::beg);
-  char *data = new char[size];
+  char* data = new char[size];
   file.seekg(0, ios::beg);
   file.read(data, size);
 
@@ -30,17 +30,15 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
     for (uint i = kAdrNewLicenseStart; i <= kAdrNewLicenseEnd; i++) {
       key += static_cast<char>(data[i]);
     }
-    try {
+    if (new_license_code_map.contains(key)) {
       license_code_ = new_license_code_map.at(key);
-    }
-    catch (std::out_of_range &e) {
+    } else {
       license_code_ = "Unknown";
     }
   } else {
-    try {
+    if (old_license_code_map.contains(data[kAdrOldLicense])) {
       license_code_ = old_license_code_map.at(data[kAdrOldLicense]);
-    }
-    catch (std::out_of_range &e) {
+    } else {
       license_code_ = "Unknown";
     }
   }
@@ -55,11 +53,11 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
   }
 
   cartridge_type_ = cartridge_type_map.at(data[kAdrCartType]);
-  rom_size_       = rom_size_map.at(data[kAdrRomSize]);
-  ram_size_       = ram_size_map.at(data[kAdrRamSize]);
-  region_         = region_map.at(data[kAdrRegionCode]);
+  rom_size_ = rom_size_map.at(data[kAdrRomSize]);
+  ram_size_ = ram_size_map.at(data[kAdrRamSize]);
+  region_ = region_map.contains(data[kAdrRegionCode]) ? region_map.at(data[kAdrRegionCode]) : "Unknown";
 
-  delete [] data;
+  delete[] data;
 }
 
 GameInfo::operator string() const {
