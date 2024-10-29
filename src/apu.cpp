@@ -52,6 +52,35 @@ Apu::~Apu() {
   SDL_Quit();
 }
 
+void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length, int i) {
+    int period_length = (double)kSampleRate / frequency;  // use real_frequency
+
+    int duty_stop = (period_length / 8);
+    switch (duty) {
+    case 1:
+      duty_stop *= 2;
+      break;
+    case 2:
+      duty_stop *= 4;
+      break;
+    case 3:
+      duty_stop *= 6;
+      break;
+    }
+
+    for (int j = 0; j < length / 2; ++j, ++i) {
+      int x = i % period_length;
+      Sint16 sample;
+      if (x < duty_stop)
+        sample = SDL_MIN_SINT16 / (((float)volume) / 40.f);
+      else
+        sample = SDL_MAX_SINT16 / (((float)volume) / 40.f);
+      stream[j] = sample;
+      if (length_load == 0)
+        stream[j] = 0;
+    }
+}
+
 void Apu::AudioLoop() {
   SDL_Init(SDL_INIT_AUDIO);
   audio_spec_.freq = kSampleRate;
@@ -69,35 +98,39 @@ void Apu::AudioLoop() {
     u8 frequency_lsb = *(apu->reg_nr23);
     u8 frequency_msb = *(apu->reg_nr24) & 0b111u;
     u16 frequency = static_cast<u16>(frequency_msb) << 8 | static_cast<u16>(frequency_lsb);
-    u32 real_frequency = 131072u / (2048u - frequency);  // Lowest frequency = 64Hz.
+    apu->square2.frequency = 131072u / (2048u - frequency);  // Lowest frequency = 64Hz.
 
-    int period_length = (double)kSampleRate / real_frequency;  // use real_frequency
+    apu->square2.WriteDataIntoStream((Sint16*)buffer, length, i);
 
-    int square2_duty_stop = (period_length / 8);
-    switch (apu->square2.duty) {
-    case 1:
-      square2_duty_stop *= 2;
-      break;
-    case 2:
-      square2_duty_stop *= 4;
-      break;
-    case 3:
-      square2_duty_stop *= 6;
-      break;
-    }
+    i += (length / 2);
 
-    Sint16* stream = (Sint16*)buffer;
-    for (int j = 0; j < length / 2; ++j, ++i) {
-      int x = i % period_length;
-      Sint16 sample;
-      if (x < square2_duty_stop)
-        sample = SDL_MIN_SINT16 / (((float)apu->square2.volume) / 15.f);
-      else
-        sample = SDL_MAX_SINT16 / (((float)apu->square2.volume) / 15.f);
-      stream[j] = sample;
-      if (apu->square2.length_load == 0)
-        stream[j] = 0;
-    }
+    // int period_length = (double)kSampleRate / real_frequency;  // use real_frequency
+
+    // int square2_duty_stop = (period_length / 8);
+    // switch (apu->square2.duty) {
+    // case 1:
+    //   square2_duty_stop *= 2;
+    //   break;
+    // case 2:
+    //   square2_duty_stop *= 4;
+    //   break;
+    // case 3:
+    //   square2_duty_stop *= 6;
+    //   break;
+    // }
+
+    // Sint16* stream = (Sint16*)buffer;
+    // for (int j = 0; j < length / 2; ++j, ++i) {
+    //   int x = i % period_length;
+    //   Sint16 sample;
+    //   if (x < square2_duty_stop)
+    //     sample = SDL_MIN_SINT16 / (((float)apu->square2.volume) / 15.f);
+    //   else
+    //     sample = SDL_MAX_SINT16 / (((float)apu->square2.volume) / 15.f);
+    //   stream[j] = sample;
+    //   if (apu->square2.length_load == 0)
+    //     stream[j] = 0;
+    // }
   };
 
   audio_device_ = SDL_OpenAudioDevice(nullptr, 0, &audio_spec_, nullptr, 0);
