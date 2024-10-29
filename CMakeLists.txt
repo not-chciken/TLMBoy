@@ -55,6 +55,13 @@ target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy -lsystemc -lSDL2)
 target_compile_options(tlmboy PUBLIC -O3 -flto)
 
+# The debug version.
+add_executable(tlmboy_debug src/main.cpp ${ALL_CPPS})
+target_include_directories(tlmboy_debug SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
+target_link_libraries(tlmboy_debug "-L${SYSTEMC_PATH}/lib-linux64")
+target_link_libraries(tlmboy_debug -lsystemc -lSDL2)
+target_compile_options(tlmboy_debug PUBLIC -O0 -g)
+
 # For test purposes
 add_executable(tlmboy_test src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy_test SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
