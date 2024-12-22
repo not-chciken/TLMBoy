@@ -16,6 +16,7 @@
 bool Ppu::uiRenderBg = true;
 bool Ppu::uiRenderSprites = true;
 bool Ppu::uiRenderWndw = true;
+u8 Ppu::color_palette[4][3] = {};
 
 // Interleaves two selected bits of two bit vectors and arranges them in a screen buffer friendly way.
 // example a=0b00001000, b=00000000, pos=3, returns 0b00000010
@@ -32,8 +33,13 @@ constexpr u8 MapColors(u8 val, u8 const* reg) {
   return (*reg >> val * 2) & 0b11;
 }
 
-Ppu::Ppu(sc_module_name name, bool headless, int fps_cap) : sc_module(name), init_socket("init_socket"), clk("clk") {
+Ppu::Ppu(sc_module_name name, bool headless, int fps_cap, i64 resolution_scaling, string color_palette)
+    : sc_module(name), init_socket("init_socket"), clk("clk") {
   SC_CTHREAD(RenderLoop, clk);
+
+  for (int j = 0; j < 4; ++j)
+    for (int i = 0; i < 3; ++i)
+      Ppu::color_palette[j][i] = (u8)std::stoul(color_palette.substr(6 * j + i * 2, 2), nullptr, 16);
 
   memset(bg_buffer, Colors::White, kGbScreenBufferHeight * kGbScreenBufferWidth);
   memset(sprite_buffer, Colors::Transparent, kGbScreenWidth * kGbScreenHeight);
@@ -44,7 +50,8 @@ Ppu::Ppu(sc_module_name name, bool headless, int fps_cap) : sc_module(name), ini
     window_wndw = std::make_unique<DummyWindow>();
   } else {
     // Need typecast to create some temporaries with addresses for unique pointer reference arguments :/
-    game_wndw = std::make_unique<GameWindow>((int)kRenderWndwWidth, (int)kRenderWndwHeight, (int)kGbScreenWidth,
+    game_wndw = std::make_unique<GameWindow>((int)kGbScreenWidth * resolution_scaling,
+                                             (int)kGbScreenHeight * resolution_scaling, (int)kGbScreenWidth,
                                              (int)kGbScreenHeight, "TLMBoy", fps_cap);
     window_wndw = std::make_unique<WindowWindow>(128 * 2, 128 * 2, 128, 128, "Tile Data Table");
   }
@@ -413,7 +420,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
     for (int y = 0; y < log_height; ++y) {
       for (int x = 0; x < log_width; ++x) {
         int val = p.bg_buffer[y][x];
-        pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
+        pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
       }
     }
   } else {
@@ -432,7 +439,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
         if (val == Colors::Transparent)
           continue;
         p.sprite_buffer[y][x] = Colors::Transparent;
-        pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
+        pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
       }
     }
   }
@@ -455,10 +462,10 @@ void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
           u8 val = InterleaveBits(p.tile_data_table_low[t * 256 + j * 16 + 2 * i],
                                   p.tile_data_table_low[t * 256 + j * 16 + 2 * i + 1], 7 - k);
           val = MapColors(val, p.reg_bgp);
-          SDL_SetRenderDrawColor(renderer, renderColor[val][0], renderColor[val][1], renderColor[val][2], 255);
+          SDL_SetRenderDrawColor(renderer, color_palette[val][0], color_palette[val][1], color_palette[val][2], 255);
           const size_t x = j * 8 + k;
           const size_t y = t * 8 + i;
-          pixels[y * log_width + x] = ToTextureColor(renderColor[val][0], renderColor[val][1], renderColor[val][2]);
+          pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
         }
       }
     }

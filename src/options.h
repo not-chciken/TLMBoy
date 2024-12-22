@@ -19,6 +19,8 @@ struct Options {
   fs::path boot_rom_path = "../roms/DMG_ROM.bin";
   i64 fps_cap = 60;
   i64 max_cycles = -1;
+  i64 resolution_scaling = 4;
+  string color_palette = "f2ffd9aaaaaa555555000000";
 
   // Parses the arguments from the CLI and sets option variables accordingly for the TLMBoy's main.
   void InitOpts(int argc, char* argv[]);

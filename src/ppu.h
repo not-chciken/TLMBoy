@@ -30,7 +30,6 @@
 struct Ppu : public sc_module {
   SC_HAS_PROCESS(Ppu);
 
-  static constexpr u8 renderColor[4][3] = {{242, 255, 217}, {170, 170, 170}, {85, 85, 85}, {0, 0, 0}};
   static const int kOamEntryBytes = 4;   // Bytes per OAM entry.
   static const int kNumOamEntries = 40;  // Number of OAM entries. Hence, 40 sprites can be displayed at max.
   static const int kTileLength = 8;      // Length of a normal tile in pixels.
@@ -40,9 +39,6 @@ struct Ppu : public sc_module {
   static const int kGbScreenHeight = 144;
   static const int kGbScreenBufferWidth = 256;
   static const int kGbScreenBufferHeight = 256;
-  static const int kRenderScaling = 4;
-  static const int kRenderWndwWidth = kGbScreenWidth * kRenderScaling;
-  static const int kRenderWndwHeight = kGbScreenHeight * kRenderScaling;
 
   // Masks for reg_lcdc.
   static const u8 kMaskLcdControl = 0b10000000;          // bit 7; 1 -> operate
@@ -88,6 +84,8 @@ struct Ppu : public sc_module {
   static bool uiRenderSprites;
   static bool uiRenderWndw;
 
+  static u8 color_palette[4][3];
+
   enum Colors {
     White = 0,
     Grey = 1,
@@ -96,7 +94,7 @@ struct Ppu : public sc_module {
     Transparent = 4,
   };
 
-  explicit Ppu(sc_module_name name, bool headless = false, int fps_cap = 60);
+  explicit Ppu(sc_module_name name, bool headless = false, int fps_cap = 60, i64 resolution_scaling = 4, string color_palette = "f2ffd9aaaaaa555555000000");
   ~Ppu();
 
   // PPU IO registers.

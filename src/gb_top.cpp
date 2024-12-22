@@ -20,7 +20,7 @@ GbTop::GbTop(sc_module_name name, const Options &options)
       serial_transfer(3, "serial_transfer"),
       reg_if(1, "reg_if"),
       intr_enable(1, "intr_enable"),
-      gb_ppu("gb_ppu", options.headless, options.fps_cap),
+      gb_ppu("gb_ppu", options.headless, options.fps_cap, options.resolution_scaling, options.color_palette),
       gb_timer("gb_timer", reg_if.GetDataPtr()),
       global_clk("global_clock", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
 
