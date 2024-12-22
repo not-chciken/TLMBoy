@@ -47,10 +47,10 @@ cd build
 * `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
 * `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
 * `--max-cycles=X`: Only execute a maximum number of `X` clock (not machine!) cycles.
-* `--resolution-scaling=X`: Scaling of the game window's resolution. A value of 1 corresponds to the original resolution of 160x144.
+* `--resolution-scaling=X`: Scaling of the game window's resolution. A value of 1 corresponds to the original resolution of 160x144. Default 4.
 * `--rom-path=X`: Specifies the ROM/game `X` that shall be executed.
 * `--single-step`: Prints the CPU state before the execution pf each instruction.
-* `--symbol-file`: Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit.
+* `--symbol-file`: Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit. The file can be used in debuggers and disassemblers.
 * `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
 
 ## Screenshots
