@@ -197,7 +197,7 @@ void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
     } else if (adr <= 0x7FFF) {
       if (gbcmd && symfile_tracer_)
         if (gbcmd->cmd == GbCommand::kGbReadData)
-          symfile_tracer_->TraceAccess(0, adr);
+          symfile_tracer_->TraceAccess(rom_high.GetCurrentBankIndex(), adr);
       trans.set_address(adr - 0x4000);
       rom_high_socket_out->b_transport(trans, delay);
     }

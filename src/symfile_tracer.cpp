@@ -17,6 +17,8 @@ void SymfileTracer::Clear() {
 }
 
 void PrintSymbol(std::ostream& os, size_t bank, u16 start_adr, i32 len) {
+  if (bank != 0)
+    start_adr += 0x4000u;
   os << std::format("{:02x}:{:04x} Data{:02x}{:04x}\n", bank, start_adr, bank, start_adr);
   os << std::format("{:02x}:{:04x} .data:{:x}\n", bank, start_adr, len);
 }
