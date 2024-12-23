@@ -41,8 +41,8 @@ TEST(SymfileTracerTests, SimpleAccess) {
   golden_out =
       "00:0000 Data000000\n"
       "00:0000 .data:2\n"
-      "01:000f Data01000f\n"
-      "01:000f .data:a\n";
+      "01:400f Data01400f\n"
+      "01:400f .data:a\n";
   ASSERT_EQ(ss.str(), golden_out);
   ss.str("");
 
@@ -64,10 +64,10 @@ TEST(SymfileTracerTests, FullAccess) {
   }
   sft.DumpTrace(ss);
   golden_out =
-      "0e:0000 Data0e0000\n"
-      "0e:0000 .data:4000\n"
-      "0f:0000 Data0f0000\n"
-      "0f:0000 .data:4000\n";
+      "0e:4000 Data0e4000\n"
+      "0e:4000 .data:4000\n"
+      "0f:4000 Data0f4000\n"
+      "0f:4000 .data:4000\n";
   ASSERT_EQ(ss.str(), golden_out);
 }
 
