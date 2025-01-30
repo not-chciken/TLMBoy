@@ -81,6 +81,30 @@ struct Apu : public sc_module {
   struct Square2 : public Osc {
   } square2;
 
+  struct Noise {
+    bool length_enable;  // If true, internal counter starts decreasing.
+    bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
+    i32 volume;  // Sound volume (e [0,15]).
+    u8 length_load;
+    u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
+    u32 frequency;
+
+    u8 divisor_table[8] = {8, 16, 32, 48, 64, 80, 96, 112};
+    u8 divisor;
+    u8 shift;
+    u8 lfsr_width;
+    u32 lfsr_sample_rate; // In Hz.
+    u32 lfsr_sample_length; // In ns.
+    u32 lfsr_output; // Either 1 or 0.
+    uint lfsr_bits;
+    u32 tick_cntr;
+
+    void DoLfsrTick(int num_ticks);
+
+    void WriteDataIntoStream(Sint16* stream, int length);
+  } noise;
+
+
   // SystemC interfaces.
   void start_of_simulation() override;
   tlm_utils::simple_initiator_socket<Apu, gb_const::kBusDataWidth> init_socket;

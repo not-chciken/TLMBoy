@@ -55,6 +55,9 @@ Apu::~Apu() {
 void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length, int i) {
     int period_length = (double)kSampleRate / frequency;  // use real_frequency
 
+    if (length_load == 0)
+        return;
+
     int duty_stop = (period_length / 8);
     switch (duty) {
     case 1:
@@ -71,14 +74,45 @@ void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length, int i) {
     for (int j = 0; j < length / 2; ++j, ++i) {
       int x = i % period_length;
       Sint16 sample;
+
       if (x < duty_stop)
-        sample = SDL_MIN_SINT16 / (((float)volume) / 40.f);
+        sample = (float)SDL_MIN_SINT16 * (((float)volume) / 60.f);
       else
-        sample = SDL_MAX_SINT16 / (((float)volume) / 40.f);
-      stream[j] = sample;
-      if (length_load == 0)
-        stream[j] = 0;
+        sample = (float)SDL_MAX_SINT16 * (((float)volume) / 60.f);
+      stream[j] += sample;
     }
+}
+
+void Apu::Noise::DoLfsrTick(int num_ticks) {
+  for (int i = 0; i < num_ticks; ++i) {
+    uint val = !((lfsr_bits & 1) ^ ((lfsr_bits >> 1) & 1));
+    lfsr_output = lfsr_bits & 1;
+    lfsr_bits >>= 1;
+    lfsr_bits |= (val << lfsr_width);
+  }
+}
+
+void Apu::Noise::WriteDataIntoStream(Sint16* stream, int length) {
+  u32 stream_sample_length = gb_const::kClockCycleFrequency / kSampleRate;
+  lfsr_sample_length = 1000000000ull / lfsr_sample_rate;
+
+  if (length_load == 0)
+    return;
+
+  for (int i = 0; i < length; ++i) {
+    tick_cntr += stream_sample_length;
+    uint lfsr_ticks = tick_cntr / lfsr_sample_length;
+    DoLfsrTick(lfsr_ticks);
+    tick_cntr -= lfsr_ticks * lfsr_sample_length;
+
+    if (lfsr_output)
+       stream[i] += (float)SDL_MIN_SINT16 * (((float)volume) / 60.f);
+    else
+       stream[i] += (float)SDL_MAX_SINT16 * (((float)volume) / 60.f);
+
+    // if (length_load == 0)
+    //   stream[i] = 0;
+  }
 }
 
 void Apu::AudioLoop() {
@@ -92,6 +126,10 @@ void Apu::AudioLoop() {
     Apu* apu = (Apu*)userData;
     static uint64_t i = 0;
 
+    for (int j = 0; j < length; ++j) {
+      buffer[j] = 0;
+    }
+
     apu->square1.duty = *(apu->reg_nr11) >> 6;
     apu->square2.duty = *(apu->reg_nr21) >> 6;
 
@@ -103,6 +141,12 @@ void Apu::AudioLoop() {
     apu->square2.WriteDataIntoStream((Sint16*)buffer, length, i);
 
     i += (length / 2);
+
+    apu->noise.divisor = apu->noise.divisor_table[*(apu->reg_nr43) >> 4];
+    apu->noise.lfsr_width = (((*(apu->reg_nr43)) >> 3) & 1) ? 7 : 15;
+    apu->noise.shift = *(apu->reg_nr43) & 111;
+    apu->noise.lfsr_sample_rate = gb_const::kClockCycleFrequency / (apu->noise.divisor << apu->noise.shift);
+    apu->noise.WriteDataIntoStream((Sint16*)buffer, length / 2);
 
     // int period_length = (double)kSampleRate / real_frequency;  // use real_frequency
 
@@ -205,8 +249,8 @@ void Apu::DecrementLengths() {
     --square2.length_load;
   if (wave_length_enable && (wave_length_load > 1u))
     --wave_length_load;
-  if (noise_length_enable && (noise_length_load > 1u))
-    --noise_length_load;
+  if (noise_length_enable && (noise.length_load > 1u))
+    --noise.length_load;
 }
 
 void Apu::UpdateEnvelopes() {
@@ -235,6 +279,18 @@ void Apu::UpdateEnvelopes() {
     }
   }
 
+  noise.envelope_mode = *reg_nr42 & 0b1000u;
+  noise.period = *reg_nr42 & 0b111u;
+
+  if (noise.period) {
+    if (!(i % noise.period)) {
+      if (noise.envelope_mode)
+        noise.volume = std::min(noise.volume + 1, 15);
+      else
+        noise.volume = std::max(noise.volume - 1, 0);
+    }
+  }
+
   ++i;
 }
 
@@ -251,7 +307,7 @@ void Apu::ReloadLengthWave() {
 }
 
 void Apu::ReloadLengthNoise() {
-  noise_length_load = 64u - (*reg_nr41 & 0b111111u);
+  noise.length_load = 64u - (*reg_nr41 & 0b111111u);
 }
 
 void Apu::TriggerEventSquare1() {
@@ -282,8 +338,8 @@ void Apu::TriggerEventWave() {
 }
 
 void Apu::TriggerEventNoise() {
-  if (noise_length_load == 0)
-    noise_length_load = 64;
+  if (noise.length_load == 0)
+    noise.length_load = 64;
 
-  volume_ns = *reg_nr42 >> 4;
+  noise.volume = *reg_nr42 >> 4;
 }
