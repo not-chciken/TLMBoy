@@ -32,4 +32,5 @@ const u8 kMaskBit7 = 0b10000000;
 
 const i32 kNsPerClkCycle = 238;  // Refers to roughly 4.19MHz.
 const i32 kNsPerMachineCycle = kNsPerClkCycle * 4;  // Refers to roughly 1.05MHz
+const i32 kClockCycleFrequency = 4194304;
 }  // namespace gb_const
