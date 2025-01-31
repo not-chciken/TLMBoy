@@ -52,7 +52,7 @@ Apu::~Apu() {
   SDL_Quit();
 }
 
-void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length, int i) {
+void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length) {
     int period_length = (double)kSampleRate / frequency;  // use real_frequency
 
     if (length_load == 0)
@@ -71,15 +71,12 @@ void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length, int i) {
       break;
     }
 
-    for (int j = 0; j < length / 2; ++j, ++i) {
-      int x = i % period_length;
-      Sint16 sample;
-
+    for (int j = 0; j < length; ++j, ++sample_cntr) {
+      int x = sample_cntr % period_length;
       if (x < duty_stop)
-        sample = (float)SDL_MIN_SINT16 * (((float)volume) / 60.f);
+        stream[j] += (float)SDL_MIN_SINT16 * (((float)volume) / 60.f);
       else
-        sample = (float)SDL_MAX_SINT16 * (((float)volume) / 60.f);
-      stream[j] += sample;
+        stream[j] += (float)SDL_MAX_SINT16 * (((float)volume) / 60.f);
     }
 }
 
@@ -109,9 +106,6 @@ void Apu::Noise::WriteDataIntoStream(Sint16* stream, int length) {
        stream[i] += (float)SDL_MIN_SINT16 * (((float)volume) / 60.f);
     else
        stream[i] += (float)SDL_MAX_SINT16 * (((float)volume) / 60.f);
-
-    // if (length_load == 0)
-    //   stream[i] = 0;
   }
 }
 
@@ -124,23 +118,25 @@ void Apu::AudioLoop() {
   audio_spec_.userdata = (void*)this;
   audio_spec_.callback = [](void* userData, Uint8* buffer, int length) {
     Apu* apu = (Apu*)userData;
-    static uint64_t i = 0;
 
     for (int j = 0; j < length; ++j) {
       buffer[j] = 0;
     }
 
     apu->square1.duty = *(apu->reg_nr11) >> 6;
-    apu->square2.duty = *(apu->reg_nr21) >> 6;
-
-    u8 frequency_lsb = *(apu->reg_nr23);
-    u8 frequency_msb = *(apu->reg_nr24) & 0b111u;
+    u8 frequency_lsb = *(apu->reg_nr13);
+    u8 frequency_msb = *(apu->reg_nr14) & 0b111u;
     u16 frequency = static_cast<u16>(frequency_msb) << 8 | static_cast<u16>(frequency_lsb);
+    apu->square1.frequency = 131072u / (2048u - frequency);  // Lowest frequency = 64Hz.
+    apu->square1.WriteDataIntoStream((Sint16*)buffer, length / 2);
+
+
+    apu->square2.duty = *(apu->reg_nr21) >> 6;
+    frequency_lsb = *(apu->reg_nr23);
+    frequency_msb = *(apu->reg_nr24) & 0b111u;
+    frequency = static_cast<u16>(frequency_msb) << 8 | static_cast<u16>(frequency_lsb);
     apu->square2.frequency = 131072u / (2048u - frequency);  // Lowest frequency = 64Hz.
-
-    apu->square2.WriteDataIntoStream((Sint16*)buffer, length, i);
-
-    i += (length / 2);
+    apu->square2.WriteDataIntoStream((Sint16*)buffer, length / 2);
 
     apu->noise.divisor = apu->noise.divisor_table[*(apu->reg_nr43) >> 4];
     apu->noise.lfsr_width = (((*(apu->reg_nr43)) >> 3) & 1) ? 7 : 15;
@@ -148,7 +144,6 @@ void Apu::AudioLoop() {
     apu->noise.lfsr_sample_rate = gb_const::kClockCycleFrequency / (apu->noise.divisor << apu->noise.shift);
     apu->noise.WriteDataIntoStream((Sint16*)buffer, length / 2);
 
-    // int period_length = (double)kSampleRate / real_frequency;  // use real_frequency
 
     // int square2_duty_stop = (period_length / 8);
     // switch (apu->square2.duty) {
@@ -241,7 +236,7 @@ void Apu::DecrementLengths() {
   square1.length_enable = *reg_nr14 & 0b01000000u;
   square2.length_enable = *reg_nr24 & 0b01000000u;
   bool wave_length_enable = *reg_nr34 & 0b01000000u;
-  bool noise_length_enable = *reg_nr44 & 0b01000000u;
+  noise.length_enable = *reg_nr44 & 0b01000000u;
 
   if (square1.length_enable && (square1.length_load > 1u))
     --square1.length_load;
@@ -249,7 +244,7 @@ void Apu::DecrementLengths() {
     --square2.length_load;
   if (wave_length_enable && (wave_length_load > 1u))
     --wave_length_load;
-  if (noise_length_enable && (noise.length_load > 1u))
+  if (noise.length_enable && (noise.length_load > 1u))
     --noise.length_load;
 }
 
