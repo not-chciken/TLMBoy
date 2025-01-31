@@ -44,12 +44,12 @@ void IoRegisters::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[
     switch (adr) {
     case 0x00:  // 0xFF10
       memcpy(&data_[adr], ptr, 1);
-      sig_reload_length_square1_out.write(true);
+      sig_reload_length_square1_out.write(!sig_reload_length_square1_out.read());
       break;
     case 0x04:  // 0xFF14
       memcpy(&data_[adr], ptr, 1);
       if (*ptr & 0b10000000u)
-        sig_trigger_square1_out.write(true);
+        sig_trigger_square1_out.write(!sig_trigger_square1_out.read());
       break;
     case 0x06:  // 0xFF16
       memcpy(&data_[adr], ptr, 1);
@@ -67,6 +67,11 @@ void IoRegisters::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[
     case 0x10:  // 0xFF20
       sig_reload_length_noise_out.write(true);
       memcpy(&data_[adr], ptr, 1);
+      break;
+    case 0x13:  // 0xFF23
+      memcpy(&data_[adr], ptr, 1);
+      if (*ptr & 0b10000000u)
+        sig_trigger_noise_out.write(!sig_trigger_noise_out.read());
       break;
     case 0x31:  // 0xFF41
       // Mode (first two bits) is read-only. Hence, some masking.

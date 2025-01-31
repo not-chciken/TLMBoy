@@ -59,6 +59,7 @@ struct Apu : public sc_module {
   struct Osc {
     bool length_enable;  // If true, internal counter starts decreasing.
     bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
+    u32 sample_cntr;
 
     i32 volume;  // Sound volume (e [0,15]).
 
@@ -73,7 +74,7 @@ struct Apu : public sc_module {
 
     u32 frequency;
 
-    void WriteDataIntoStream(Sint16* stream, int length, int i);
+    void WriteDataIntoStream(Sint16* stream, int length);
   };
 
   struct Square1 : public Osc {
