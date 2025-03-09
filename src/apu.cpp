@@ -80,33 +80,42 @@ void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length) {
     }
 }
 
-void Apu::Noise::DoLfsrTick(int num_ticks) {
+float Apu::Noise::DoLfsrTicks(int num_ticks) {
+  int val = 0;
+  float sum = 0.f;
+
   for (int i = 0; i < num_ticks; ++i) {
-    uint val = !((lfsr_bits & 1) ^ ((lfsr_bits >> 1) & 1));
-    lfsr_output = lfsr_bits & 1;
-    lfsr_bits >>= 1;
-    lfsr_bits |= (val << lfsr_width);
+    lfsr_bits = (lfsr_bits >> 1) | ((val == 1) << lfsr_width);
+    val = !(((lfsr_bits) & 1) ^ ((lfsr_bits >> 1) & 1)) ? 1 : -1;
+    sum += (float)val;
   }
+
+  return sum / (float)num_ticks;
 }
 
 void Apu::Noise::WriteDataIntoStream(Sint16* stream, int length) {
-  u32 stream_sample_length = gb_const::kClockCycleFrequency / kSampleRate;
-  lfsr_sample_length = 1000000000ull / lfsr_sample_rate;
+  constexpr u32 stream_sample_length = gb_const::kClockCycleFrequency / kSampleRate; // Length of a stream sample in CPU cycles.
+
+  if (!powered)
+    return;
 
   if (length_load == 0)
     return;
 
   for (int i = 0; i < length; ++i) {
     tick_cntr += stream_sample_length;
-    uint lfsr_ticks = tick_cntr / lfsr_sample_length;
-    DoLfsrTick(lfsr_ticks);
-    tick_cntr -= lfsr_ticks * lfsr_sample_length;
-
-    if (lfsr_output)
-       stream[i] += (float)SDL_MIN_SINT16 * (((float)volume) / 60.f);
-    else
-       stream[i] += (float)SDL_MAX_SINT16 * (((float)volume) / 60.f);
+    uint lfsr_ticks = tick_cntr / cpu_ticks_per_lfsr_sample;
+    float sample = DoLfsrTicks(lfsr_ticks);
+    sample = Hipass(sample);
+    tick_cntr -= lfsr_ticks * cpu_ticks_per_lfsr_sample;
+    stream[i] += (float)SDL_MAX_SINT16 * sample * (((float)volume) / 60.f);
   }
+}
+
+float Apu::Noise::Hipass(float sample) {
+  float out = sample - capacitor;
+  capacitor = sample - out * 0.996f;
+  return out;
 }
 
 void Apu::AudioLoop() {
@@ -114,7 +123,7 @@ void Apu::AudioLoop() {
   audio_spec_.freq = kSampleRate;
   audio_spec_.format = AUDIO_S16SYS;
   audio_spec_.channels = 1;  // TODO: Has to be 2.
-  audio_spec_.samples = 1024;
+  audio_spec_.samples = 512;
   audio_spec_.userdata = (void*)this;
   audio_spec_.callback = [](void* userData, Uint8* buffer, int length) {
     Apu* apu = (Apu*)userData;
@@ -130,7 +139,6 @@ void Apu::AudioLoop() {
     apu->square1.frequency = 131072u / (2048u - frequency);  // Lowest frequency = 64Hz.
     apu->square1.WriteDataIntoStream((Sint16*)buffer, length / 2);
 
-
     apu->square2.duty = *(apu->reg_nr21) >> 6;
     frequency_lsb = *(apu->reg_nr23);
     frequency_msb = *(apu->reg_nr24) & 0b111u;
@@ -138,10 +146,11 @@ void Apu::AudioLoop() {
     apu->square2.frequency = 131072u / (2048u - frequency);  // Lowest frequency = 64Hz.
     apu->square2.WriteDataIntoStream((Sint16*)buffer, length / 2);
 
-    apu->noise.divisor = apu->noise.divisor_table[*(apu->reg_nr43) >> 4];
+    apu->noise.divisor = apu->noise.divisor_table[*(apu->reg_nr43) & 0b111];
     apu->noise.lfsr_width = (((*(apu->reg_nr43)) >> 3) & 1) ? 7 : 15;
-    apu->noise.shift = *(apu->reg_nr43) & 111;
-    apu->noise.lfsr_sample_rate = gb_const::kClockCycleFrequency / (apu->noise.divisor << apu->noise.shift);
+    apu->noise.shift = *(apu->reg_nr43) >> 4;
+    apu->noise.cpu_ticks_per_lfsr_sample = (apu->noise.divisor << apu->noise.shift); // CPU ticks per LFSR sample.
+    apu->noise.powered = *(apu->reg_nr42) >> 4; // Means starting volume is 0, and envelope decrease/does nothing.
     apu->noise.WriteDataIntoStream((Sint16*)buffer, length / 2);
 
 
@@ -337,4 +346,6 @@ void Apu::TriggerEventNoise() {
     noise.length_load = 64;
 
   noise.volume = *reg_nr42 >> 4;
+
+  noise.lfsr_bits = 0;
 }

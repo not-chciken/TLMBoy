@@ -83,6 +83,7 @@ struct Apu : public sc_module {
   } square2;
 
   struct Noise {
+    bool powered;
     bool length_enable;  // If true, internal counter starts decreasing.
     bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
     i32 volume;  // Sound volume (e [0,15]).
@@ -94,13 +95,16 @@ struct Apu : public sc_module {
     u8 divisor;
     u8 shift;
     u8 lfsr_width;
-    u32 lfsr_sample_rate; // In Hz.
+    u32 cpu_ticks_per_lfsr_sample;
     u32 lfsr_sample_length; // In ns.
     u32 lfsr_output; // Either 1 or 0.
     uint lfsr_bits;
     u32 tick_cntr;
 
-    void DoLfsrTick(int num_ticks);
+    float capacitor;
+    float Hipass(float sample);
+
+    float DoLfsrTicks(int num_ticks);
 
     void WriteDataIntoStream(Sint16* stream, int length);
   } noise;
