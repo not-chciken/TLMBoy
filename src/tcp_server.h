@@ -36,7 +36,7 @@ class TcpServer {
   bool DataAvailable();
   void AcceptClient();
   void Start(int port);
-  void SendMsg(const char *msg);
+  void SendMsg(const char* msg);
   string RecvBlocking(uint length);
 
  private:

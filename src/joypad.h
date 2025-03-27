@@ -52,7 +52,7 @@ struct JoyPad : public InterruptModule<JoyPad>, sc_module {
   void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
   uint transport_dbg(tlm::tlm_generic_payload& trans);
 
-private:
+ private:
   bool but_up_;
   bool but_down_;
   bool but_left_;
@@ -61,6 +61,6 @@ private:
   bool but_b_;
   bool but_start_;
   bool but_select_;
-  u8 reg_p1_; // Register at 0xff00 for reading joy pad info.
+  u8 reg_p1_;  // Register at 0xff00 for reading joy pad info.
   SDL_Event event;
 };

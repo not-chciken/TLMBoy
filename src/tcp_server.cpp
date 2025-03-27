@@ -6,11 +6,11 @@
 #include "tcp_server.h"
 
 #include <errno.h>
-#include <format>
 #include <sys/ioctl.h>
 
-#include <stdexcept>
+#include <format>
 #include <sstream>
+#include <stdexcept>
 
 TcpServer::TcpServer() : socket_fd_(0), client_fd_(0) {
 }
@@ -27,7 +27,7 @@ bool TcpServer::DataAvailable() {
 }
 
 void TcpServer::AcceptClient() {
-  socklen_t cli_addr_size   = sizeof(client_addr_);
+  socklen_t cli_addr_size = sizeof(client_addr_);
   client_fd_ = ::accept(socket_fd_, (struct sockaddr*)&client_addr_, &cli_addr_size);
   if (client_fd_ == -1) {  // Accept failed.
     throw std::runtime_error("accept failed");
@@ -59,7 +59,7 @@ void TcpServer::Start(int port) {
   }
 }
 
-void TcpServer::SendMsg(const char *msg) {
+void TcpServer::SendMsg(const char* msg) {
   int succ = ::send(client_fd_, msg, strlen(msg), 0);
   if (succ == -1) {
     throw std::runtime_error(std::format("SendMsg failed with errno: {}\n", strerror(errno)));

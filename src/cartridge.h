@@ -30,7 +30,7 @@ class Cartridge : public sc_module {
     uint current_bank_ind_;
     uint num_banks_;
     uint bank_size_;
-    u8 *bank_data_;
+    u8* bank_data_;
   };
 
   class MemoryBankCtrler {
@@ -68,6 +68,7 @@ class Cartridge : public sc_module {
     Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
+
    private:
     u8 rom_bank_low_bits;
     u8 the_two_bits_;
@@ -83,6 +84,7 @@ class Cartridge : public sc_module {
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     uint transport_dbg_ram(tlm::tlm_generic_payload& trans) override;
+
    private:
     u16 rom_ind_;
     u16 ram_ind_;
@@ -97,7 +99,8 @@ class Cartridge : public sc_module {
   std::unique_ptr<MemoryBankCtrler> mbc;
   sc_in<bool> sig_unmap_rom_in;
 
-  Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file = false);
+  Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
+            bool symbol_file = false);
 
   void SigHandler();
 

@@ -30,55 +30,55 @@ void JoyPad::InputLoop() {
   while (1) {
     SDL_PollEvent(&event);
     switch (event.type) {
-      case SDL_KEYDOWN:
-        if (event.key.repeat == true) {
-          break;
-        }
-        switch (event.key.keysym.sym) {
-          case SDLK_1:
-            Ppu::uiRenderBg = false;
-            break;
-          case SDLK_2:
-            Ppu::uiRenderSprites = false;
-            break;
-          case SDLK_3:
-            Ppu::uiRenderWndw = false;
-            break;
-          default:
-            SetButton(event.key.keysym.sym, true);
-        }
+    case SDL_KEYDOWN:
+      if (event.key.repeat == true) {
         break;
-      case SDL_KEYUP:
-        if (event.key.repeat == true) {
-          break;
-        }
-        switch (event.key.keysym.sym) {
-          case SDLK_1:
-            Ppu::uiRenderBg = true;
-            break;
-          case SDLK_2:
-            Ppu::uiRenderSprites = true;
-            break;
-          case SDLK_3:
-            Ppu::uiRenderWndw = true;
-            break;
-          default:
-            SetButton(event.key.keysym.sym, false);
-        }
+      }
+      switch (event.key.keysym.sym) {
+      case SDLK_1:
+        Ppu::uiRenderBg = false;
         break;
-      case SDL_WINDOWEVENT:
-        if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-          DBG_LOG_JP("window closed");
-          sc_stop();
-          return;
-        }
+      case SDLK_2:
+        Ppu::uiRenderSprites = false;
         break;
-      case SDL_QUIT:
-        DBG_LOG_JP("SDL quit");
+      case SDLK_3:
+        Ppu::uiRenderWndw = false;
+        break;
+      default:
+        SetButton(event.key.keysym.sym, true);
+      }
+      break;
+    case SDL_KEYUP:
+      if (event.key.repeat == true) {
+        break;
+      }
+      switch (event.key.keysym.sym) {
+      case SDLK_1:
+        Ppu::uiRenderBg = true;
+        break;
+      case SDLK_2:
+        Ppu::uiRenderSprites = true;
+        break;
+      case SDLK_3:
+        Ppu::uiRenderWndw = true;
+        break;
+      default:
+        SetButton(event.key.keysym.sym, false);
+      }
+      break;
+    case SDL_WINDOWEVENT:
+      if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+        DBG_LOG_JP("window closed");
         sc_stop();
         return;
-      default:
-        break;
+      }
+      break;
+    case SDL_QUIT:
+      DBG_LOG_JP("SDL quit");
+      sc_stop();
+      return;
+    default:
+      break;
     }
     wait(kWaitMs, SC_MS);
   }
@@ -86,40 +86,40 @@ void JoyPad::InputLoop() {
 
 void JoyPad::SetButton(SDL_Keycode sym, bool pressed) {
   switch (sym) {
-    case SDLK_UP:
-      DBG_LOG_JP("button 'up' " << (pressed ? "pressed" : "released"));
-      but_up_ = pressed;
-      break;
-    case SDLK_DOWN:
-      DBG_LOG_JP("button 'down' " << (pressed ? "pressed" : "released"));
-      but_down_ = pressed;
-      break;
-    case SDLK_RIGHT:
-      DBG_LOG_JP("button 'right' " << (pressed ? "pressed" : "released"));
-      but_right_ = pressed;
-      break;
-    case SDLK_LEFT:
-      DBG_LOG_JP("button 'left' " << (pressed ? "pressed" : "released"));
-      but_left_ = pressed;
-      break;
-    case SDLK_a:
-      DBG_LOG_JP("button 'A' " << (pressed ? "pressed" : "released"));
-      but_a_ = pressed;
-      break;
-    case SDLK_s:
-      DBG_LOG_JP("button 'B' " << (pressed ? "pressed" : "released"));
-      but_b_ = pressed;
-      break;
-    case SDLK_o:
-      DBG_LOG_JP("button 'select' " << (pressed ? "pressed" : "released"));
-      but_select_ = pressed;
-      break;
-    case SDLK_p:
-      DBG_LOG_JP("button 'start' " << (pressed ? "pressed" : "released"));
-      but_start_ = pressed;
-      break;
-    default:
-      return;
+  case SDLK_UP:
+    DBG_LOG_JP("button 'up' " << (pressed ? "pressed" : "released"));
+    but_up_ = pressed;
+    break;
+  case SDLK_DOWN:
+    DBG_LOG_JP("button 'down' " << (pressed ? "pressed" : "released"));
+    but_down_ = pressed;
+    break;
+  case SDLK_RIGHT:
+    DBG_LOG_JP("button 'right' " << (pressed ? "pressed" : "released"));
+    but_right_ = pressed;
+    break;
+  case SDLK_LEFT:
+    DBG_LOG_JP("button 'left' " << (pressed ? "pressed" : "released"));
+    but_left_ = pressed;
+    break;
+  case SDLK_a:
+    DBG_LOG_JP("button 'A' " << (pressed ? "pressed" : "released"));
+    but_a_ = pressed;
+    break;
+  case SDLK_s:
+    DBG_LOG_JP("button 'B' " << (pressed ? "pressed" : "released"));
+    but_b_ = pressed;
+    break;
+  case SDLK_o:
+    DBG_LOG_JP("button 'select' " << (pressed ? "pressed" : "released"));
+    but_select_ = pressed;
+    break;
+  case SDLK_p:
+    DBG_LOG_JP("button 'start' " << (pressed ? "pressed" : "released"));
+    but_start_ = pressed;
+    break;
+  default:
+    return;
   }
 
   if (pressed) {

@@ -465,7 +465,8 @@ void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
           SDL_SetRenderDrawColor(renderer, color_palette[val][0], color_palette[val][1], color_palette[val][2], 255);
           const size_t x = j * 8 + k;
           const size_t y = t * 8 + i;
-          pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+          pixels[y * log_width + x] =
+              ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
         }
       }
     }

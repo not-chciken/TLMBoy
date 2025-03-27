@@ -94,7 +94,8 @@ struct Ppu : public sc_module {
     Transparent = 4,
   };
 
-  explicit Ppu(sc_module_name name, bool headless = false, int fps_cap = 60, i64 resolution_scaling = 4, string color_palette = "f2ffd9aaaaaa555555000000");
+  explicit Ppu(sc_module_name name, bool headless = false, int fps_cap = 60, i64 resolution_scaling = 4,
+               string color_palette = "f2ffd9aaaaaa555555000000");
   ~Ppu();
 
   // PPU IO registers.
