@@ -59,6 +59,9 @@ struct Apu : public sc_module {
   struct Osc {
     bool length_enable;  // If true, internal counter starts decreasing.
     bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
+    uint sweep_step;
+    bool sweep_direction;
+    uint sweep_period;
     u32 sample_cntr;
 
     i32 volume;  // Sound volume (e [0,15]).
@@ -73,8 +76,14 @@ struct Apu : public sc_module {
     u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
 
     u32 frequency;
+    uint sweep_counter = 0;
 
     void WriteDataIntoStream(Sint16* stream, int length);
+
+    private:
+      float tick_counter = 0;
+      float phase = 1.f;
+      float dduty = 0.125f;  // TODO
   };
 
   struct Square1 : public Osc {
@@ -83,10 +92,9 @@ struct Apu : public sc_module {
   } square2;
 
   struct Noise {
-    bool powered;
     bool length_enable;  // If true, internal counter starts decreasing.
     bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
-    i32 volume;  // Sound volume (e [0,15]).
+    i32 volume;          // Sound volume (e [0,15]).
     u8 length_load;
     u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
     u32 frequency;
@@ -96,19 +104,18 @@ struct Apu : public sc_module {
     u8 shift;
     u8 lfsr_width;
     u32 cpu_ticks_per_lfsr_sample;
-    u32 lfsr_sample_length; // In ns.
-    u32 lfsr_output; // Either 1 or 0.
+    u32 lfsr_sample_length;  // In ns.
+    u32 lfsr_output;         // Either 1 or 0.
     uint lfsr_bits;
     u32 tick_cntr;
 
+    void WriteDataIntoStream(Sint16* stream, int length);
+
+   private:
     float capacitor;
     float Hipass(float sample);
-
     float DoLfsrTicks(int num_ticks);
-
-    void WriteDataIntoStream(Sint16* stream, int length);
   } noise;
-
 
   // SystemC interfaces.
   void start_of_simulation() override;
@@ -141,4 +148,5 @@ struct Apu : public sc_module {
 
   void DecrementLengths();
   void UpdateEnvelopes();
+  void DoSweep();
 };
