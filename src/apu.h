@@ -50,40 +50,33 @@ struct Apu : public sc_module {
   u8* reg_nr51;  //  NW21 NW21 Left enables, Right enables
   u8* reg_nr52;  //  P--- NW21 Power control/status, Channel length statuses
 
+  u8* wave_table;
+
   u16 wave_length_load;
   u8 noise_length_load;
 
-  // Current volume, which is not exposed.
-  i32 volume_ns;
+  i32 volume_ns; // Current volume, which is not exposed.
 
   struct Osc {
-    bool length_enable;  // If true, internal counter starts decreasing.
-    bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
-    uint sweep_step;
+    bool envelope_mode;
+    bool length_enable;
     bool sweep_direction;
-    uint sweep_period;
-    u32 sample_cntr;
-
-    i32 volume;  // Sound volume (e [0,15]).
-
-    u8 duty;  // 0 (12.5%) = _-------; 1 (25%)   = __------; 2 (50%)   = ____----; 3 (75%)   = ______--
-
-    // Writing into regX1 loads the counter with (64-length) (256-length for wave).
-    // The internal counter decrements this to zero.
-    // Clocked at 256Hz. Only counts down with length_enable = true.
-    u8 length_load;
-
-    u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
-
-    u32 frequency;
+    uint frequency;
     uint sweep_counter = 0;
+    uint sweep_step;
+    uint sweep_period;
+    int volume;
+
+    u8 duty;
+    u8 length_load;
+    u8 period;
 
     void WriteDataIntoStream(Sint16* stream, int length);
 
-    private:
-      float tick_counter = 0;
-      float phase = 1.f;
-      float dduty = 0.125f;  // TODO
+   private:
+    float tick_counter = 0;
+    float phase = 1.f;
+    float fduty = 0.125f;
   };
 
   struct Square1 : public Osc {
@@ -116,6 +109,19 @@ struct Apu : public sc_module {
     float Hipass(float sample);
     float DoLfsrTicks(int num_ticks);
   } noise;
+
+  struct Wave {
+    bool length_enable;
+    uint length_load;
+    i32 volume;
+    uint period;
+    bool dac_enable;
+    float tick_counter = 0;
+    uint sample_index = 0;
+
+    void WriteDataIntoStream(Sint16* stream, int length, u8* wave_table);
+
+  } wave;
 
   // SystemC interfaces.
   void start_of_simulation() override;
