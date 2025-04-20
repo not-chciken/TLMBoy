@@ -62,23 +62,27 @@ void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length) {
   float periods_per_sample = (131072 / (float)kSampleRate) / (float)(2048 - frequency);
 
   switch (duty) {
-    case 0: dduty = 0.125f;
+  case 0:
+    fduty = 0.125f;
     break;
-    case 1: dduty = 0.25f;
+  case 1:
+    fduty = 0.25f;
     break;
-    case 2: dduty = 0.5f;
+  case 2:
+    fduty = 0.5f;
     break;
-    case 3: dduty = 0.75f;
+  case 3:
+    fduty = 0.75f;
     break;
-    default:
+  default:
     break;
   }
 
-  if (periods_per_sample >= dduty)
+  if (periods_per_sample >= fduty)
     return;
 
   for (int i = 0; i < length; ++i) {
-    float d = phase == 1.f ? dduty : (1.f - dduty);
+    float d = phase == 1.f ? fduty : (1.f - fduty);
 
     if (tick_counter < d) {
       stream[i] += (float)SDL_MAX_SINT16 * phase * (((float)volume) / 60.f);
@@ -134,6 +138,58 @@ float Apu::Noise::Hipass(float sample) {
   return out;
 }
 
+void Apu::Wave::WriteDataIntoStream(Sint16* stream, int length, u8* wave_table) {
+  if (length_load == 0 && length_enable == 1)
+    return;
+
+  if (!dac_enable)
+    return;
+
+  float fvolume;
+
+  switch (volume) {
+  case 0:
+    fvolume = 0.f;
+    break;
+  case 1:
+    fvolume = 1.f;
+    break;
+  case 2:
+    fvolume = 0.5f;
+    break;
+  case 3:
+    fvolume = 0.25f;
+    break;
+  default:
+    fvolume = 0.f;
+    break;
+  }
+
+  if (volume == 0.f)
+    return;
+
+  float entries_per_sample = (2097152.f / (float)kSampleRate) / (float)(2048.f - period);
+
+  if (entries_per_sample >= 1.f)
+    return;
+
+  for (int i = 0; i < length; ++i) {
+    tick_counter += entries_per_sample;
+    if (tick_counter >= 1.f) {
+      ++sample_index;
+      tick_counter -= 1.f;
+      sample_index = sample_index > 31 ? 0 : sample_index;
+    }
+    u8 sample = wave_table[sample_index / 2];
+    if (sample_index % 2) {
+      sample &= 0xfu;
+    } else {
+      sample = (sample & 0xf0u) >> 4;
+    }
+    stream[i] += (float)SDL_MAX_SINT16 * (2.f * (float)sample / 15.f - 1.f) * (fvolume * 0.25f);
+  }
+}
+
 void Apu::AudioLoop() {
   SDL_Init(SDL_INIT_AUDIO);
   audio_spec_.freq = kSampleRate;
@@ -159,6 +215,13 @@ void Apu::AudioLoop() {
     frequency_msb = *(apu->reg_nr24) & 0b111u;
     apu->square2.frequency = static_cast<u16>(frequency_msb) << 8 | static_cast<u16>(frequency_lsb);
     apu->square2.WriteDataIntoStream((Sint16*)buffer, length / 2);
+
+    apu->wave.dac_enable = *(apu->reg_nr30) & 0x80u;
+    apu->wave.volume = (*apu->reg_nr32 >> 5) & 0b11;
+    frequency_lsb = *(apu->reg_nr33);
+    frequency_msb = *(apu->reg_nr34) & 0b111u;
+    apu->wave.period = static_cast<u16>(frequency_msb) << 8 | static_cast<u16>(frequency_lsb);
+    apu->wave.WriteDataIntoStream((Sint16*)buffer, length / 2, apu->wave_table);
 
     apu->noise.divisor = apu->noise.divisor_table[*(apu->reg_nr43) & 0b111];
     apu->noise.lfsr_width = (((*(apu->reg_nr43)) >> 3) & 1) ? 7 : 15;
@@ -222,6 +285,8 @@ void Apu::start_of_simulation() {
     reg_nr50 = &data_ptr[0xFF24 - 0xFF10];
     reg_nr51 = &data_ptr[0xFF25 - 0xFF10];
     reg_nr52 = &data_ptr[0xFF26 - 0xFF10];
+
+    wave_table = &data_ptr[0xFF30 - 0xFF10];
   } else {
     throw std::runtime_error("Could not get DMI for IO registers!");
   }
@@ -293,7 +358,8 @@ void Apu::DoSweep() {
     return;
 
   if (square1.sweep_counter >= square1.sweep_period) {
-    square1.frequency = square1.frequency + (square1.sweep_direction ? -1 : +1) * square1.frequency / (1u << square1.sweep_step);
+    square1.frequency =
+        square1.frequency + (square1.sweep_direction ? -1 : +1) * square1.frequency / (1u << square1.sweep_step);
     square1.frequency = std::min(2047u, square1.frequency);
     square1.sweep_counter = 0;
     *(reg_nr13) = square1.frequency & 0xffu;
@@ -302,7 +368,6 @@ void Apu::DoSweep() {
     ++square1.sweep_counter;
   }
 }
-
 
 void Apu::ReloadLengthSquare1() {
   square1.length_load = 64u - (*reg_nr11 & 0b111111u);
@@ -313,7 +378,7 @@ void Apu::ReloadLengthSquare2() {
 }
 
 void Apu::ReloadLengthWave() {
-  wave_length_load = 256u - (*reg_nr31);
+  wave.length_load = 256u - (*reg_nr31);
 }
 
 void Apu::ReloadLengthNoise() {
@@ -343,8 +408,10 @@ void Apu::TriggerEventSquare2() {
 }
 
 void Apu::TriggerEventWave() {
-  if (wave_length_load == 0)
-    wave_length_load = 256;
+  if (wave.length_load == 0)
+    wave.length_load = 256;
+
+  wave.volume = (*reg_nr32 >> 5) & 0b11;
 }
 
 void Apu::TriggerEventNoise() {
