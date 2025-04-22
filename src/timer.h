@@ -24,8 +24,8 @@
  * Source: https://gbdev.gg8.se/wiki/articles/Timer_and_Divider_Registers
  ******************************************************************************/
 
-#include <systemc.h>
 #include <sysc/kernel/sc_simcontext.h>
+#include <systemc.h>
 #include <tlm.h>
 
 #include "common.h"
@@ -40,10 +40,10 @@ struct Timer : public sc_module {
   u8 reg_tac = 0;
   u32 cycles_per_inc_ = 1024;
   sc_in_clk clk;
-  u8 *reg_if;  // Interrupt Flag register (0xFF0F).
+  u8* reg_if;  // Interrupt Flag register (0xFF0F).
   tlm_utils::simple_target_socket<Timer, gb_const::kBusDataWidth> targ_socket;
 
-  Timer(sc_module_name name, u8 *reg_if);
+  Timer(sc_module_name name, u8* reg_if);
 
   // Increments the div register at rate of 16384Hz.
   void DivLoop();

@@ -9,6 +9,7 @@
 
 Apu::Apu(sc_module_name name)
     : sc_module(name),
+      init_socket("init_socket"),
       sig_reload_length_square1_in("sig_reload_length_square1_in"),
       sig_reload_length_square2_in("sig_reload_length_square2_in"),
       sig_reload_length_wave_in("sig_reload_length_wave_in"),

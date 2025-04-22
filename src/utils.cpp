@@ -5,8 +5,8 @@
 
 #include "utils.h"
 
-string GetEnvVariable(const string &name) {
-  char *t = std::getenv(name.c_str());
+string GetEnvVariable(const string& name) {
+  char* t = std::getenv(name.c_str());
 
   if (t == nullptr) {
     throw std::runtime_error("Environment variable " + name + " not set!");
@@ -68,7 +68,7 @@ u8 SetBit(u8 dat, bool val, u8 bit_index) {
   return dat;
 }
 
-void SetBit(u8 *dat, bool val, u8 bit_index) {
+void SetBit(u8* dat, bool val, u8 bit_index) {
   assert(bit_index < 8);
   if (val) {
     *dat |= (1 << bit_index);
@@ -77,12 +77,12 @@ void SetBit(u8 *dat, bool val, u8 bit_index) {
   }
 }
 
-std::shared_ptr<tlm::tlm_generic_payload> MakeSharedPayloadPtr(tlm::tlm_command cmd, sc_dt::uint64 addr, void *data,
+std::shared_ptr<tlm::tlm_generic_payload> MakeSharedPayloadPtr(tlm::tlm_command cmd, sc_dt::uint64 addr, void* data,
                                                                bool dmi_allowed, uint size) {
   auto p = std::make_shared<tlm::tlm_generic_payload>();
   p->set_command(cmd);
   p->set_address(addr);
-  p->set_data_ptr(reinterpret_cast<unsigned char *>(data));
+  p->set_data_ptr(reinterpret_cast<unsigned char*>(data));
   p->set_data_length(size);
   p->set_streaming_width(size);
   p->set_dmi_allowed(dmi_allowed);

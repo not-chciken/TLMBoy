@@ -33,7 +33,9 @@ void GenericMemory::SetMemData(u8* data, size_t size) {
   std::memcpy(data_, data, size);
 }
 
-u8* GenericMemory::GetDataPtr() { return data_; }
+u8* GenericMemory::GetDataPtr() {
+  return data_;
+}
 
 void GenericMemory::LoadFromFile(std::filesystem::path path, int offset) {
   std::ifstream file(path.string(), std::ios::binary | std::ios::ate);

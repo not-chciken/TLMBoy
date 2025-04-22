@@ -85,15 +85,3 @@ Utilities:
 
 * [Overview](https://www.chciken.com/tlmboy/2022/02/02/gameboy-systemc.html)
 * [GDB Remote Serial Protocol](https://www.chciken.com/tlmboy/2022/04/03/gdb-z80.html)
-
-## TODO
-
-* Show full tile map in window (currently only the lower tile map is shown)
-* Implement the sound processor
-* Complete instructions (stop)
-* BankSwitchMemory: Use seperate functions for loading of the boot ROM and the game.
-* BankSwitchMemory: Implement enable/disable RAM
-* BankSwitchMemory: Implement all MBC
-* Use native c++ implementation for ranges once available (maybe with c++23)
-* Fix bank size of ram
-* Checkpointing system

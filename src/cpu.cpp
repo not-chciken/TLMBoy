@@ -136,7 +136,10 @@ void Cpu::Continue() {
 // Initialize interrupt enable and pending DMI.
 void Cpu::start_of_simulation() {
   InterruptModule::start_of_simulation();
-  payload = MakeSharedPayloadPtr(tlm::TLM_IGNORE_COMMAND, 0x0000, nullptr);
+  payload = new tlm::tlm_generic_payload;
+  payload->set_command(tlm::TLM_IGNORE_COMMAND);
+  payload->set_address(0);
+  payload->set_data_ptr(nullptr);
   payload->set_extension(&gbcmd);
 }
 

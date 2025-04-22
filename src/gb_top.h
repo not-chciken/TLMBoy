@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * This is the top level of the Game Boy.
  ******************************************************************************/
@@ -10,8 +10,8 @@
 #include "apu.h"
 #include "bus.h"
 #include "cartridge.h"
-#include "cpu.h"
 #include "common.h"
+#include "cpu.h"
 #include "game_info.h"
 #include "generic_memory.h"
 #include "io_registers.h"
@@ -52,5 +52,5 @@ struct GbTop : public sc_module {
   sc_signal<bool> sig_trigger_wave;
   sc_signal<bool> sig_trigger_noise;
 
-  GbTop(sc_module_name name, const Options &options);
+  GbTop(sc_module_name name, const Options& options);
 };

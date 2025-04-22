@@ -8,9 +8,7 @@
 #include <string>
 
 Cartridge::BankSwitchedMem::BankSwitchedMem(sc_module_name name, uint num_banks, uint bank_size)
-    : GenericMemory(bank_size * num_banks, name),
-      num_banks_(num_banks),
-      bank_size_(bank_size) {
+    : GenericMemory(bank_size * num_banks, name), num_banks_(num_banks), bank_size_(bank_size) {
   DoBankSwitch(0);
 }
 
@@ -65,7 +63,7 @@ Cartridge::MemoryBankCtrler::MemoryBankCtrler(uint num_rom_banks, uint num_ram_b
 Cartridge::MemoryBankCtrler::~MemoryBankCtrler() {
   if (symfile_tracer_) {
     std::ofstream file;
-    file.open ("trace.sym");
+    file.open("trace.sym");
     symfile_tracer_->DumpTrace(file);
     file.close();
   }
@@ -78,7 +76,7 @@ uint Cartridge::MemoryBankCtrler::transport_dbg_rom(tlm::tlm_generic_payload& tr
   if (adr < 0x4000) {
     rom_low_socket_out->transport_dbg(trans);
   } else {
-    trans.set_address(adr-0x4000);
+    trans.set_address(adr - 0x4000);
     rom_high_socket_out->transport_dbg(trans);
   }
   return 1;
@@ -124,7 +122,7 @@ void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& d
     if (gbcmd && symfile_tracer_)
       if (gbcmd->cmd == GbCommand::kGbReadData)
         symfile_tracer_->TraceAccess(rom_high.GetCurrentBankIndex(), adr);
-    trans.set_address(adr-0x4000);
+    trans.set_address(adr - 0x4000);
     rom_high_socket_out->b_transport(trans, delay);
   }
 }
@@ -181,7 +179,7 @@ void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
       rom_ind_ += 1;  // It's not a bug, it's a feature!
     }
     ram_ind_ = more_ram_mode_ ? the_two_bits_ : 0;
-    assert(0 < rom_ind_ && rom_ind_< 128);
+    assert(0 < rom_ind_ && rom_ind_ < 128);
     assert(more_ram_mode_ || (!more_ram_mode_ && (ram_ind_ == 0)));  // Only one bank in 4/32 Mode.
     rom_high.DoBankSwitch(rom_ind_ - 1);
     ext_ram.DoBankSwitch(ram_ind_);
@@ -215,10 +213,7 @@ void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
 }
 
 Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file)
-    : MemoryBankCtrler(512, 16, symbol_file),
-      rom_ind_(0),
-      ram_ind_(0),
-      ram_enabled_(false) {
+    : MemoryBankCtrler(512, 16, symbol_file), rom_ind_(0), ram_ind_(0), ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
   rom_low.LoadFromFile(boot_path);
@@ -274,26 +269,18 @@ uint Cartridge::Mbc5::transport_dbg_ram(tlm::tlm_generic_payload& trans) {
   return 1;
 }
 
-Cartridge::Cartridge(sc_module_name name,
-                     std::filesystem::path game_path,
-                     std::filesystem::path boot_path,
+Cartridge::Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
                      bool symbol_file)
-    : sc_module(name),
-      sig_unmap_rom_in("sig_unmap_rom_in"),
-      game_path_(game_path),
-      boot_path_(boot_path) {
+    : sc_module(name), sig_unmap_rom_in("sig_unmap_rom_in"), game_path_(game_path), boot_path_(boot_path) {
   game_info = std::make_unique<GameInfo>(game_path_);
   string cr_type = game_info->GetCartridgeType();
 
   if (cr_type == "ROM ONLY")
     mbc = std::make_unique<Rom>(game_path, boot_path, symbol_file);
   else if (cr_type == "MBC1"  // TODO(niko): finer granularity and more MBC types
-          || cr_type == "MBC1+RAM"
-          || cr_type == "MBC1+BAT+RAM")
+           || cr_type == "MBC1+RAM" || cr_type == "MBC1+BAT+RAM")
     mbc = std::make_unique<Mbc1>(game_path, boot_path, symbol_file);
-  else if (cr_type == "MBC5"
-          || cr_type == "MBC5+RAM"
-          || cr_type == "MBC5+BAT+RAM")
+  else if (cr_type == "MBC5" || cr_type == "MBC5+RAM" || cr_type == "MBC5+BAT+RAM")
     mbc = std::make_unique<Mbc5>(game_path, boot_path, symbol_file);
   else
     throw std::runtime_error(std::format("Cartidge type {} not implemented", cr_type));

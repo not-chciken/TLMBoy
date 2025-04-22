@@ -5,7 +5,8 @@
 
 #include "io_registers.h"
 
-IoRegisters::IoRegisters() : GenericMemory(0x80, "IoRegisters"), sig_unmap_rom_out("sig_unmap_rom_out") {
+IoRegisters::IoRegisters()
+    : GenericMemory(0x80, "IoRegisters"), sig_unmap_rom_out("sig_unmap_rom_out"), init_socket("init_socket") {
 }
 
 // TODO(niko): 160µs. CONTINUE HERE

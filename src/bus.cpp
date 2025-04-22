@@ -5,7 +5,8 @@
 
 #include "bus.h"
 
-Bus::Bus(sc_module_name name) : sc_module(name) {}
+Bus::Bus(sc_module_name name) : sc_module(name) {
+}
 
 void Bus::AddBusMaster(tlm::tlm_initiator_socket<gb_const::kBusDataWidth>* init_sock) {
   string name = string(init_sock->basename()) + "_bus_master_socket_" + std::to_string(bus_master_vec_.size());
