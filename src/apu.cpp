@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2024 chciken/Niko Zurstraßen
+ * Copyright (c) 2025 chciken/Niko Zurstraßen
  ******************************************************************************/
 
 #include "apu.h"
@@ -52,7 +52,7 @@ Apu::~Apu() {
   SDL_Quit();
 }
 
-void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length) {
+void Apu::Square::WriteDataIntoStream(Sint16* stream, int length) {
   if (length_load == 0 && length_enable == 1)
     return;
 
@@ -60,6 +60,8 @@ void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length) {
     return;
 
   float periods_per_sample = (131072 / (float)kSampleRate) / (float)(2048 - frequency);
+
+  float fduty;
 
   switch (duty) {
   case 0:
@@ -75,7 +77,7 @@ void Apu::Osc::WriteDataIntoStream(Sint16* stream, int length) {
     fduty = 0.75f;
     break;
   default:
-    break;
+    fduty = 0.5f;
   }
 
   if (periods_per_sample >= fduty)
@@ -128,7 +130,7 @@ void Apu::Noise::WriteDataIntoStream(Sint16* stream, int length) {
     float sample = DoLfsrTicks(lfsr_ticks);
     sample = Hipass(sample);
     tick_cntr -= lfsr_ticks * cpu_ticks_per_lfsr_sample;
-    stream[i] += (float)SDL_MAX_SINT16 * (2 * sample - 1) * (((float)volume) / 60.f);
+    stream[i] += (float)SDL_MAX_SINT16 * (2.f * sample - 1.f) * (((float)volume) / 60.f);
   }
 }
 
@@ -165,7 +167,7 @@ void Apu::Wave::WriteDataIntoStream(Sint16* stream, int length, u8* wave_table) 
     break;
   }
 
-  if (volume == 0.f)
+  if (fvolume == 0.f)
     return;
 
   float entries_per_sample = (2097152.f / (float)kSampleRate) / (float)(2048.f - period);
@@ -181,7 +183,7 @@ void Apu::Wave::WriteDataIntoStream(Sint16* stream, int length, u8* wave_table) 
       sample_index = sample_index > 31 ? 0 : sample_index;
     }
     u8 sample = wave_table[sample_index / 2];
-    if (sample_index % 2) {
+    if (sample_index % 2u) {
       sample &= 0xfu;
     } else {
       sample = (sample & 0xf0u) >> 4;
@@ -200,9 +202,7 @@ void Apu::AudioLoop() {
   audio_spec_.callback = [](void* userData, Uint8* buffer, int length) {
     Apu* apu = (Apu*)userData;
 
-    for (int j = 0; j < length; ++j) {
-      buffer[j] = 0;
-    }
+    std::fill(buffer, buffer + length, 0);
 
     apu->square1.duty = *(apu->reg_nr11) >> 6;
     u8 frequency_lsb = *(apu->reg_nr13);
@@ -295,17 +295,37 @@ void Apu::start_of_simulation() {
 void Apu::DecrementLengths() {
   square1.length_enable = *reg_nr14 & 0b01000000u;
   square2.length_enable = *reg_nr24 & 0b01000000u;
-  bool wave_length_enable = *reg_nr34 & 0b01000000u;
+  wave.length_enable = *reg_nr34 & 0b01000000u;
   noise.length_enable = *reg_nr44 & 0b01000000u;
 
   if (square1.length_enable && (square1.length_load >= 1u))
     --square1.length_load;
   if (square2.length_enable && (square2.length_load >= 1u))
     --square2.length_load;
-  if (wave_length_enable && (wave_length_load >= 1u))
-    --wave_length_load;
+  if (wave.length_enable && (wave.length_load >= 1u))
+    --wave.length_load;
   if (noise.length_enable && (noise.length_load >= 1u))
     --noise.length_load;
+}
+
+void Apu::DoSweep() {
+  square1.sweep_step = *(reg_nr10) & 0b111;
+  square1.sweep_direction = *(reg_nr10) & 0b1000;
+  square1.sweep_period = (*(reg_nr10) >> 4) & 0b111;
+
+  if (square1.sweep_period == 0)
+    return;
+
+  if (square1.sweep_counter >= square1.sweep_period) {
+    const int dir = square1.sweep_direction ? -1 : +1;
+    square1.frequency = square1.frequency + dir * square1.frequency / (1u << square1.sweep_step);
+    square1.frequency = std::min(2047u, square1.frequency);
+    square1.sweep_counter = 0;
+    *(reg_nr13) = square1.frequency & 0xffu;
+    *(reg_nr14) = (square1.frequency & 0x700u) >> 8;
+  } else {
+    ++square1.sweep_counter;
+  }
 }
 
 void Apu::UpdateEnvelopes() {
@@ -349,26 +369,6 @@ void Apu::UpdateEnvelopes() {
   ++i;
 }
 
-void Apu::DoSweep() {
-  square1.sweep_step = *(reg_nr10) & 0b111;
-  square1.sweep_direction = *(reg_nr10) & 0b1000;
-  square1.sweep_period = (*(reg_nr10) >> 4) & 0b111;
-
-  if (square1.sweep_period == 0)
-    return;
-
-  if (square1.sweep_counter >= square1.sweep_period) {
-    square1.frequency =
-        square1.frequency + (square1.sweep_direction ? -1 : +1) * square1.frequency / (1u << square1.sweep_step);
-    square1.frequency = std::min(2047u, square1.frequency);
-    square1.sweep_counter = 0;
-    *(reg_nr13) = square1.frequency & 0xffu;
-    *(reg_nr14) = (square1.frequency & 0x700u) >> 8;
-  } else {
-    ++square1.sweep_counter;
-  }
-}
-
 void Apu::ReloadLengthSquare1() {
   square1.length_load = 64u - (*reg_nr11 & 0b111111u);
 }
@@ -390,14 +390,6 @@ void Apu::TriggerEventSquare1() {
     square1.length_load = 64;
 
   square1.volume = *reg_nr12 >> 4;
-  //  Channel is enabled (see length counter).
-  // If length counter is zero, it is set to 64 (256 for wave channel). DONE
-  // Frequency timer is reloaded with period.
-  // Volume envelope timer is reloaded with period.
-  // Channel volume is reloaded from NRx2. DONE
-  // Noise channel's LFSR bits are all set to 1.
-  // Wave channel's position is set to 0 but sample buffer is NOT refilled.
-  // Square 1's sweep does several things (see frequency sweep).
 }
 
 void Apu::TriggerEventSquare2() {

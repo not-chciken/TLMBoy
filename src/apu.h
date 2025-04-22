@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2024 chciken/Niko Zurstraßen
+ * Copyright (c) 2025 chciken/Niko Zurstraßen
  *
  * This class implements the Game Boy's APU (Audio Processing Unit).
  ******************************************************************************/
@@ -17,6 +17,8 @@ struct Apu : public sc_module {
   ~Apu();
 
   void AudioLoop();
+
+  static constexpr uint kSampleRate = 44000u;
 
   // APU IO registers.
   // Square 1.
@@ -50,56 +52,46 @@ struct Apu : public sc_module {
   u8* reg_nr51;  //  NW21 NW21 Left enables, Right enables
   u8* reg_nr52;  //  P--- NW21 Power control/status, Channel length statuses
 
-  u8* wave_table;
+  u8* wave_table;  // 32 4-bit samples from 0xFF30 to 0xFF3F.
 
-  u16 wave_length_load;
-  u8 noise_length_load;
-
-  i32 volume_ns; // Current volume, which is not exposed.
-
-  struct Osc {
-    bool envelope_mode;
+  struct Channel {
     bool length_enable;
+    int volume;
+    uint length_load;
+  };
+
+  struct Square : public Channel {
+    bool envelope_mode;
     bool sweep_direction;
+    uint duty;
     uint frequency;
-    uint sweep_counter = 0;
+    uint period;
+    uint sweep_counter;
     uint sweep_step;
     uint sweep_period;
-    int volume;
-
-    u8 duty;
-    u8 length_load;
-    u8 period;
 
     void WriteDataIntoStream(Sint16* stream, int length);
 
    private:
-    float tick_counter = 0;
+    float tick_counter;
     float phase = 1.f;
-    float fduty = 0.125f;
   };
 
-  struct Square1 : public Osc {
-  } square1;
-  struct Square2 : public Osc {
-  } square2;
+  Square square1;
+  Square square2;
 
-  struct Noise {
-    bool length_enable;  // If true, internal counter starts decreasing.
-    bool envelope_mode;  // Envelope: true = amplify, false = attenuate;
-    i32 volume;          // Sound volume (e [0,15]).
-    u8 length_load;
-    u8 period;  // Number of envelope sweep (n: 0-7) (If zero, stop envelope operation).
-    u32 frequency;
+  struct Noise : public Channel {
+    const uint divisor_table[8] = {8, 16, 32, 48, 64, 80, 96, 112};
 
-    u8 divisor_table[8] = {8, 16, 32, 48, 64, 80, 96, 112};
-    u8 divisor;
-    u8 shift;
-    u8 lfsr_width;
+    bool envelope_mode;
+    uint divisor;
+    uint frequency;
+    uint lfsr_bits;
+    uint lfsr_width;
+    uint period;
+    uint shift;
     u32 cpu_ticks_per_lfsr_sample;
     u32 lfsr_sample_length;  // In ns.
-    u32 lfsr_output;         // Either 1 or 0.
-    uint lfsr_bits;
     u32 tick_cntr;
 
     void WriteDataIntoStream(Sint16* stream, int length);
@@ -110,24 +102,19 @@ struct Apu : public sc_module {
     float DoLfsrTicks(int num_ticks);
   } noise;
 
-  struct Wave {
-    bool length_enable;
-    uint length_load;
-    i32 volume;
-    uint period;
+  struct Wave : public Channel {
     bool dac_enable;
-    float tick_counter = 0;
-    uint sample_index = 0;
+    uint period;
+    uint sample_index;
+    float tick_counter;
 
     void WriteDataIntoStream(Sint16* stream, int length, u8* wave_table);
-
   } wave;
 
   // SystemC interfaces.
   void start_of_simulation() override;
   tlm_utils::simple_initiator_socket<Apu, gb_const::kBusDataWidth> init_socket;
   sc_in_clk clk;
-  static constexpr i32 kSampleRate = 44000;
 
   sc_in<bool> sig_reload_length_square1_in;
   sc_in<bool> sig_reload_length_square2_in;
@@ -149,10 +136,10 @@ struct Apu : public sc_module {
   void TriggerEventNoise();
 
  protected:
-  SDL_AudioSpec audio_spec_;
   SDL_AudioDeviceID audio_device_;
+  SDL_AudioSpec audio_spec_;
 
   void DecrementLengths();
-  void UpdateEnvelopes();
   void DoSweep();
+  void UpdateEnvelopes();
 };
