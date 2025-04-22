@@ -1,9 +1,9 @@
 ######################################################
 # Apache License, Version 2.0
-# Copyright (c) 2022 chciken/Niko
+# Copyright (c) 2025 chciken/Niko
 ######################################################
 
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.5.0)
 project(TLMBoy VERSION 1.0.0)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
