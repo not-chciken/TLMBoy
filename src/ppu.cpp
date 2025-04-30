@@ -35,7 +35,7 @@ constexpr u8 MapColors(u8 val, u8 const* reg) {
 
 Ppu::Ppu(sc_module_name name, bool headless, int fps_cap, i64 resolution_scaling, string color_palette)
     : sc_module(name), init_socket("init_socket"), clk("clk") {
-  SC_CTHREAD(RenderLoop, clk);
+  SC_THREAD(RenderLoop);
 
   for (int j = 0; j < 4; ++j)
     for (int i = 0; i < 3; ++i)
@@ -273,11 +273,11 @@ void Ppu::RenderLoop() {
       // Mode = OAM-search (10).
       SetBit(reg_stat, false, 0);
       SetBit(reg_stat, true, 1);
-      wait(80);
+      wait(80 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
 
       // Mode = LCD transfer (11)
       SetBit(reg_stat, true, 0);
-      wait(168);
+      wait(168 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
 
       // Mode = H-Blank (00).
       SetBit(reg_stat, false, 0);
@@ -300,7 +300,7 @@ void Ppu::RenderLoop() {
       }
 
       CheckLycInterrupt();
-      wait(208);
+      wait(208 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     }
     window_line_ = 0;
 
@@ -312,7 +312,7 @@ void Ppu::RenderLoop() {
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
     for (int i = 0; i < 10; ++i) {
-      wait(456);  // The vblank period is 4560 cycles.
+      wait(456 * gb_const::kNsPerClkCycle, sc_core::SC_NS);  // The vblank period is 4560 cycles.
       ++(*reg_lcdc_y);
       CheckLycInterrupt();
     }
