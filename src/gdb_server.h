@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * A GDB server for the Game Boy.
  * Allows you to attach with GDB via `target remote localhost:<port>`
@@ -17,28 +17,28 @@
 class Cpu;
 
 class GdbServer {
- private:
-  Cpu* cpu_;
-
  public:
   explicit GdbServer(Cpu* cpu);
-  void InitBlocking(const int port);
+
+  bool BpReached(const u16 address);
   bool IsMsgPending();
   void HandleMessages();
-  void SendSignal(const uint signal);
-  bool BpReached(const u16 address);
+  void InitBlocking(const int port);
   void SendBpReached();
+  void SendSignal(const uint signal);
 
  private:
   bool is_attached_;
+  Cpu* cpu_;
   std::map<string, std::function<void(const std::vector<string>)>> cmd_map;
   std::set<u16> bp_set_;
   TcpServer tcp_server_;
-  char const* kMsgEmpty = "+$#00";
+
   char const* kMsgAck = "+";
+  char const* kMsgEmpty = "+$#00";
   char const* kMsgOk = "+$OK#9a";
 
-  uint kMaxMessageLength = 4096;
+  static constexpr uint kMaxMessageLength = 4096;
 
   string RecvMsgBlocking();
   void DecodeAndCall(const string& msg);
@@ -46,7 +46,7 @@ class GdbServer {
   string GetChecksumStr(const string& msg);
   string Packetify(string msg);
 
-  // All the commands.
+  // All the GDBRSP commands.
   void CmdHalted(const std::vector<string>& msg_split);
   void CmdDetach(const std::vector<string>& msg_split);
   void CmdNotFound(const std::vector<string>& msg_split);

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * This class holds general information about the game.
  * The information is obtained by reading the certain regions
@@ -139,16 +139,16 @@ class GameInfo {
     {0x00, "Japanese"}, {0x01, "Non-Japanese"}
   };
 
-  const u16 kAdrTitleStart      = 0x134;
-  const u16 kAdrTitleEnd        = 0x143;
-  const u16 kAdrNewLicenseStart = 0x144;
-  const u16 kAdrNewLicenseEnd   = 0x145;
-  const u16 kAdrSgbFunc         = 0x146;
-  const u16 kAdrCartType        = 0x147;
-  const u16 kAdrRomSize         = 0x148;
-  const u16 kAdrRamSize         = 0x149;
-  const u16 kAdrRegionCode      = 0x14a;
-  const u16 kAdrOldLicense      = 0x14b;
+  static constexpr size_t kAdrTitleStart      = 0x134;
+  static constexpr size_t kAdrTitleEnd        = 0x143;
+  static constexpr size_t kAdrNewLicenseStart = 0x144;
+  static constexpr size_t kAdrNewLicenseEnd   = 0x145;
+  static constexpr size_t kAdrSgbFunc         = 0x146;
+  static constexpr size_t kAdrCartType        = 0x147;
+  static constexpr size_t kAdrRomSize         = 0x148;
+  static constexpr size_t kAdrRamSize         = 0x149;
+  static constexpr size_t kAdrRegionCode      = 0x14a;
+  static constexpr size_t kAdrOldLicense      = 0x14b;
 
   explicit GameInfo(std::filesystem::path game_path);
 
@@ -164,8 +164,8 @@ class GameInfo {
   uint GetRomSize();
 
  private:
-  bool uses_new_license_;
   bool sgb_support_;
+  bool uses_new_license_;
   string cartridge_type_;
   string license_code_;
   string region_;

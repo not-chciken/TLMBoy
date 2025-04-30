@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * This class implements the Game Boy's timer.
  * Don't confuse it with the MBC3 battery buffered real time clock.
@@ -45,7 +45,7 @@ struct Timer : public sc_module {
 
   Timer(sc_module_name name, u8* reg_if);
 
-  // Increments the div register at rate of 16384Hz.
+  // Increments the div register at rate of 16384 Hz.
   void DivLoop();
   void TimerLoop();
 

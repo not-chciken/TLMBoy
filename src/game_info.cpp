@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "game_info.h"
@@ -44,13 +44,7 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
   }
 
   // SGB
-  if (data[kAdrSgbFunc] == 0) {
-    sgb_support_ = false;
-  } else if (data[kAdrSgbFunc] == 0x03) {
-    sgb_support_ = false;
-  } else {
-    std::cerr << "Wrong SGB value: " << data[kAdrSgbFunc] << std::endl;
-  }
+  sgb_support_ = (data[kAdrSgbFunc] == 3);
 
   cartridge_type_ = cartridge_type_map.at(data[kAdrCartType]);
   rom_size_ = rom_size_map.at(data[kAdrRomSize]);
@@ -66,7 +60,7 @@ GameInfo::operator string() const {
      << "Title:          " << title_ << std::endl
      << "Dev/Publisher:  " << license_code_ << std::endl
      << "License type:   " << (uses_new_license_ ? "New" : "Old") << std::endl
-     << "SGB support:    " << sgb_support_ << std::endl
+     << "SGB support:    " << (sgb_support_ ? "True" : "False") << std::endl
      << "Cartridge type: " << cartridge_type_ << std::endl
      << "ROM size:       " << std::get<0>(rom_size_) << std::endl
      << "RAM size:       " << std::get<0>(ram_size_) << std::endl
@@ -98,12 +92,12 @@ string GameInfo::GetTitle() {
   return title_;
 }
 
-// Returns RAM size in kiB
+// Returns RAM size in kiB.
 uint GameInfo::GetRamSize() {
   return std::get<1>(ram_size_);
 }
 
-// Returns ROM size in number of banks
+// Returns ROM size in number of banks.
 uint GameInfo::GetRomSize() {
   return std::get<1>(rom_size_);
 }

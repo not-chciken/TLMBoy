@@ -22,7 +22,7 @@
 
 struct GbTop : public sc_module {
   SC_HAS_PROCESS(GbTop);
-  u8 reg_ie;  // Interrupt Enable at 0xFFFF.
+  u8 reg_ie;
   Cartridge cartridge;
   Apu gb_apu;
   Bus gb_bus;

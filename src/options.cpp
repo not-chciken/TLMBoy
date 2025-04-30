@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "options.h"
@@ -24,7 +24,7 @@ void Options::InitOpts(int argc, char* argv[]) {
                                      {nullptr, 0, nullptr, 0}};
 
   int index;
-  for (;;) {
+  while (true) {
     switch (getopt_long(argc, argv, "b:f:hm:lwr:sc:e:", long_opts, &index)) {
     case 'b':
       boot_rom_path = fs::path(optarg);

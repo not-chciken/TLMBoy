@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2022 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * If a module uses/sets interrupts (CPU, PPU, Joypad),
  * it inherits from this class.
@@ -24,23 +24,24 @@ class InterruptModule {
 
   // Initialize interrupt enable and pending DMI.
   void start_of_simulation() {
-    if (reg_intr_enable_dmi == nullptr) {
-      tlm::tlm_dmi dmi_data;
-      uint dummy_data;
-      auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0xffff, reinterpret_cast<void*>(&dummy_data));
+    if (reg_intr_enable_dmi != nullptr)
+      return;
 
-      if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
-        reg_intr_enable_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
-      } else {
-        throw std::runtime_error("Could not get interrupt enable register DMI!");
-      }
+    tlm::tlm_dmi dmi_data;
+    uint dummy_data;
+    auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0xffff, reinterpret_cast<void*>(&dummy_data));
 
-      payload->set_address(0xff0f);
-      if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
-        reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
-      } else {
-        throw std::runtime_error("Could not get interrupt pending register DMI!");
-      }
+    if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
+      reg_intr_enable_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
+    } else {
+      throw std::runtime_error("Could not get interrupt enable register DMI!");
+    }
+
+    payload->set_address(0xff0f);
+    if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
+      reg_intr_pending_dmi = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
+    } else {
+      throw std::runtime_error("Could not get interrupt pending register DMI!");
     }
   }
 };

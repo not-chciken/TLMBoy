@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "joypad.h"
@@ -25,9 +25,9 @@ JoyPad::JoyPad(sc_module_name name)
 
 // This thread continously reads the inputs from SDL. Fine-tune the polling with kWaitMs.
 void JoyPad::InputLoop() {
-  const u32 kWaitMs = 10;
+  constexpr uint kWaitMs = 10;
 
-  while (1) {
+  while (true) {
     SDL_PollEvent(&event);
     switch (event.type) {
     case SDL_KEYDOWN:
@@ -154,11 +154,9 @@ void JoyPad::start_of_simulation() {
 }
 
 void JoyPad::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
+  assert(static_cast<u16>(trans.get_address()) == 0);
   tlm::tlm_command cmd = trans.get_command();
-  u16 adr = static_cast<u16>(trans.get_address());
   u8* ptr = trans.get_data_ptr();
-  assert(adr == 0);
-
   trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
   if (cmd == tlm::TLM_READ_COMMAND) {

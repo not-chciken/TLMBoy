@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "generic_memory.h"
@@ -87,7 +87,7 @@ uint GenericMemory::transport_dbg(tlm::tlm_generic_payload& trans) {
 }
 
 bool GenericMemory::get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data) {
-  u16 adr = trans.get_address();
+  u16 adr = static_cast<u16>(trans.get_address());
   assert(adr < memory_size_);
   dmi_data.allow_read_write();
   dmi_data.set_start_address(0);

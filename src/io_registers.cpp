@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "io_registers.h"
@@ -9,7 +9,7 @@ IoRegisters::IoRegisters()
     : GenericMemory(0x80, "IoRegisters"), sig_unmap_rom_out("sig_unmap_rom_out"), init_socket("init_socket") {
 }
 
-// TODO(niko): 160µs. CONTINUE HERE
+// TODO(niko): 160µs.
 // In theory it skips 4 bits per entry as these aren't used.
 void IoRegisters::DmaTransfer(const u8 byte) {
   u8 read_data;

@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * Implementation of a TCP server.
  * Currently only used for the Remote GDB protocol.
@@ -34,13 +34,13 @@ class TcpServer {
   ~TcpServer();
 
   bool DataAvailable();
+  string RecvBlocking(uint length);
   void AcceptClient();
   void Start(int port);
   void SendMsg(const char* msg);
-  string RecvBlocking(uint length);
 
  private:
-  const uint kMaxPacketSize = 4096;
+  static constexpr uint kMaxPacketSize = 4096;
   int socket_fd_;
   int client_fd_;
   sockaddr_in server_addr_;

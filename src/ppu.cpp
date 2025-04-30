@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "ppu.h"
@@ -371,7 +371,7 @@ Ppu::RenderWindow::~RenderWindow() {
 void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path& file_path) {
   const Uint32 format = SDL_PIXELFORMAT_ARGB8888;
   SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format);
-  SDL_RenderReadPixels(renderer, NULL, format, surface->pixels, surface->pitch);
+  SDL_RenderReadPixels(renderer, nullptr, format, surface->pixels, surface->pitch);
   SDL_SaveBMP(surface, file_path.string().c_str());
   SDL_FreeSurface(surface);
 }

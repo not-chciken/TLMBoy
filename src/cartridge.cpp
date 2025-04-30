@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 #include "cartridge.h"
 
@@ -23,10 +23,10 @@ u8 Cartridge::BankSwitchedMem::GetCurrentBankIndex() {
 }
 
 void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
-  tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
-  unsigned char* ptr = trans.get_data_ptr();
   assert(adr < bank_size_);
+  tlm::tlm_command cmd = trans.get_command();
+  unsigned char* ptr = trans.get_data_ptr();
   if (cmd == tlm::TLM_READ_COMMAND) {
     *ptr = bank_data_[adr];
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
@@ -130,9 +130,9 @@ void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& d
 // There's no RAM for rom-only games.
 // Yet some games like Alleyway try to write in the non-existing RAM...
 void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
-  u16 adr = static_cast<uint16_t>(trans.get_address());
+  assert(static_cast<u16>(trans.get_address()) < 0x8000);
+
   tlm::tlm_command cmd = trans.get_command();
-  assert(adr < 0x8000);
   trans.set_response_status(tlm::TLM_OK_RESPONSE);
   if (cmd == tlm::TLM_WRITE_COMMAND) {
     std::cout << "[WARNING] Tried to write into non-existing RAM!" << std::endl;
@@ -203,8 +203,7 @@ void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
 }
 
 void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) {
-  u16 adr = static_cast<u16>(trans.get_address());
-  assert(adr <= 0x1FFF);
+  assert(static_cast<u16>(trans.get_address()) <= 0x1FFF);
   if (ram_enabled_) {
     ram_socket_out->b_transport(trans, delay);
   } else {
@@ -252,8 +251,7 @@ void Cartridge::Mbc5::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
 }
 
 void Cartridge::Mbc5::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) {
-  u16 adr = static_cast<u16>(trans.get_address());
-  assert(adr <= 0x1FFF);
+  assert(static_cast<u16>(trans.get_address()) <= 0x1FFF);
   if (ram_enabled_) {
     ram_socket_out->b_transport(trans, delay);
   } else {
@@ -262,9 +260,8 @@ void Cartridge::Mbc5::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
 }
 
 uint Cartridge::Mbc5::transport_dbg_ram(tlm::tlm_generic_payload& trans) {
-  u16 adr = static_cast<u16>(trans.get_address());
+  assert(static_cast<u16>(trans.get_address()) <= 0x1FFF);
   sc_time delay(0, SC_NS);
-  assert(adr <= 0x1FFF);
   ram_socket_out->b_transport(trans, delay);
   return 1;
 }

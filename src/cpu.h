@@ -1,7 +1,7 @@
 #pragma once
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  *
  * The SM83 CPU of the gameboy. Basically a Z80 clone with some special instructions
  ********************************************************************************/
@@ -84,9 +84,9 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   // In single step mode the CPU state is printed after each instruction.
   bool single_step_ = false;
   // TCP port for the GDB stub.
-  const i32 gdb_port_ = 1337;
+  const int gdb_port_ = 1337;
 
-  // ALl of the SM83's instructions
+  // All of the SM83's instructions.
   void InstrAddA(Reg<u8>& reg);
   void InstrAddA(Reg<u16>& addr_reg);
   void InstrAddACarry(Reg<u8>& reg);
@@ -191,16 +191,16 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
   void InstrEmu();
 
   // zero flag: math op is zero or two values match with CP instruction.
-  const u8 kMaskZFlag = 0b10000000;
+  static constexpr u8 kMaskZFlag = 0b10000000;
   // subtract flag: last math instruction was a subtraction.
-  const u8 kMaskNFlag = 0b01000000;
+  static constexpr u8 kMaskNFlag = 0b01000000;
   // half carry flag: carry occured from lower nibble in last math instruction.
-  const u8 kMaskHFlag = 0b00100000;
+  static constexpr u8 kMaskHFlag = 0b00100000;
   // carry flag: carry occured from last math operation or A is smaller than value with CP instruction.
-  const u8 kMaskCFlag = 0b00010000;
+  static constexpr u8 kMaskCFlag = 0b00010000;
 
-  const u8 kIndCFlag = 4;  // Bit index of the C flag
-  const u8 kIndHFlag = 5;  // Bit index of the H flag
-  const u8 kIndNFlag = 6;  // Bit index of the N flag
-  const u8 kIndZFlag = 7;  // Bit index of the Z flag
+  static constexpr u8 kIndCFlag = 4;  // Bit index of the C flag.
+  static constexpr u8 kIndHFlag = 5;  // Bit index of the H flag.
+  static constexpr u8 kIndNFlag = 6;  // Bit index of the N flag.
+  static constexpr u8 kIndZFlag = 7;  // Bit index of the Z flag.
 };

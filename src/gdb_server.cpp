@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Apache License, Version 2.0
- * Copyright (c) 2023 chciken/Niko
+ * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 
 #include "gdb_server.h"
@@ -17,7 +17,7 @@
 
 #include "cpu.h"
 
-GdbServer::GdbServer(Cpu* cpu) : cpu_(cpu), is_attached_(false) {
+GdbServer::GdbServer(Cpu* cpu) : is_attached_(false), cpu_(cpu) {
   cmd_map["?"] = std::bind(&GdbServer::CmdHalted, this, std::placeholders::_1);
   cmd_map["g"] = std::bind(&GdbServer::CmdReadReg, this, std::placeholders::_1);
   cmd_map["G"] = std::bind(&GdbServer::CmdWriteReg, this, std::placeholders::_1);
@@ -137,8 +137,7 @@ string GdbServer::GetChecksumStr(const string& msg) {
   return std::format("{:02x}", checksum);
 }
 
-// This function packetifies your message by prepending "$"
-// and appending the check sum.
+// This function packetifies your message by prepending "$" and appending the check sum.
 string GdbServer::Packetify(string msg) {
   string checksum = GetChecksumStr(msg);
   msg.insert(0, "$");
