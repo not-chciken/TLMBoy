@@ -114,7 +114,6 @@ struct Apu : public sc_module {
   // SystemC interfaces.
   void start_of_simulation() override;
   tlm_utils::simple_initiator_socket<Apu, gb_const::kBusDataWidth> init_socket;
-  sc_in_clk clk;
 
   sc_in<bool> sig_reload_length_square1_in;
   sc_in<bool> sig_reload_length_square2_in;

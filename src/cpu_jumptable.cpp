@@ -29,7 +29,7 @@ void Cpu::DoMachineCycle() {
     if (gdb_server.BpReached(reg_file.PC)) {
       halted_ = true;
       gdb_server.SendBpReached();
-      wait(4);
+      wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
       continue;
     }
 

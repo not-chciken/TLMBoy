@@ -34,8 +34,8 @@ constexpr u8 MapColors(u8 val, u8 const* reg) {
 }
 
 Ppu::Ppu(sc_module_name name, bool headless, int fps_cap, i64 resolution_scaling, string color_palette)
-    : sc_module(name), init_socket("init_socket"), clk("clk") {
-  SC_CTHREAD(RenderLoop, clk);
+    : sc_module(name), init_socket("init_socket") {
+  SC_THREAD(RenderLoop);
 
   for (int j = 0; j < 4; ++j)
     for (int i = 0; i < 3; ++i)
@@ -268,16 +268,17 @@ void Ppu::CheckLycInterrupt() {
 
 // A complete screen refresh occurs every 70224 cycles.
 void Ppu::RenderLoop() {
+  wait(1, sc_core::SC_NS); // Ensures correct ordering of CPU and PPU.
   while (1) {
     for (int i = 0; i < kGbScreenHeight; ++i) {
       // Mode = OAM-search (10).
       SetBit(reg_stat, false, 0);
       SetBit(reg_stat, true, 1);
-      wait(80);
+      wait(80 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
 
       // Mode = LCD transfer (11)
       SetBit(reg_stat, true, 0);
-      wait(168);
+      wait(168 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
 
       // Mode = H-Blank (00).
       SetBit(reg_stat, false, 0);
@@ -300,7 +301,7 @@ void Ppu::RenderLoop() {
       }
 
       CheckLycInterrupt();
-      wait(208);
+      wait(208 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     }
     window_line_ = 0;
 
@@ -312,7 +313,7 @@ void Ppu::RenderLoop() {
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
     for (int i = 0; i < 10; ++i) {
-      wait(456);  // The vblank period is 4560 cycles.
+      wait(456 * gb_const::kNsPerClkCycle, sc_core::SC_NS);  // The vblank period is 4560 cycles.
       ++(*reg_lcdc_y);
       CheckLycInterrupt();
     }
@@ -358,14 +359,18 @@ Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_he
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, log_width, log_height);
 }
 
-Ppu::RenderWindow::RenderWindow() {
+Ppu::RenderWindow::RenderWindow() : renderer(nullptr), texture(nullptr), window(nullptr) {
 }
 
 Ppu::RenderWindow::~RenderWindow() {
-  SDL_DestroyTexture(texture);
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
+  if (texture)
+    SDL_DestroyTexture(texture);
+  if (renderer)
+    SDL_DestroyRenderer(renderer);
+  if (window)
+    SDL_DestroyWindow(window);
+  if (SDL_WasInit(SDL_INIT_VIDEO))
+    SDL_Quit();
 }
 
 void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path& file_path) {

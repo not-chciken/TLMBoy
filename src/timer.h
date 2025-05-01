@@ -39,7 +39,6 @@ struct Timer : public sc_module {
   u8 reg_tma = 0;
   u8 reg_tac = 0;
   u32 cycles_per_inc_ = 1024;
-  sc_in_clk clk;
   u8* reg_if;  // Interrupt Flag register (0xFF0F).
   tlm_utils::simple_target_socket<Timer, gb_const::kBusDataWidth> targ_socket;
 

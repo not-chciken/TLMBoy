@@ -18,8 +18,7 @@ Apu::Apu(sc_module_name name)
       sig_trigger_square2_in("sig_trigger_square2_in"),
       sig_trigger_wave_in("sig_trigger_wave_in"),
       sig_trigger_noise_in("sig_trigger_noise_in") {
-  SC_CTHREAD(AudioLoop, clk);
-  dont_initialize();
+  SC_THREAD(AudioLoop);
 
   SC_METHOD(ReloadLengthSquare1);
   sensitive << sig_reload_length_square1_in;
@@ -236,17 +235,17 @@ void Apu::AudioLoop() {
 
   while (true) {
     DecrementLengths();
-    wait(16384);
+    wait(16384 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     DecrementLengths();
     DoSweep();
-    wait(16384);
+    wait(16384 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     DecrementLengths();
-    wait(16384);
+    wait(16384 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     DecrementLengths();
     DoSweep();
-    wait(8192);
+    wait(8192 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     UpdateEnvelopes();
-    wait(8192);
+    wait(8192 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
   }
 }
 

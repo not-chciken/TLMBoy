@@ -17,7 +17,7 @@ Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step):
     gdb_server(this),
     attach_gdb_(attach_gdb),
     single_step_(single_step) {
-  SC_CTHREAD(DoMachineCycle, clk);
+  SC_THREAD(DoMachineCycle);
 }
 
 Cpu::~Cpu() {

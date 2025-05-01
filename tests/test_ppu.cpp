@@ -26,7 +26,6 @@ Options options;
 
 struct PpuStimulus : public sc_module {
   SC_HAS_PROCESS(PpuStimulus);
-  sc_in_clk clk;
   tlm_utils::simple_target_socket<PpuStimulus, gb_const::kBusDataWidth> targ_socket;
   u8* memory;  // pointer to memory region
 
@@ -52,7 +51,6 @@ struct PpuStimulus : public sc_module {
 
   PpuStimulus(u8 *memory, sc_module_name name)
       : sc_module(name),
-        clk("clk"),
         targ_socket("targ_socket"),
         memory(memory) {
     targ_socket.register_get_direct_mem_ptr(this, &PpuStimulus::get_direct_mem_ptr);
@@ -84,12 +82,11 @@ struct PpuStimulus : public sc_module {
     memory[0xFE03] = 0;  // flags
 
     SC_THREAD(StimulusLoop);
-    sensitive << clk.pos();
   }
 
   void StimulusLoop() {
     while (1) {
-      wait(70224);  // A complete screen refresh occurs every 70224 cycles.
+      wait(70224 * gb_const::kNsPerClkCycle, sc_core::SC_NS);  // A complete screen refresh occurs every 70224 cycles.
       memory[Ppu::kAdrRegScrollY] += 1;
       memory[Ppu::kAdrRegScrollX] += 1;
     }
@@ -132,19 +129,13 @@ struct Top : public sc_module {
   SC_HAS_PROCESS(Top);
   PpuStimulus test_stimulus;
   Ppu test_ppu;
-  sc_clock global_clk;
   sc_signal<bool> intr_sig;
   u8 memory[0x10000];
 
   explicit Top(sc_module_name name [[maybe_unused]])
       : test_stimulus(memory, "test_stimulus"),
-        test_ppu("test_ppu", options.headless, options.fps_cap),
-        global_clk("global_clk", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
+        test_ppu("test_ppu", options.headless, options.fps_cap) {
     test_ppu.init_socket.bind(test_stimulus.targ_socket);
-
-    // wire up the testbench
-    test_ppu.clk(global_clk);
-    test_stimulus(global_clk);
   }
 };
 

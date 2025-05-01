@@ -41,7 +41,6 @@ struct GbTop : public sc_module {
   IoRegisters io_registers;
   Ppu gb_ppu;
   Timer gb_timer;
-  sc_clock global_clk;
   sc_signal<bool> sig_unmap_rom;
   sc_signal<bool> sig_reload_length_square1;
   sc_signal<bool> sig_reload_length_square2;

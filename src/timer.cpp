@@ -6,15 +6,15 @@
 #include "timer.h"
 
 Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if(reg_if) {
-  SC_CTHREAD(TimerLoop, clk);
-  SC_CTHREAD(DivLoop, clk);
+  SC_THREAD(TimerLoop);
+  SC_THREAD(DivLoop);
   targ_socket.register_b_transport(this, &Timer::b_transport);
   targ_socket.register_transport_dbg(this, &Timer::transport_dbg);
 }
 
 void Timer::DivLoop() {
   while (true) {
-    wait(256);
+    wait(256 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     ++reg_div;
   }
 }
@@ -22,7 +22,7 @@ void Timer::DivLoop() {
 void Timer::TimerLoop() {
   u8 old_val;
   while (true) {
-    wait(cycles_per_inc_);
+    wait(cycles_per_inc_ * gb_const::kNsPerClkCycle, sc_core::SC_NS);
     if (reg_tac & gb_const::kMaskBit2) {
       old_val = reg_tima++;
       if (old_val > reg_tima) {
