@@ -19,7 +19,6 @@ Apu::Apu(sc_module_name name)
       sig_trigger_wave_in("sig_trigger_wave_in"),
       sig_trigger_noise_in("sig_trigger_noise_in") {
   SC_THREAD(AudioLoop);
-  dont_initialize();
 
   SC_METHOD(ReloadLengthSquare1);
   sensitive << sig_reload_length_square1_in;

@@ -17,17 +17,14 @@ struct Top : public sc_module {
   Bus test_bus;
   Cpu test_cpu;
   GenericMemory test_memory;
-  sc_clock test_clk;
 
   explicit Top (sc_module_name name)
       : sc_module(name),
         test_bus("test_bus"),
         test_cpu("test_cpu"),
-        test_memory(65536, "test_memory"),
-        test_clk("test_clock", 1, SC_NS, 0.5) {
+        test_memory(65536, "test_memory") {
     test_bus.AddBusMaster(&test_cpu.init_socket);
     test_bus.AddBusSlave(&test_memory.targ_socket, 0x0000, 0xFFFF);
-    test_cpu.clk(test_clk);
   }
 };
 Top test_top("test_top");
@@ -75,7 +72,7 @@ TEST(CpuTests, Firstopcodes) {
 
   data[0x105] = 0x03;  // INC BC, 8 cycles
 
-  sc_start(25, SC_NS);
+  sc_start(25 * gb_const::kNsPerClkCycle, SC_NS);
   ASSERT_EQ(test_top.test_cpu.reg_file.B, 0x42);
   ASSERT_EQ(test_top.test_cpu.reg_file.C, 0x24);
 }

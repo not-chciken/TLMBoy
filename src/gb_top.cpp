@@ -22,8 +22,7 @@ GbTop::GbTop(sc_module_name name, const Options& options)
       reg_if(1, "reg_if"),
       intr_enable(1, "intr_enable"),
       gb_ppu("gb_ppu", options.headless, options.fps_cap, options.resolution_scaling, options.color_palette),
-      gb_timer("gb_timer", reg_if.GetDataPtr()),
-      global_clk("global_clock", gb_const::kNsPerClkCycle, SC_NS, 0.5) {
+      gb_timer("gb_timer", reg_if.GetDataPtr()) {
   gb_bus.AddBusMaster(&gb_apu.init_socket);
   gb_bus.AddBusMaster(&gb_cpu.init_socket);
   gb_bus.AddBusMaster(&gb_ppu.init_socket);
@@ -63,9 +62,4 @@ GbTop::GbTop(sc_module_name name, const Options& options)
   gb_bus.AddBusSlave(&io_registers.targ_socket, 0xFF10, 0xFF7F);
   gb_bus.AddBusSlave(&high_ram.targ_socket, 0xFF80, 0xFFFE);
   gb_bus.AddBusSlave(&intr_enable.targ_socket, 0xFFFF, 0xFFFF);
-
-  gb_apu.clk(global_clk);
-  gb_cpu.clk(global_clk);
-  gb_ppu.clk(global_clk);
-  gb_timer.clk(global_clk);
 }

@@ -136,7 +136,6 @@ struct Ppu : public sc_module {
 
   // SystemC interfaces.
   tlm_utils::simple_initiator_socket<Ppu, gb_const::kBusDataWidth> init_socket;
-  sc_in_clk clk;
   void start_of_simulation() override;
 
   class RenderWindow {

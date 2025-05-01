@@ -34,7 +34,7 @@ constexpr u8 MapColors(u8 val, u8 const* reg) {
 }
 
 Ppu::Ppu(sc_module_name name, bool headless, int fps_cap, i64 resolution_scaling, string color_palette)
-    : sc_module(name), init_socket("init_socket"), clk("clk") {
+    : sc_module(name), init_socket("init_socket") {
   SC_THREAD(RenderLoop);
 
   for (int j = 0; j < 4; ++j)
@@ -268,6 +268,7 @@ void Ppu::CheckLycInterrupt() {
 
 // A complete screen refresh occurs every 70224 cycles.
 void Ppu::RenderLoop() {
+  wait(1, sc_core::SC_NS); // Ensures correct ordering of CPU and PPU.
   while (1) {
     for (int i = 0; i < kGbScreenHeight; ++i) {
       // Mode = OAM-search (10).
@@ -358,14 +359,18 @@ Ppu::RenderWindow::RenderWindow(int width, int height, int log_width, int log_he
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, log_width, log_height);
 }
 
-Ppu::RenderWindow::RenderWindow() {
+Ppu::RenderWindow::RenderWindow() : renderer(nullptr), texture(nullptr), window(nullptr) {
 }
 
 Ppu::RenderWindow::~RenderWindow() {
-  SDL_DestroyTexture(texture);
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
+  if (texture)
+    SDL_DestroyTexture(texture);
+  if (renderer)
+    SDL_DestroyRenderer(renderer);
+  if (window)
+    SDL_DestroyWindow(window);
+  if (SDL_WasInit(SDL_INIT_VIDEO))
+    SDL_Quit();
 }
 
 void Ppu::RenderWindow::SaveScreenshot(const std::filesystem::path& file_path) {

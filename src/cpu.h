@@ -22,7 +22,6 @@ class Cpu : public InterruptModule<Cpu>, sc_module {
  public:
   SC_HAS_PROCESS(Cpu);
   friend GdbServer;
-  sc_in_clk clk;
 
   // The Game Boy's register file.
   RegFile reg_file;
