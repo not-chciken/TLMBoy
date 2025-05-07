@@ -26,6 +26,7 @@ struct GenericMemory : public sc_module {
   u8* GetDataPtr();
   void SetMemData(u8* data, size_t size);
   virtual void LoadFromFile(std::filesystem::path path, int offset = 0);
+  void SaveToFile(const std::filesystem::path path);
 
   // SystemC interfaces
   virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);

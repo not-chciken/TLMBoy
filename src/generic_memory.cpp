@@ -56,9 +56,24 @@ void GenericMemory::LoadFromFile(std::filesystem::path path, int offset) {
   file.seekg(offset, std::ios::beg);
 
   if (file.read(reinterpret_cast<char*>(&data_[0]), size)) {
+    file.close();
     return;
   } else {
     throw std::runtime_error("could not read file");
+  }
+}
+
+void GenericMemory::SaveToFile(const std::filesystem::path path) {
+  std::ofstream file(path.string(), std::ios::binary);
+
+  if (!file) {
+    throw std::runtime_error(std::format("Could not write to file '{}'!", path.string()));
+  }
+
+  file.write(reinterpret_cast<char*>(&data_[0]), memory_size_);
+
+  if (!file.good()) {
+    throw std::runtime_error(std::format("Error writing to file '{}'!", path.string()));
   }
 
   file.close();

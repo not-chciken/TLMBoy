@@ -35,7 +35,8 @@ class Cartridge : public sc_module {
   class MemoryBankCtrler {
    public:
     MemoryBankCtrler(uint num_rom_banks, uint num_ram_banks, bool symbol_file);
-    ~MemoryBankCtrler();
+    virtual ~MemoryBankCtrler();
+
     GenericMemory rom_low;
     BankSwitchedMem rom_high;
     BankSwitchedMem ext_ram;
@@ -58,15 +59,17 @@ class Cartridge : public sc_module {
   class Rom : public MemoryBankCtrler {
    public:
     Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file);
-    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
-    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
+    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
+    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
   };
 
   class Mbc1 : public MemoryBankCtrler {
    public:
     Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
-    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay);
-    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay);
+    virtual ~Mbc1() override;
+
+    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
+    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
 
    private:
     u8 rom_bank_low_bits;
@@ -75,6 +78,7 @@ class Cartridge : public sc_module {
     u8 ram_ind_;
     bool more_ram_mode_;
     bool ram_enabled_;
+    std::filesystem::path save_file;
   };
 
   class Mbc5 : public MemoryBankCtrler {

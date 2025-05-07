@@ -156,6 +156,19 @@ Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boo
   rom_low.LoadFromFile(game_path);
   rom_low.LoadFromFile(boot_path);
   rom_high.LoadFromFile(game_path, 0x4000);
+
+  save_file = game_path.filename().string() + string(".save");
+  if (std::filesystem::exists(save_file)) {
+    std::cout << std::format("Loading save state from file '{}'", save_file.string());
+    ext_ram.LoadFromFile(save_file);
+  } else {
+    std::cout << std::format("Creating new save state file '{}'", save_file.string());
+  }
+}
+
+Cartridge::Mbc1::~Mbc1() {
+  std::cout << std::format("Writing save state to file '{}'", save_file.string());
+  ext_ram.SaveToFile(save_file);
 }
 
 void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) {
