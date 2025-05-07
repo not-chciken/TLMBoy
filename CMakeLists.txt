@@ -4,7 +4,7 @@
 ######################################################
 
 cmake_minimum_required(VERSION 3.5.0)
-project(TLMBoy VERSION 1.0.0)
+project(TLMBoy VERSION 2.0.0)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
@@ -52,7 +52,7 @@ set(ALL_CPPS
 add_executable(tlmboy src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy -lsystemc -lSDL2)
+target_link_libraries(tlmboy /usr/local/systemc-2.3.3/lib-linux64/libsystemc.a -lSDL2)
 target_compile_options(tlmboy PUBLIC -O3 -flto)
 
 # The debug version.
