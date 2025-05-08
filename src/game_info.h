@@ -122,17 +122,17 @@ class GameInfo {
   };
 
   const std::map<uint, std::tuple<string, uint>> rom_size_map {
-    {0x00, {"32kiB", 0}},              {0x01, {"64kiB (4 banks)", 4}},
-    {0x02, {"128kiB (8 banks)", 8}},   {0x03, {"256kiB (16 banks)", 16}},
-    {0x04, {"512kiB (32 banks)", 32}}, {0x05, {"1MiB (64 banks)", 64}},
-    {0x06, {"2MiB (128 banks)", 128}}, {0x07, {"4MiB (256 banks)", 256}},
-    {0x08, {"8MiB (512 banks)", 512}}, {0x52, {"1.1MiB (72 banks)", 72}},
-    {0x53, {"1.2MiB (80 banks)", 80}}, {0x54, {"1.5MiB (96 banks)", 96}},
+    {0x00, {"32 KiB", 0}},              {0x01, {"64 KiB (4 banks)", 4}},
+    {0x02, {"128 KiB (8 banks)", 8}},   {0x03, {"256 KiB (16 banks)", 16}},
+    {0x04, {"512 KiB (32 banks)", 32}}, {0x05, {"1 MiB (64 banks)", 64}},
+    {0x06, {"2 MiB (128 banks)", 128}}, {0x07, {"4 MiB (256 banks)", 256}},
+    {0x08, {"8 MiB (512 banks)", 512}}, {0x52, {"1.1 MiB (72 banks)", 72}},
+    {0x53, {"1.2 MiB (80 banks)", 80}}, {0x54, {"1.5 MiB (96 banks)", 96}},
   };
 
   const std::map<uint, std::tuple<string, uint>> ram_size_map {
-    {0x00, {"None", 0}},   {0x01, {"2KiB", 2}},     {0x02, {"8kiB", 8}},
-    {0x03, {"32KiB", 32}}, {0x04, {"128kiB", 128}}, {0x05, {"64kiB", 64}}
+    {0x00, {"None", 0}},   {0x01, {"2 KiB", 2}},     {0x02, {"8 KiB", 8}},
+    {0x03, {"32 KiB", 32}}, {0x04, {"128 KiB", 128}}, {0x05, {"64 KiB", 64}}
   };
 
   const std::map<uint, string> region_map {

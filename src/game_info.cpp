@@ -56,7 +56,7 @@ GameInfo::GameInfo(std::filesystem::path game_path) {
 
 GameInfo::operator string() const {
   std::stringstream ss;
-  ss << "########## Game Info ###########" << std::endl
+  ss << "############ Game Info #############" << std::endl
      << "Title:          " << title_ << std::endl
      << "Dev/Publisher:  " << license_code_ << std::endl
      << "License type:   " << (uses_new_license_ ? "New" : "Old") << std::endl
@@ -64,7 +64,7 @@ GameInfo::operator string() const {
      << "Cartridge type: " << cartridge_type_ << std::endl
      << "ROM size:       " << std::get<0>(rom_size_) << std::endl
      << "RAM size:       " << std::get<0>(ram_size_) << std::endl
-     << "################################" << std::endl;
+     << "####################################" << std::endl;
   return ss.str();
 }
 
