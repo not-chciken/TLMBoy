@@ -79,6 +79,7 @@ Utilities:
 | 1         | Hold to not render background |
 | 2         | Hold to not render sprites    |
 | 3         | Hold to not render window     |
+| SPACE     | Turbo mode (3x speed)         |
 
 
 ## Documentation

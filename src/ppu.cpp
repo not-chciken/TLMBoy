@@ -16,6 +16,7 @@
 bool Ppu::uiRenderBg = true;
 bool Ppu::uiRenderSprites = true;
 bool Ppu::uiRenderWndw = true;
+bool Ppu::uiTurboMode = false;
 u8 Ppu::color_palette[4][3] = {};
 
 // Interleaves two selected bits of two bit vectors and arranges them in a screen buffer friendly way.
@@ -394,19 +395,20 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
 
   u64 new_time = SDL_GetTicks64();
   u64 delta_time = new_time - last_time;
-  int fps = 1000 / delta_time;
+  float fps = 1000.f / static_cast<float>(delta_time);
+  float fps_cap_total = fps_cap * (Ppu::uiTurboMode ? 3.f : 1.f);
 
-  if (fps > fps_cap) {
-    int target_delta = 1000 / fps_cap;
-    int sleep_time = target_delta - delta_time;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+  if (fps > fps_cap_total) {
+    float target_delta = 1000.f / fps_cap_total;
+    float sleep_time = 1000.f * (target_delta - delta_time);
+    std::this_thread::sleep_for(std::chrono::microseconds((int)sleep_time));
     new_time = SDL_GetTicks64();
-    fps = 1000 / (new_time - last_time);
+    fps = 1000.f / (new_time - last_time);
   }
 
   last_time = new_time;
 
-  SDL_SetWindowTitle(window, std::format("{}   FPS: {:03}", title, fps).c_str());
+  SDL_SetWindowTitle(window, std::format("{}   FPS: {:03}", title, (int)fps).c_str());
 
   // If the screen is off, just draw a red background.
   if (!((*p.reg_lcdc) & kMaskLcdControl)) {
@@ -467,7 +469,6 @@ void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
           u8 val = InterleaveBits(p.tile_data_table_low[t * 256 + j * 16 + 2 * i],
                                   p.tile_data_table_low[t * 256 + j * 16 + 2 * i + 1], 7 - k);
           val = MapColors(val, p.reg_bgp);
-          SDL_SetRenderDrawColor(renderer, color_palette[val][0], color_palette[val][1], color_palette[val][2], 255);
           const size_t x = j * 8 + k;
           const size_t y = t * 8 + i;
           pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);

@@ -44,6 +44,9 @@ void JoyPad::InputLoop() {
       case SDLK_3:
         Ppu::uiRenderWndw = false;
         break;
+      case SDLK_SPACE:
+        Ppu::uiTurboMode = true;
+        break;
       default:
         SetButton(event.key.keysym.sym, true);
       }
@@ -61,6 +64,9 @@ void JoyPad::InputLoop() {
         break;
       case SDLK_3:
         Ppu::uiRenderWndw = true;
+        break;
+      case SDLK_SPACE:
+        Ppu::uiTurboMode = false;
         break;
       default:
         SetButton(event.key.keysym.sym, false);

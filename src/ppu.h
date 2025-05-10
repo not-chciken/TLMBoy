@@ -83,6 +83,7 @@ struct Ppu : public sc_module {
   static bool uiRenderBg;
   static bool uiRenderSprites;
   static bool uiRenderWndw;
+  static bool uiTurboMode;
 
   static u8 color_palette[4][3];
 
