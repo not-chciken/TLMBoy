@@ -81,6 +81,24 @@ class Cartridge : public sc_module {
     std::filesystem::path save_file;
   };
 
+  class Mbc3 : public MemoryBankCtrler {
+   public:
+    Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
+    virtual ~Mbc3() override;
+
+    void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
+    void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
+
+   private:
+    u8 rom_ind_;
+    u8 ram_ind_;
+    uint rtc_reg_;
+    bool ram_rtc_enabled_;
+    bool rtc_mapped_;
+    bool rtc_halted_;
+    std::filesystem::path save_file;
+  };
+
   class Mbc5 : public MemoryBankCtrler {
    public:
     Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);

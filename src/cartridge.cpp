@@ -4,6 +4,7 @@
  ******************************************************************************/
 #include "cartridge.h"
 
+#include <ctime>
 #include <format>
 #include <string>
 
@@ -107,7 +108,7 @@ void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& d
   tlm::tlm_command cmd = trans.get_command();
   assert(adr < 0x8000);
   if (cmd == tlm::TLM_WRITE_COMMAND) {
-    // Some games like tetris try to write in the ROM...
+    // Some games like Tetris try to write in the ROM...
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
     return;
   }
@@ -127,7 +128,7 @@ void Cartridge::Rom::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& d
   }
 }
 
-// There's no RAM for rom-only games.
+// There's no RAM for ROM-only games.
 // Yet some games like Alleyway try to write in the non-existing RAM...
 void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
   assert(static_cast<u16>(trans.get_address()) < 0x8000);
@@ -224,6 +225,126 @@ void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   }
 }
 
+Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file)
+    : MemoryBankCtrler(128, 4, symbol_file),
+      rom_ind_(0),
+      ram_ind_(0),
+      ram_rtc_enabled_(false) {
+  game_path_ = game_path;
+  rom_low.LoadFromFile(game_path);
+  rom_low.LoadFromFile(boot_path);
+  rom_high.LoadFromFile(game_path, 0x4000);
+
+  save_file = game_path.filename().string() + string(".save");
+  if (std::filesystem::exists(save_file)) {
+    std::cout << std::format("Loading save state from file '{}'", save_file.string());
+    ext_ram.LoadFromFile(save_file);
+  } else {
+    std::cout << std::format("Creating new save state file '{}'", save_file.string());
+  }
+}
+
+Cartridge::Mbc3::~Mbc3() {
+  std::cout << std::format("Writing save state to file '{}'", save_file.string());
+  ext_ram.SaveToFile(save_file);
+}
+
+void Cartridge::Mbc3::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) {
+  tlm::tlm_command cmd = trans.get_command();
+  u16 adr = static_cast<u16>(trans.get_address());
+  u8* ptr = reinterpret_cast<u8*>(trans.get_data_ptr());
+
+  assert(adr < 0x8000);
+  if (cmd == tlm::TLM_WRITE_COMMAND) {
+    if (adr <= 0x1FFF) {
+      ram_rtc_enabled_ = (*ptr & 0xA) == 0xA;
+    } else if (adr >= 0x2000 && adr <= 0x3FFF) {
+      rom_ind_ = 0b01111111 & *ptr;
+    } else if (adr >= 0x4000 && adr <= 0x5FFF) {
+      if (*ptr < 8) {
+        ram_ind_ = *ptr;
+        rtc_mapped_ = false;
+      } else if (*ptr < 13) {
+        rtc_reg_ = *ptr - 8;
+        rtc_mapped_ = true;
+      }
+    } else if (adr >= 0x6000 && adr <= 0x7FFF) {
+      // TODO: latch thing.
+    }
+
+    rom_ind_ = (rom_ind_ == 0) ? 1 : rom_ind_;
+
+    assert(rom_ind_ < 128);
+    rom_high.DoBankSwitch(rom_ind_ - 1);
+    ext_ram.DoBankSwitch(ram_ind_);
+  }
+
+  if (cmd == tlm::TLM_READ_COMMAND) {
+    GbCommand* gbcmd;
+    trans.get_extension<GbCommand>(gbcmd);
+    if (adr <= 0x3FFF) {
+      if (gbcmd && symfile_tracer_)
+        if (gbcmd->cmd == GbCommand::kGbReadData)
+          symfile_tracer_->TraceAccess(0, adr);
+      rom_low_socket_out->b_transport(trans, delay);
+    } else if (adr <= 0x7FFF) {
+      if (gbcmd && symfile_tracer_)
+        if (gbcmd->cmd == GbCommand::kGbReadData)
+          symfile_tracer_->TraceAccess(rom_high.GetCurrentBankIndex(), adr);
+      trans.set_address(adr - 0x4000u);
+      rom_high_socket_out->b_transport(trans, delay);
+    }
+  }
+}
+
+void Cartridge::Mbc3::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) {
+  assert(static_cast<u16>(trans.get_address()) <= 0x1FFFu);
+  if (ram_rtc_enabled_) {
+    if (rtc_mapped_) {
+      tlm::tlm_command cmd = trans.get_command();
+      unsigned char* ptr = trans.get_data_ptr();
+      trans.set_response_status(tlm::TLM_OK_RESPONSE);
+
+      if (cmd == tlm::TLM_WRITE_COMMAND) {
+        // TODO: Implement.
+        return;
+      }
+
+      const time_t t = std::time(nullptr);
+      const time_t secs = t % 60;
+      const time_t minutes = (t / 60) % 60;
+      const time_t hours = (t /(60 * 60)) % 60;
+      const time_t days = (t / (60 * 60 * 24)) % 512;
+      time_t val;
+
+      switch (rtc_reg_) {
+        case 0:
+          val = secs;
+          break;
+        case 1:
+          val = minutes;
+          break;
+        case 2:
+          val = hours;
+          break;
+        case 3:
+          val = days % 256;
+          break;
+        case 4:
+          val = (days >> 8) | ((uint)rtc_halted_ << 6);
+          break;
+        default:
+          val = 0;
+      }
+      *ptr = (u8)val;
+    } else {
+      ram_socket_out->b_transport(trans, delay);
+    }
+  } else {
+    std::cout << "[WARNING] Tried to write into disabled RAM/RTC!" << std::endl;
+  }
+}
+
 Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file)
     : MemoryBankCtrler(512, 16, symbol_file), rom_ind_(0), ram_ind_(0), ram_enabled_(false) {
   game_path_ = game_path;
@@ -290,6 +411,8 @@ Cartridge::Cartridge(sc_module_name name, std::filesystem::path game_path, std::
   else if (cr_type == "MBC1"  // TODO(niko): finer granularity and more MBC types
            || cr_type == "MBC1+RAM" || cr_type == "MBC1+BAT+RAM")
     mbc = std::make_unique<Mbc1>(game_path, boot_path, symbol_file);
+  else if (cr_type == "MBC3" || cr_type == "MBC3+RAM" || cr_type == "MBC3+BAT+RAM")
+    mbc = std::make_unique<Mbc3>(game_path, boot_path, symbol_file);
   else if (cr_type == "MBC5" || cr_type == "MBC5+RAM" || cr_type == "MBC5+BAT+RAM")
     mbc = std::make_unique<Mbc5>(game_path, boot_path, symbol_file);
   else
