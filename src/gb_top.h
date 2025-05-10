@@ -18,6 +18,7 @@
 #include "joypad.h"
 #include "options.h"
 #include "ppu.h"
+#include "serial.h"
 #include "timer.h"
 
 struct GbTop : public sc_module {
@@ -35,11 +36,11 @@ struct GbTop : public sc_module {
   GenericMemory echo_ram_n;
   GenericMemory obj_attr_mem;
   GenericMemory high_ram;
-  GenericMemory serial_transfer;
   GenericMemory reg_if;
   GenericMemory intr_enable;
   IoRegisters io_registers;
   Ppu gb_ppu;
+  Serial serial;
   Timer gb_timer;
   sc_signal<bool> sig_unmap_rom;
   sc_signal<bool> sig_reload_length_square1;

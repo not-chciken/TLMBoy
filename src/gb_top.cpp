@@ -18,10 +18,10 @@ GbTop::GbTop(sc_module_name name, const Options& options)
       echo_ram_n(4096, "echo_ram_n", work_ram_n.GetDataPtr()),
       obj_attr_mem(160, "obj_attr_mem"),
       high_ram(127, "high_ram"),
-      serial_transfer(3, "serial_transfer"),
       reg_if(1, "reg_if"),
       intr_enable(1, "intr_enable"),
       gb_ppu("gb_ppu", options.headless, options.fps_cap, options.resolution_scaling, options.color_palette),
+      serial("serial",reg_if.GetDataPtr()),
       gb_timer("gb_timer", reg_if.GetDataPtr()) {
   gb_bus.AddBusMaster(&gb_apu.init_socket);
   gb_bus.AddBusMaster(&gb_cpu.init_socket);
@@ -56,7 +56,7 @@ GbTop::GbTop(sc_module_name name, const Options& options)
   gb_bus.AddBusSlave(&echo_ram_n.targ_socket, 0xF000, 0xFDFF);
   gb_bus.AddBusSlave(&obj_attr_mem.targ_socket, 0xFE00, 0xFE9F);
   gb_bus.AddBusSlave(&joy_pad.targ_socket, 0xFF00, 0xFF00);
-  gb_bus.AddBusSlave(&serial_transfer.targ_socket, 0xFF01, 0xFF03);
+  gb_bus.AddBusSlave(&serial.targ_socket, 0xFF01, 0xFF03);
   gb_bus.AddBusSlave(&gb_timer.targ_socket, 0xFF04, 0xFF07);
   gb_bus.AddBusSlave(&reg_if.targ_socket, 0xFF0F, 0xFF0F);
   gb_bus.AddBusSlave(&io_registers.targ_socket, 0xFF10, 0xFF7F);

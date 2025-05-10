@@ -12,12 +12,12 @@
 #include "utils.h"
 
 namespace gb_const {
-constexpr u16 kAdrIntrFlag = 0xFF0F;  // address of the interrupt flag register
-constexpr u8 kVBlankIf = 1;           // bit0: v blank interrupt mask
-constexpr u8 kLCDCIf = 1 << 1;        // bit1: lcdc interrupt mask TODO
+constexpr u16 kAdrIntrFlag = 0xFF0F;  // Address of the interrupt flag register
+constexpr u8 kVBlankIf = 1;           // bit0: V-blank interrupt mask.
+constexpr u8 kLCDCIf = 1 << 1;        // bit1: LCDC interrupt mask.
 constexpr u8 kTimerOfIf = 1 << 2;     // bit2: Timer overflow interrupt.
-constexpr u8 kSerialIOIf = 1 << 3;    // bit3: serial IO transer interrupt TODO
-constexpr u8 kJoypadIf = 1 << 4;      // bit4: transition from high to low p10-p13 TODO
+constexpr u8 kSerialIOIf = 1 << 3;    // bit3: Serial IO transfer interrupt.
+constexpr u8 kJoypadIf = 1 << 4;      // bit4: Transition from high to low p10-p13.
 constexpr uint kBusDataWidth = 8;
 constexpr uint kBusAddrWidth = 16;
 
@@ -30,7 +30,7 @@ constexpr u8 kMaskBit5 = 0b00100000;
 constexpr u8 kMaskBit6 = 0b01000000;
 constexpr u8 kMaskBit7 = 0b10000000;
 
-constexpr i32 kNsPerClkCycle = 238;                     // Refers to roughly 4.19MHz.
-constexpr i32 kNsPerMachineCycle = kNsPerClkCycle * 4;  // Refers to roughly 1.05MHz
+constexpr i32 kNsPerClkCycle = 238;                     // Refers to roughly 4.19 MHz.
+constexpr i32 kNsPerMachineCycle = kNsPerClkCycle * 4;  // Refers to roughly 1.05 MHz
 constexpr i32 kClockCycleFrequency = 4194304;
 }  // namespace gb_const
