@@ -42,7 +42,7 @@ cd build
 
 ## Command Line Arguments
 
-* `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG\_ROM.bin" by default.
+* `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG\_ROM.bin" by default. Alternatively, use "../roms/FASTBOOT.bin" to skip the lenghty logo scroll down.
 * `--color-palette=X`: Color palette hex string with four RGB colors from bright to dark. Default: f2ffd9aaaaaa555555000000.
 * `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps.
 * `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
