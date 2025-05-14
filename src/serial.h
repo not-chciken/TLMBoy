@@ -18,10 +18,12 @@
 struct Serial : public sc_module {
   SC_HAS_PROCESS(Serial);
 
+  static constexpr u8 kMaskClockSource = 0b1u;;
   static constexpr u8 kMaskTransferStart = 0b10000000u;
 
   Serial(sc_module_name name, u8* reg_if);
 
+  bool ongoing_transmission;
   u8 reg_sc;   // SIO control register (0xFF02).
   u8* reg_if;  // Interrupt Flag register (0xFF0F).
 

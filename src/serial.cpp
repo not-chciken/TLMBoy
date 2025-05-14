@@ -15,6 +15,7 @@ Serial::Serial(sc_module_name name, u8* reg_if) : sc_module(name), reg_if(reg_if
 void Serial::SerialInterrupt() {
   *reg_if |= gb_const::kSerialIOIf;
   reg_sc &= ~kMaskTransferStart;
+  ongoing_transmission = false;
 }
 
 void Serial::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
@@ -46,8 +47,11 @@ void Serial::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe
       break;
     }
 
-    if (adr == 1 && (reg_sc & kMaskTransferStart)) {
+    const bool clock_internal = (reg_sc & kMaskClockSource);
+    const bool start_transfer = (reg_sc & kMaskTransferStart);
+    if ((adr == 1) & start_transfer && !ongoing_transmission && clock_internal) {
       interrupt_event.notify(8 * 122, SC_US);
+      ongoing_transmission = true;
     }
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
