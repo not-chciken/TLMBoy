@@ -34,21 +34,24 @@
 
 struct Timer : public sc_module {
   SC_HAS_PROCESS(Timer);
-  u8 reg_div = 0;
-  u8 reg_tima = 0;
-  u8 reg_tma = 0;
-  u8 reg_tac = 0;
-  u32 cycles_per_inc_ = 1024;
-  u8* reg_if;  // Interrupt Flag register (0xFF0F).
-  tlm_utils::simple_target_socket<Timer, gb_const::kBusDataWidth> targ_socket;
+
+  static constexpr u8 kMaskTimerEnabled = 0b100u;
 
   Timer(sc_module_name name, u8* reg_if);
 
-  // Increments the div register at rate of 16384 Hz.
+  // SystemC interfaces
+  tlm_utils::simple_target_socket<Timer, gb_const::kBusDataWidth> targ_socket;
+  void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+  uint transport_dbg(tlm::tlm_generic_payload& trans);
+
+ protected:
   void DivLoop();
   void TimerLoop();
 
-  // SystemC interfaces
-  void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
-  uint transport_dbg(tlm::tlm_generic_payload& trans);
+  u8 reg_div_;
+  u8 reg_tac_;
+  u8 reg_tima_;
+  u8 reg_tma_;
+  u8* reg_if_;  // Interrupt flag register (0xFF0F).
+  u32 cycles_per_inc_ = 1024;
 };

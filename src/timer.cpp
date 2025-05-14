@@ -5,54 +5,57 @@
 
 #include "timer.h"
 
-Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if(reg_if) {
-  SC_THREAD(TimerLoop);
+Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if(reg_if_) {
   SC_THREAD(DivLoop);
+  SC_THREAD(TimerLoop);
   targ_socket.register_b_transport(this, &Timer::b_transport);
   targ_socket.register_transport_dbg(this, &Timer::transport_dbg);
 }
 
+// Increments the div register at rate of 16384 Hz.
 void Timer::DivLoop() {
   while (true) {
     wait(256 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
-    ++reg_div;
+    ++reg_div_;
   }
 }
 
 void Timer::TimerLoop() {
-  u8 old_val;
   while (true) {
     wait(cycles_per_inc_ * gb_const::kNsPerClkCycle, sc_core::SC_NS);
-    if (reg_tac & gb_const::kMaskBit2) {
-      old_val = reg_tima++;
-      if (old_val > reg_tima) {
-        reg_tima = reg_tma;
-        *reg_if |= gb_const::kTimerOfIf;
+    if (reg_tac_ & kMaskTimerEnabled) {
+      u8 old_val = reg_tima_++;
+      if (old_val > reg_tima_) {  // Overflow case.
+        reg_tima_ = reg_tma_;
+        *reg_if_ |= gb_const::kTimerOfIf;
       }
     }
   }
 }
 
 void Timer::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_unused]]) {
-  tlm::tlm_command cmd = trans.get_command();
   u16 adr = static_cast<u16>(trans.get_address());
-  unsigned char* ptr = trans.get_data_ptr();
   u8* reg;
-  assert(adr < 0x4);
+
   switch (adr) {
   case 0:
-    reg = &reg_div;
+    reg = &reg_div_;
     break;
   case 1:
-    reg = &reg_tima;
+    reg = &reg_tima_;
     break;
   case 2:
-    reg = &reg_tma;
+    reg = &reg_tma_;
     break;
   case 3:
-    reg = &reg_tac;
+    reg = &reg_tac_;
     break;
+  default:
+    assert(false);
   }
+
+  unsigned char* ptr = trans.get_data_ptr();
+  const tlm::tlm_command cmd = trans.get_command();
 
   if (cmd == tlm::TLM_READ_COMMAND) {
     *ptr = *reg;
@@ -63,7 +66,7 @@ void Timer::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_
       *reg = 0;  // Every write to DIV resets it!
     }
     if (adr == 3) {
-      switch (reg_tac & 0b11) {
+      switch (reg_tac_ & 0b11) {
       case 0:
         cycles_per_inc_ = 1024;
         break;
