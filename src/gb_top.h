@@ -25,9 +25,9 @@ struct GbTop : public sc_module {
   SC_HAS_PROCESS(GbTop);
   u8 reg_ie;
   Cartridge cartridge;
-  Apu gb_apu;
-  Bus gb_bus;
-  Cpu gb_cpu;
+  Apu apu;
+  Bus bus;
+  Cpu cpu;
   JoyPad joy_pad;
   GenericMemory video_ram;
   GenericMemory work_ram;
@@ -39,9 +39,9 @@ struct GbTop : public sc_module {
   GenericMemory reg_if;
   GenericMemory intr_enable;
   IoRegisters io_registers;
-  Ppu gb_ppu;
+  Ppu ppu;
   Serial serial;
-  Timer gb_timer;
+  Timer timer;
   sc_signal<bool> sig_unmap_rom;
   sc_signal<bool> sig_reload_length_square1;
   sc_signal<bool> sig_reload_length_square2;

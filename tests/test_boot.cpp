@@ -41,7 +41,7 @@ struct Top : public GbTop {
 TEST(BootTests, Boot) {
   Top test_top;
   sc_start();
-  test_top.gb_ppu.game_wndw->SaveScreenshot("test_boot.bmp");
+  test_top.ppu.game_wndw->SaveScreenshot("test_boot.bmp");
   ASSERT_EQ(test_top.cartridge.game_info->GetTitle(), "DUMMY");
   ASSERT_EQ(test_top.cartridge.game_info->GetLicenseCode(), "none");
   ASSERT_EQ(test_top.cartridge.game_info->GetCartridgeType(), "MBC5+BAT+RAM");

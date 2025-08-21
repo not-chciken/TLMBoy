@@ -21,10 +21,10 @@ TEST(BlarrgTest, cpuinstr01) {
 
   GbTop test_top("test_top", options);
   sc_start(9, SC_SEC);
-  test_top.gb_ppu.game_wndw->SaveScreenshot("blarrgs_cpuinstr01.bmp");
+  test_top.ppu.game_wndw->SaveScreenshot("blarrgs_cpuinstr01.bmp");
 
   if (options.headless == true) {
-    ASSERT_EQ(test_top.gb_cpu.cpu_state, Cpu::CpuState::kTestPassed);
+    ASSERT_EQ(test_top.cpu.cpu_state, Cpu::CpuState::kTestPassed);
   } else {
     ASSERT_TRUE(CompareFiles("blarrgs_cpuinstr01.bmp", tlm_boy_root + "/tests/golden_files/blarrgs_cpuinstr01.bmp"));
   }

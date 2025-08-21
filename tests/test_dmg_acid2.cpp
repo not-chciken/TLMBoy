@@ -23,7 +23,7 @@ TEST(PpuTest, DmgAcid2) {
 
   GbTop test_top("test_top", options);
   sc_start(5, SC_SEC);
-  test_top.gb_ppu.game_wndw->SaveScreenshot("dmg-acid2.bmp");
+  test_top.ppu.game_wndw->SaveScreenshot("dmg-acid2.bmp");
 
   ASSERT_TRUE(CompareFiles("dmg-acid2.bmp", tlm_boy_root + "/tests/golden_files/dmg-acid2.bmp"));
 }
