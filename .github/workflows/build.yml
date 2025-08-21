@@ -25,7 +25,7 @@ jobs:
            source ./source_me.bash
            mkdir build
            cd build
-           cmake tlmboy ..
+           SYSTEMC_PATH=/usr/local/systemc-2.3.3 cmake tlmboy ..
     - name: build tlmboy
       working-directory: ./build
       run: |
