@@ -34,7 +34,7 @@
 #include "interrupt_module.h"
 #include "utils.h"
 
-struct JoyPad : public InterruptModule<JoyPad>, sc_module {
+struct JoyPad : public InterruptModule<JoyPad>, public sc_module {
   SC_HAS_PROCESS(JoyPad);
 
   explicit JoyPad(sc_module_name name);

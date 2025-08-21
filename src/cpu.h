@@ -18,7 +18,7 @@
 #include "interrupt_module.h"
 #include "reg_file.h"
 
-class Cpu : public InterruptModule<Cpu>, sc_module {
+class Cpu : public InterruptModule<Cpu>, public sc_module {
  public:
   SC_HAS_PROCESS(Cpu);
   friend GdbServer;

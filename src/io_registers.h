@@ -12,7 +12,7 @@
 #include "joypad.h"
 
 struct IoRegisters : public GenericMemory {
-  IoRegisters();
+  IoRegisters(sc_module_name name);
 
   void DmaTransfer(const u8 byte);
 
