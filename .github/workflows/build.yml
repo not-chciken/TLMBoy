@@ -18,7 +18,7 @@ jobs:
     - name: configure
       run: |
            chmod a+x source_me.bash
-           ./source_me.bash
+           source ./source_me.bash
            mkdir build
            cd build
            cmake tlmboy ..
