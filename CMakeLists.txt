@@ -24,11 +24,11 @@ set(CMAKE_CXX_STANDARD 20)
 add_definitions(-DSC_DISABLE_API_VERSION_CHECK) # "Fix" c++ version issue.
 add_definitions(-DSC_INCLUDE_DYNAMIC_PROCESSES)
 
-if(NOT DEFINED $ENV{SYSTEMC_PATH})
+if(NOT DEFINED ENV{SYSTEMC_PATH})
   set(SYSTEMC_PATH /opt/systemc)
   message(STATUS "SYSTEMC_PATH not set, assigning default.")
 else()
-  set(SYSTEMC_PATH $ENV{SYSTEMC_PATH})
+  set(SYSTEMC_PATH "$ENV{SYSTEMC_PATH}")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
