@@ -5,7 +5,7 @@
 
 #include "timer.h"
 
-Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if(reg_if_) {
+Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if_(reg_if) {
   SC_THREAD(DivLoop);
   SC_THREAD(TimerLoop);
   targ_socket.register_b_transport(this, &Timer::b_transport);
