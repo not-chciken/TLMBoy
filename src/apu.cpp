@@ -204,6 +204,9 @@ void Apu::AudioLoop() {
 
     std::fill(buffer, buffer + length, 0);
 
+    if (!(*(apu->reg_nr52) >> 7))
+      return;  // Nothing to do if APU is turned off.
+
     apu->square1.duty = *(apu->reg_nr11) >> 6;
     u8 frequency_lsb = *(apu->reg_nr13);
     u8 frequency_msb = *(apu->reg_nr14) & 0b111u;
@@ -298,14 +301,26 @@ void Apu::DecrementLengths() {
   wave.length_enable = *reg_nr34 & 0b01000000u;
   noise.length_enable = *reg_nr44 & 0b01000000u;
 
-  if (square1.length_enable && (square1.length_load >= 1u))
+  if (square1.length_enable && (square1.length_load >= 1u)) {
     --square1.length_load;
-  if (square2.length_enable && (square2.length_load >= 1u))
+    if (square1.length_load == 0)
+      *reg_nr52 &= ~kSquare1StatusMask;
+  }
+  if (square2.length_enable && (square2.length_load >= 1u)) {
     --square2.length_load;
-  if (wave.length_enable && (wave.length_load >= 1u))
+    if (square2.length_load == 0)
+      *reg_nr52 &= ~kSquare2StatusMask;
+  }
+  if (wave.length_enable && (wave.length_load >= 1u)) {
     --wave.length_load;
-  if (noise.length_enable && (noise.length_load >= 1u))
+    if (wave.length_load == 0)
+      *reg_nr52 &= ~kWaveStatusMask;
+  }
+  if (noise.length_enable && (noise.length_load >= 1u)) {
     --noise.length_load;
+    if (noise.length_load == 0)
+      *reg_nr52 &= ~kNoiseStatusMask;
+  }
 }
 
 void Apu::DoSweep() {
@@ -319,6 +334,11 @@ void Apu::DoSweep() {
   if (square1.sweep_counter >= square1.sweep_period) {
     const int dir = square1.sweep_direction ? -1 : +1;
     square1.frequency = square1.frequency + dir * square1.frequency / (1u << square1.sweep_step);
+
+    if (square1.frequency > 2047u) {
+      *reg_nr52 &= ~kSquare1StatusMask;  // Turn off if overflow.
+    }
+
     square1.frequency = std::min(2047u, square1.frequency);
     square1.sweep_counter = 0;
     *(reg_nr13) = square1.frequency & 0xffu;
@@ -387,30 +407,40 @@ void Apu::ReloadLengthNoise() {
 
 void Apu::TriggerEventSquare1() {
   if (square1.length_load == 0)
-    square1.length_load = 64;
+    ReloadLengthSquare1();
 
   square1.volume = *reg_nr12 >> 4;
+
+  if ((*reg_nr12 & 0xF8) != 0)
+    *reg_nr52 |= kSquare1StatusMask;
 }
 
 void Apu::TriggerEventSquare2() {
   if (square2.length_load == 0)
-    square2.length_load = 64;
+    ReloadLengthSquare2();
 
   square2.volume = *reg_nr22 >> 4;
+
+  if ((*reg_nr22 & 0xF8) != 0)
+    *reg_nr52 |= kSquare2StatusMask;
 }
 
 void Apu::TriggerEventWave() {
   if (wave.length_load == 0)
-    wave.length_load = 256;
+    ReloadLengthWave();
 
   wave.volume = (*reg_nr32 >> 5) & 0b11;
+
+  *reg_nr52 |= kWaveStatusMask;
 }
 
 void Apu::TriggerEventNoise() {
   if (noise.length_load == 0)
-    noise.length_load = 64;
+    ReloadLengthNoise();
 
   noise.volume = *reg_nr42 >> 4;
-
   noise.lfsr_bits = 0;
+
+  if ((*reg_nr42 & 0xF8) != 0)
+    *reg_nr52 |= kNoiseStatusMask;
 }

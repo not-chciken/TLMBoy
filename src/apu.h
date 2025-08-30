@@ -19,6 +19,10 @@ struct Apu : public sc_module {
   void AudioLoop();
 
   static constexpr uint kSampleRate = 44000u;
+  static constexpr u8 kSquare1StatusMask = 1u;
+  static constexpr u8 kSquare2StatusMask = 1u << 1;
+  static constexpr u8 kWaveStatusMask = 1u << 2;
+  static constexpr u8 kNoiseStatusMask = 1u << 3;
 
   // APU IO registers.
   // Square 1.
