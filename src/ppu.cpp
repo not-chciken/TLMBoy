@@ -269,7 +269,7 @@ void Ppu::CheckLycInterrupt() {
 
 // A complete screen refresh occurs every 70224 cycles.
 void Ppu::RenderLoop() {
-  wait(1, sc_core::SC_NS); // Ensures correct ordering of CPU and PPU.
+  wait(1, sc_core::SC_NS);  // Ensures correct ordering of CPU and PPU.
   while (1) {
     for (int i = 0; i < kGbScreenHeight; ++i) {
       // Mode = OAM-search (10).
@@ -391,24 +391,24 @@ constexpr u32 ToTextureColor(u8 r, u8 g, u8 b) {
 }
 
 void Ppu::GameWindow::DrawToScreen(Ppu& p) {
-  static u64 last_time = 0;
+  static auto last_time = std::chrono::high_resolution_clock::now();
 
-  u64 new_time = SDL_GetTicks64();
-  u64 delta_time = new_time - last_time;
-  float fps = 1000.f / static_cast<float>(delta_time);
-  float fps_cap_total = fps_cap * (Ppu::uiTurboMode ? 3.f : 1.f);
+  auto new_time = std::chrono::high_resolution_clock::now();
+  const float delta_time_us = std::chrono::duration_cast<std::chrono::microseconds>(new_time - last_time).count();
+  float fps = 1000000.f / delta_time_us;
+  const float fps_cap_total = fps_cap * (Ppu::uiTurboMode ? 3.f : 1.f);
 
   if (fps > fps_cap_total) {
-    float target_delta = 1000.f / fps_cap_total;
-    float sleep_time = 1000.f * (target_delta - delta_time);
+    const float target_delta_us = 1000000.f / fps_cap_total;
+    const float sleep_time = (target_delta_us - delta_time_us) * 0.99f;
     std::this_thread::sleep_for(std::chrono::microseconds((int)sleep_time));
-    new_time = SDL_GetTicks64();
-    fps = 1000.f / (new_time - last_time);
+    new_time = std::chrono::high_resolution_clock::now();
+    fps = 1000000.f / (float)std::chrono::duration_cast<std::chrono::microseconds>(new_time - last_time).count();
   }
 
   last_time = new_time;
 
-  SDL_SetWindowTitle(window, std::format("{}   FPS: {:03}", title, (int)fps).c_str());
+  SDL_SetWindowTitle(window, std::format("{}   FPS: {:03}", title, std::lround(fps)).c_str());
 
   // If the screen is off, just draw a red background.
   if (!((*p.reg_lcdc) & kMaskLcdControl)) {
@@ -471,7 +471,8 @@ void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
           val = MapColors(val, p.reg_bgp);
           const size_t x = j * 8 + k;
           const size_t y = t * 8 + i;
-          pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+          pixels[y * log_width + x] =
+              ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
         }
       }
     }
