@@ -137,7 +137,7 @@ void Ppu::DrawBgToLine(int line_num) {
   bg_tile_map = (*reg_lcdc & kMaskBgTileSlct) ? tile_map_up : tile_map_low;
 
   const int y_tile_pixel = (*reg_scroll_y + line_num) % 8;
-  if (*reg_lcdc & kMaskBgWndwDisp) {
+  if (*reg_lcdc & kMaskBgWndwDisp && uiRenderBg) {
     for (int i = 0; i < kGbScreenWidth; ++i) {
       int bg_tile_ind = 32 * (((line_num + *reg_scroll_y) % 256) / 8) + ((*reg_scroll_x + i) % 256) / 8;
       u8 tile_ind = bg_tile_map[bg_tile_ind];
@@ -168,7 +168,7 @@ void Ppu::DrawWndwToLine(int line_num) {
   wndw_tile_map = (*reg_lcdc & kMaskWndwTileMapSlct) ? tile_map_up : tile_map_low;
 
   const int y_tile_pixel = window_line_ % 8;
-  if (*reg_lcdc & kMaskBgWndwDisp) {
+  if (*reg_lcdc & kMaskBgWndwDisp && uiRenderWndw) {
     for (int i = 0; i < kGbScreenWidth; ++i) {
       if ((i - x_pos) < 0) {
         continue;
@@ -193,6 +193,9 @@ void Ppu::DrawWndwToLine(int line_num) {
 
 void Ppu::DrawSpriteToLine(int line_num) {
   if (!(kMaskObjSpriteDisp & *reg_lcdc))
+    return;
+
+  if (!uiRenderSprites)
     return;
 
   std::vector<std::pair<int, int>> sorted_oam;
@@ -285,15 +288,9 @@ void Ppu::RenderLoop() {
       SetBit(reg_stat, false, 0);
       SetBit(reg_stat, false, 1);
 
-      if (uiRenderBg) {
-        DrawBgToLine(i);
-      }
-      if (uiRenderWndw) {
-        DrawWndwToLine(i);
-      }
-      if (uiRenderSprites) {
-        DrawSpriteToLine(i);
-      }
+      DrawBgToLine(i);
+      DrawWndwToLine(i);
+      DrawSpriteToLine(i);
 
       ++(*reg_lcdc_y);
 
@@ -423,7 +420,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
   u32* pixels = static_cast<u32*>(pixels_ptr);
 
   // Background and window loop.
-  if (uiRenderBg) {
+  if (uiRenderBg || uiRenderWndw) {
     for (int y = 0; y < log_height; ++y) {
       for (int x = 0; x < log_width; ++x) {
         int val = p.bg_buffer[y][x];

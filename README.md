@@ -74,12 +74,12 @@ Tetris | The Jungle Book
 | P         | Start     |
 
 Utilities:
-| Keyboard  | Description                   |
-|-----------|-------------------------------|
-| 1         | Hold to not render background |
-| 2         | Hold to not render sprites    |
-| 3         | Hold to not render window     |
-| SPACE     | Turbo mode (3x speed)         |
+| Keyboard  | Description                                  |
+|-----------|----------------------------------------------|
+| 1         | Press to disable/enable background rendering |
+| 2         | Press to disable/enable window rendering     |
+| 3         | Press to disable/enable sprites rendering    |
+| SPACE     | Hold for turbo mode (3x speed)               |
 
 
 ## Documentation

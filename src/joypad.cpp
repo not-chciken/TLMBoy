@@ -36,13 +36,13 @@ void JoyPad::InputLoop() {
       }
       switch (event.key.keysym.sym) {
       case SDLK_1:
-        Ppu::uiRenderBg = false;
+        Ppu::uiRenderBg = !Ppu::uiRenderBg;
         break;
       case SDLK_2:
-        Ppu::uiRenderSprites = false;
+        Ppu::uiRenderWndw = !Ppu::uiRenderWndw;
         break;
       case SDLK_3:
-        Ppu::uiRenderWndw = false;
+        Ppu::uiRenderSprites = !Ppu::uiRenderSprites;
         break;
       case SDLK_SPACE:
         Ppu::uiTurboMode = true;
@@ -56,15 +56,6 @@ void JoyPad::InputLoop() {
         break;
       }
       switch (event.key.keysym.sym) {
-      case SDLK_1:
-        Ppu::uiRenderBg = true;
-        break;
-      case SDLK_2:
-        Ppu::uiRenderSprites = true;
-        break;
-      case SDLK_3:
-        Ppu::uiRenderWndw = true;
-        break;
       case SDLK_SPACE:
         Ppu::uiTurboMode = false;
         break;
