@@ -54,7 +54,7 @@ Ppu::Ppu(sc_module_name name, bool headless, int fps_cap, i64 resolution_scaling
     game_wndw = std::make_unique<GameWindow>((int)kGbScreenWidth * resolution_scaling,
                                              (int)kGbScreenHeight * resolution_scaling, (int)kGbScreenWidth,
                                              (int)kGbScreenHeight, "TLMBoy", fps_cap);
-    window_wndw = std::make_unique<WindowWindow>(128 * 2, 128 * 2, 128, 128, "Tile Data Table");
+    window_wndw = std::make_unique<WindowWindow>(128 * 2, 192 * 2, 128, 192, "Tile Data Table");
   }
 }
 
@@ -454,24 +454,38 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
 }
 
 void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
+  constexpr int kTilesPerRow = 16;
+  constexpr int kTotalTileRows = 24;
+  constexpr int kTotalTiles = kTilesPerRow * kTotalTileRows;
+  constexpr int kOverlapStartTile = 128;
+  constexpr int kOverlapEndTile = 256;
+
   void* pixels_ptr;
   int pitch;
   SDL_LockTexture(texture, nullptr, &pixels_ptr, &pitch);
   u32* pixels = static_cast<u32*>(pixels_ptr);
 
-  for (int t = 0; t < 16; ++t) {
-    for (int i = 0; i < 8; ++i) {
-      for (int j = 0; j < 16; ++j) {
-        for (int k = 0; k < 8; ++k) {
-          u8 val = InterleaveBits(p.tile_data_table_low[t * 256 + j * 16 + 2 * i],
-                                  p.tile_data_table_low[t * 256 + j * 16 + 2 * i + 1], 7 - k);
-          val = MapColors(val, p.reg_bgp);
-          const size_t x = j * 8 + k;
-          const size_t y = t * 8 + i;
-          pixels[y * log_width + x] =
-              ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
-        }
+  for (int tile_index = 0; tile_index < kTotalTiles; ++tile_index) {
+    const int tile_row = tile_index / kTilesPerRow;
+    const int tile_col = tile_index % kTilesPerRow;
+    const int tile_base = tile_index * kBytesPerTile;
+
+    for (int pixel_row = 0; pixel_row < kTileLength; ++pixel_row) {
+      const int row_base = tile_base + 2 * pixel_row;
+      for (int pixel_col = 0; pixel_col < kTileLength; ++pixel_col) {
+        u8 val = InterleaveBits(p.tile_data_table_low[row_base], p.tile_data_table_low[row_base + 1], 7 - pixel_col);
+        val = MapColors(val, p.reg_bgp);
+        const size_t x = tile_col * kTileLength + pixel_col;
+        const size_t y = tile_row * kTileLength + pixel_row;
+        pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
       }
+    }
+  }
+
+  for (int separator_tile : {kOverlapStartTile, kOverlapEndTile}) {
+    const int separator_y = (separator_tile / kTilesPerRow) * kTileLength;
+    for (int x = 0; x < log_width; ++x) {
+      pixels[separator_y * log_width + x] = ToTextureColor(255, 0, 0);
     }
   }
 
