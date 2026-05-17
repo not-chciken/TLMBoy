@@ -34,27 +34,39 @@ constexpr u8 MapColors(u8 val, u8 const* reg) {
   return (*reg >> val * 2) & 0b11;
 }
 
-Ppu::Ppu(sc_module_name name, bool headless, int fps_cap, i64 resolution_scaling, string color_palette)
-    : sc_module(name), init_socket("init_socket") {
+Ppu::Ppu(sc_module_name name, PpuArgs args) : sc_module(name), init_socket("init_socket") {
   SC_THREAD(RenderLoop);
 
   for (int j = 0; j < 4; ++j)
     for (int i = 0; i < 3; ++i)
-      Ppu::color_palette[j][i] = (u8)std::stoul(color_palette.substr(6 * j + i * 2, 2), nullptr, 16);
+      Ppu::color_palette[j][i] = (u8)std::stoul(args.color_palette.substr(6 * j + i * 2, 2), nullptr, 16);
 
   memset(bg_buffer, Colors::White, kGbScreenBufferHeight * kGbScreenBufferWidth);
   memset(sprite_buffer, Colors::Transparent, kGbScreenWidth * kGbScreenHeight);
   memset(window_buffer, Colors::White, kGbScreenBufferHeight * kGbScreenBufferWidth);
 
-  if (headless) {
+  if (args.headless) {
     game_wndw = std::make_unique<DummyWindow>();
+    ext_game_wndw = std::make_unique<DummyWindow>();
     window_wndw = std::make_unique<DummyWindow>();
   } else {
     // Need typecast to create some temporaries with addresses for unique pointer reference arguments :/
-    game_wndw = std::make_unique<GameWindow>((int)kGbScreenWidth * resolution_scaling,
-                                             (int)kGbScreenHeight * resolution_scaling, (int)kGbScreenWidth,
-                                             (int)kGbScreenHeight, "TLMBoy", fps_cap);
-    window_wndw = std::make_unique<WindowWindow>(128 * 2, 192 * 2, 128, 192, "Tile Data Table");
+    game_wndw = std::make_unique<GameWindow>((int)kGbScreenWidth * args.resolution_scaling,
+                                             (int)kGbScreenHeight * args.resolution_scaling, (int)kGbScreenWidth,
+                                             (int)kGbScreenHeight, "TLMBoy", args.fps_cap);
+
+    if (args.show_ext_game_wndw) {
+      ext_game_wndw = std::make_unique<ExtGameWindow>((int)kGbScreenBufferWidth * 2, (int)kGbScreenBufferHeight * 2,
+                                                      (int)kGbScreenBufferWidth, (int)kGbScreenBufferHeight, "Extended Screen");
+    } else {
+      ext_game_wndw = std::make_unique<DummyWindow>();
+    }
+
+    if (args.show_window_wndw) {
+      window_wndw = std::make_unique<WindowWindow>(128 * 2, 192 * 2, 128, 192, "Tile Data Table");
+    } else {
+      window_wndw = std::make_unique<DummyWindow>();
+    }
   }
 }
 
@@ -305,6 +317,7 @@ void Ppu::RenderLoop() {
 
     // Mode = V-Blank (01)
     SetBit(reg_stat, true, 0);
+    ext_game_wndw->DrawToScreen(*this);
     game_wndw->DrawToScreen(*this);
     window_wndw->DrawToScreen(*this);
     DBG_LOG_PPU(std::endl << StateStr());
@@ -395,7 +408,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
   float fps = 1000000.f / delta_time_us;
   const float fps_cap_total = fps_cap * (Ppu::uiTurboMode ? 3.f : 1.f);
 
-  if (fps > fps_cap_total) {
+  if ((fps > fps_cap_total) && (fps_cap > 0)) {
     const float target_delta_us = 1000000.f / fps_cap_total;
     const float sleep_time = (target_delta_us - delta_time_us) * 0.99f;
     std::this_thread::sleep_for(std::chrono::microseconds((int)sleep_time));
@@ -450,6 +463,101 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
 
   SDL_UnlockTexture(texture);
   SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+  SDL_RenderPresent(renderer);
+}
+
+Ppu::ExtGameWindow::ExtGameWindow(int width, int height, int log_width, int log_height, const char* title)
+    : GameWindow(width, height, log_width, log_height, title, -1) {
+}
+
+void Ppu::ExtGameWindow::DrawToScreen(Ppu& p) {
+  static constexpr u32 kViewBoxColor = ToTextureColor(255, 0, 0);
+
+  if (!((*p.reg_lcdc) & kMaskLcdControl)) {
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
+    return;
+  }
+
+  void* pixels_ptr;
+  int pitch;
+  SDL_LockTexture(texture, nullptr, &pixels_ptr, &pitch);
+  u32* pixels = static_cast<u32*>(pixels_ptr);
+
+  u8* tile_data_table = (*p.reg_lcdc & kMaskBgWndwTileDataSlct) ? p.tile_data_table_low : p.tile_data_table_up;
+  u8* bg_tile_map = (*p.reg_lcdc & kMaskBgTileSlct) ? p.tile_map_up : p.tile_map_low;
+
+  for (int y = 0; y < kGbScreenBufferHeight; ++y) {
+    const int y_tile = y / kTileLength;
+    const int y_tile_pixel = y % kTileLength;
+    for (int x = 0; x < kGbScreenBufferWidth; ++x) {
+      const int x_tile = x / kTileLength;
+      const int x_tile_pixel = x % kTileLength;
+      const int bg_tile_ind = y_tile * 32 + x_tile;
+
+      u8 tile_ind = bg_tile_map[bg_tile_ind];
+      tile_ind += tile_data_table == p.tile_data_table_up ? 128 : 0;  // Using wraparound.
+
+      const int pixel_ind = static_cast<int>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
+      u8 val = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], 7 - x_tile_pixel);
+      val = MapColors(val, p.reg_bgp);
+      pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+    }
+  }
+
+  // Mark the currently visible 160x144 viewport. This wraps around the 256x256 map.
+  const int view_x0 = *p.reg_scroll_x;
+  const int view_y0 = *p.reg_scroll_y;
+
+  // Background and window loop.
+  for (int y = 0; y < kGbScreenHeight; ++y) {
+    for (int x = 0; x < kGbScreenWidth; ++x) {
+      const int y2 = (y + view_y0) % kGbScreenBufferHeight;
+      const int x2 = (x + view_x0) % kGbScreenBufferWidth;
+      int val = p.bg_buffer[y][x];
+      pixels[y2 * log_width + x2] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+    }
+  }
+
+  // Sprite loop.
+  for (int y = 0; y < kGbScreenHeight; ++y) {
+    for (int x = 0; x < kGbScreenWidth; ++x) {
+      int val = p.sprite_buffer[y][x];
+      if (val == Colors::Transparent)
+        continue;
+      const int y2 = (y + view_y0) % kGbScreenBufferHeight;
+      const int x2 = (x + view_x0) % kGbScreenBufferWidth;
+      pixels[y2 * log_width + x2] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+    }
+  }
+
+  for (int x = 0; x < kGbScreenWidth; ++x) {
+    const int top_x = (view_x0 + x) % kGbScreenBufferWidth;
+    const int top_y = view_y0 % kGbScreenBufferHeight;
+    const int bot_y = (view_y0 + kGbScreenHeight - 1) % kGbScreenBufferHeight;
+    pixels[top_y * log_width + top_x] = kViewBoxColor;
+    pixels[bot_y * log_width + top_x] = kViewBoxColor;
+  }
+
+  for (int y = 0; y < kGbScreenHeight; ++y) {
+    const int left_y = (view_y0 + y) % kGbScreenBufferHeight;
+    const int left_x = view_x0 % kGbScreenBufferWidth;
+    const int right_x = (view_x0 + kGbScreenWidth - 1) % kGbScreenBufferWidth;
+    pixels[left_y * log_width + left_x] = kViewBoxColor;
+    pixels[left_y * log_width + right_x] = kViewBoxColor;
+  }
+
+  SDL_UnlockTexture(texture);
+  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+
+  SDL_SetRenderDrawColor(renderer, 0, 0, 255, 50);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  for (int i = 0; i <= 32; ++i) {
+    SDL_RenderDrawLine(renderer, 0, i * 8, kGbScreenBufferWidth, i * 8);
+    SDL_RenderDrawLine(renderer, i * 8, 0, i * 8, kGbScreenBufferHeight);
+  }
+
   SDL_RenderPresent(renderer);
 }
 

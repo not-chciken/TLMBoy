@@ -21,8 +21,9 @@ GbTop::GbTop(sc_module_name name, const Options& options)
       reg_if(1, "reg_if"),
       intr_enable(1, "intr_enable"),
       io_registers("io_registers"),
-      ppu("ppu", options.headless, options.fps_cap, options.resolution_scaling, options.color_palette),
-      serial("serial",reg_if.GetDataPtr()),
+      ppu("ppu", PpuArgs{options.headless, options.fps_cap, options.resolution_scaling, options.color_palette,
+                         options.show_ext_game_wndw, options.show_window_wndw}),
+      serial("serial", reg_if.GetDataPtr()),
       timer("timer", reg_if.GetDataPtr()) {
   bus.AddBusMaster(&apu.init_socket);
   bus.AddBusMaster(&cpu.init_socket);

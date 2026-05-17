@@ -27,6 +27,15 @@
 #include "common.h"
 #include "debug.h"
 
+struct PpuArgs {
+  bool headless = false;
+  int fps_cap = 60;
+  i64 resolution_scaling = 4;
+  string color_palette = "f2ffd9aaaaaa555555000000";
+  bool show_ext_game_wndw = false;
+  bool show_window_wndw = false;
+};
+
 struct Ppu : public sc_module {
   SC_HAS_PROCESS(Ppu);
 
@@ -95,8 +104,7 @@ struct Ppu : public sc_module {
     Transparent = 4,
   };
 
-  explicit Ppu(sc_module_name name, bool headless = false, int fps_cap = 60, i64 resolution_scaling = 4,
-               string color_palette = "f2ffd9aaaaaa555555000000");
+  explicit Ppu(sc_module_name name, PpuArgs args = PpuArgs{});
   ~Ppu();
 
   // PPU IO registers.
@@ -160,6 +168,7 @@ struct Ppu : public sc_module {
   };
 
   std::unique_ptr<RenderWindow> game_wndw;
+  std::unique_ptr<RenderWindow> ext_game_wndw;
   std::unique_ptr<RenderWindow> window_wndw;
 
   // This the main window.
@@ -170,6 +179,13 @@ struct Ppu : public sc_module {
 
    protected:
     int fps_cap;
+  };
+
+  // An extended main window that also renders out-of-window background tiles.
+  class ExtGameWindow : public GameWindow {
+   public:
+    ExtGameWindow(int width, int height, int log_width, int log_height, const char* title);
+    void DrawToScreen(Ppu& ppu) override;
   };
 
   // Used for displaying the window tiles. Intended for debugging/analysis.

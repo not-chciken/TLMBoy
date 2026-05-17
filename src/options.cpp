@@ -21,6 +21,8 @@ void Options::InitOpts(int argc, char* argv[]) {
                                      {"single-step", no_argument, 0, 's'},
                                      {"symbol-file", no_argument, 0, 'y'},
                                      {"wait-for-gdb", no_argument, 0, 'w'},
+                                     {"show-ext-game-window", no_argument, 0, 'x'},
+                                     {"show-window-window", no_argument, 0, 'n'},
                                      {nullptr, 0, nullptr, 0}};
 
   int index;
@@ -53,6 +55,12 @@ void Options::InitOpts(int argc, char* argv[]) {
     case 'w':
       wait_for_gdb = true;
       continue;
+    case 'x':
+      show_ext_game_wndw = true;
+      continue;
+    case 'n':
+      show_window_wndw = true;
+      continue;
     case 'y':
       symbol_file = true;
       continue;
@@ -81,7 +89,11 @@ void Options::InitOpts(int argc, char* argv[]) {
                 << "          --symbole-file" << std::endl
                 << "          Traces accesses to the ROM and dumps a symbol file (trace.sym) on exit." << std::endl
                 << "          --wait-for-gdb" << std::endl
-                << "          Wait for a GDB remote connection on port 1337." << std::endl;
+                << "          Wait for a GDB remote connection on port 1337." << std::endl
+                << "          --show-ext-game-window" << std::endl
+                << "          Show the extended game window that renders out-of-viewport background tiles." << std::endl
+                << "          --show-window-window" << std::endl
+                << "          Show the window tile data table." << std::endl;
       exit(1);
     case -1:
       break;
