@@ -3,10 +3,19 @@
  * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 #include "cartridge.h"
+#include "dmg_rom_data.h"
 
 #include <ctime>
 #include <format>
 #include <string>
+
+static void LoadBootRom(GenericMemory& mem, const std::filesystem::path& boot_path) {
+  if (boot_path.empty()) {
+    mem.LoadFromData(dmg_rom::kSpan);
+  } else {
+    mem.LoadFromFile(boot_path);
+  }
+}
 
 Cartridge::BankSwitchedMem::BankSwitchedMem(sc_module_name name, uint num_banks, uint bank_size)
     : GenericMemory(bank_size * num_banks, name), num_banks_(num_banks), bank_size_(bank_size) {
@@ -96,10 +105,9 @@ void Cartridge::MemoryBankCtrler::UnmapBootRom() {
 Cartridge::Rom::Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file)
     : MemoryBankCtrler(1, 1, symbole_file) {
   assert(game_path != "");
-  assert(boot_path != "");
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  rom_low.LoadFromFile(boot_path);
+  LoadBootRom(rom_low, boot_path);
   rom_high.LoadFromFile(game_path, 0x4000);
 }
 
@@ -155,7 +163,7 @@ Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boo
       ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  rom_low.LoadFromFile(boot_path);
+  LoadBootRom(rom_low, boot_path);
   rom_high.LoadFromFile(game_path, 0x4000);
 
   save_file = game_path.filename().string() + string(".save");
@@ -232,7 +240,7 @@ Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boo
       ram_rtc_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  rom_low.LoadFromFile(boot_path);
+  LoadBootRom(rom_low, boot_path);
   rom_high.LoadFromFile(game_path, 0x4000);
 
   save_file = game_path.filename().string() + string(".save");
@@ -349,7 +357,7 @@ Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boo
     : MemoryBankCtrler(512, 16, symbol_file), rom_ind_(0), ram_ind_(0), ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  rom_low.LoadFromFile(boot_path);
+  LoadBootRom(rom_low, boot_path);
   rom_high.LoadFromFile(game_path, 0x4000);
 }
 

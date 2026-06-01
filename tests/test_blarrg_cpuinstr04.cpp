@@ -16,7 +16,6 @@ Options options;
 
 TEST(BlarrgTest, cpuinstr04) {
   string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-  options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
   options.rom_path = tlm_boy_root + "/roms/gb-test-roms/cpu_instrs/individual/04-op r,imm.gb";
 
   GbTop test_top("test_top", options);

@@ -24,7 +24,6 @@ const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 Options options;
 
 TEST(BootTests, BootState) {
-  options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
   options.rom_path = tlm_boy_root + "/roms/dummy.bin";
   options.single_step = true;
   GbTop test_top("test_top", options);

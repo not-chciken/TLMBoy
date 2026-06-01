@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <string>
 
 #include "common.h"
@@ -26,6 +27,7 @@ struct GenericMemory : public sc_module {
   u8* GetDataPtr();
   void SetMemData(u8* data, size_t size);
   virtual void LoadFromFile(std::filesystem::path path, int offset = 0);
+  void LoadFromData(std::span<const u8> data);
   void SaveToFile(const std::filesystem::path path);
 
   // SystemC interfaces

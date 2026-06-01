@@ -63,6 +63,11 @@ void GenericMemory::LoadFromFile(std::filesystem::path path, int offset) {
   }
 }
 
+void GenericMemory::LoadFromData(std::span<const u8> data) {
+  size_t copy_size = std::min(data.size(), memory_size_);
+  std::copy(data.begin(), data.begin() + copy_size, data_);
+}
+
 void GenericMemory::SaveToFile(const std::filesystem::path path) {
   std::ofstream file(path.string(), std::ios::binary);
 

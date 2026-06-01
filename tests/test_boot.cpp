@@ -22,8 +22,7 @@
 const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 Options options{
     .headless = true,
-    .rom_path = tlm_boy_root + "/roms/dummy.gb",
-    .boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin"};
+    .rom_path = tlm_boy_root + "/roms/dummy.gb"};
 
 struct Top : public GbTop {
   SC_HAS_PROCESS(Top);

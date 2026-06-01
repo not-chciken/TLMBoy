@@ -16,7 +16,7 @@ struct Options {
   bool single_step = false;
   bool wait_for_gdb = false;
   fs::path rom_path = "";
-  fs::path boot_rom_path = "../roms/DMG_ROM.bin";
+  fs::path boot_rom_path = "";
   int fps_cap = 60;
   i64 max_cycles = -1;
   i64 resolution_scaling = 4;

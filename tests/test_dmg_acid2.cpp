@@ -18,7 +18,6 @@ Options options;
 
 TEST(PpuTest, DmgAcid2) {
   string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-  options.boot_rom_path = tlm_boy_root + "/roms/DMG_ROM.bin";
   options.rom_path = tlm_boy_root + "/roms/dmg-acid2.gb";
 
   GbTop test_top("test_top", options);
