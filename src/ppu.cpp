@@ -396,8 +396,12 @@ Ppu::GameWindow::GameWindow(int width, int height, int log_width, int log_height
     : RenderWindow(width, height, log_width, log_height, title), fps_cap(fps_cap) {
 }
 
-constexpr u32 ToTextureColor(u8 r, u8 g, u8 b) {
+constexpr u32 ToTextureColor(const u8 r, const u8 g, const u8 b) {
   return ((u32)r << 16) | ((u32)g << 8) | (u32)b;
+}
+
+constexpr u32 ToTextureColor(const u8* rgb) {
+  return ToTextureColor(rgb[0], rgb[1], rgb[2]);
 }
 
 void Ppu::GameWindow::DrawToScreen(Ppu& p) {
@@ -437,7 +441,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
     for (int y = 0; y < log_height; ++y) {
       for (int x = 0; x < log_width; ++x) {
         int val = p.bg_buffer[y][x];
-        pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+        pixels[y * log_width + x] = ToTextureColor(color_palette[val]);
       }
     }
   } else {
@@ -456,7 +460,7 @@ void Ppu::GameWindow::DrawToScreen(Ppu& p) {
         if (val == Colors::Transparent)
           continue;
         p.sprite_buffer[y][x] = Colors::Transparent;
-        pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+        pixels[y * log_width + x] = ToTextureColor(color_palette[val]);
       }
     }
   }
@@ -502,7 +506,7 @@ void Ppu::ExtGameWindow::DrawToScreen(Ppu& p) {
       const int pixel_ind = static_cast<int>(tile_ind) * kBytesPerTile + 2 * y_tile_pixel;
       u8 val = InterleaveBits(tile_data_table[pixel_ind], tile_data_table[pixel_ind + 1], 7 - x_tile_pixel);
       val = MapColors(val, p.reg_bgp);
-      pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+      pixels[y * log_width + x] = ToTextureColor(color_palette[val]);
     }
   }
 
@@ -516,7 +520,7 @@ void Ppu::ExtGameWindow::DrawToScreen(Ppu& p) {
       const int y2 = (y + view_y0) % kGbScreenBufferHeight;
       const int x2 = (x + view_x0) % kGbScreenBufferWidth;
       int val = p.bg_buffer[y][x];
-      pixels[y2 * log_width + x2] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+      pixels[y2 * log_width + x2] = ToTextureColor(color_palette[val]);
     }
   }
 
@@ -528,7 +532,7 @@ void Ppu::ExtGameWindow::DrawToScreen(Ppu& p) {
         continue;
       const int y2 = (y + view_y0) % kGbScreenBufferHeight;
       const int x2 = (x + view_x0) % kGbScreenBufferWidth;
-      pixels[y2 * log_width + x2] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+      pixels[y2 * log_width + x2] = ToTextureColor(color_palette[val]);
     }
   }
 
@@ -585,7 +589,7 @@ void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
         val = MapColors(val, p.reg_bgp);
         const size_t x = tile_col * kTileLength + pixel_col;
         const size_t y = tile_row * kTileLength + pixel_row;
-        pixels[y * log_width + x] = ToTextureColor(color_palette[val][0], color_palette[val][1], color_palette[val][2]);
+        pixels[y * log_width + x] = ToTextureColor(color_palette[val]);
       }
     }
   }
