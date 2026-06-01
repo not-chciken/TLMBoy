@@ -6,7 +6,7 @@
 
 GbTop::GbTop(sc_module_name name, const Options& options)
     : sc_module(name),
-      cartridge("cartridge", options.rom_path, options.boot_rom_path, options.symbol_file),
+      cartridge("cartridge", options.rom_path, options.boot_rom_path, options.symbol_file, options.quick_boot),
       apu("apu"),
       bus("bus"),
       cpu("cpu", options.wait_for_gdb, options.single_step),

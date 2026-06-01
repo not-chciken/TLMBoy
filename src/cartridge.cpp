@@ -9,9 +9,13 @@
 #include <format>
 #include <string>
 
-static void LoadBootRom(GenericMemory& mem, const std::filesystem::path& boot_path) {
+static void LoadBootRom(GenericMemory& mem, const std::filesystem::path& boot_path, bool quick_boot) {
   if (boot_path.empty()) {
-    mem.LoadFromData(dmg_rom::kSpan);
+    if (quick_boot) {
+      mem.LoadFromData(dmg_rom::kQuickBootSpan);
+    } else {
+      mem.LoadFromData(dmg_rom::kSpan);
+    }
   } else {
     mem.LoadFromFile(boot_path);
   }
@@ -102,12 +106,12 @@ void Cartridge::MemoryBankCtrler::UnmapBootRom() {
   rom_low.LoadFromFile(game_path_);
 }
 
-Cartridge::Rom::Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file)
+Cartridge::Rom::Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file, bool quick_boot)
     : MemoryBankCtrler(1, 1, symbole_file) {
   assert(game_path != "");
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  LoadBootRom(rom_low, boot_path);
+  LoadBootRom(rom_low, boot_path, quick_boot);
   rom_high.LoadFromFile(game_path, 0x4000);
 }
 
@@ -153,7 +157,7 @@ void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& d
   }
 }
 
-Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file)
+Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot)
     : MemoryBankCtrler(128, 4, symbol_file),
       rom_bank_low_bits(0),
       the_two_bits_(0),
@@ -163,7 +167,7 @@ Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boo
       ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  LoadBootRom(rom_low, boot_path);
+  LoadBootRom(rom_low, boot_path, quick_boot);
   rom_high.LoadFromFile(game_path, 0x4000);
 
   save_file = game_path.filename().string() + string(".save");
@@ -233,14 +237,14 @@ void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   }
 }
 
-Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file)
+Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot)
     : MemoryBankCtrler(128, 4, symbol_file),
       rom_ind_(0),
       ram_ind_(0),
       ram_rtc_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  LoadBootRom(rom_low, boot_path);
+  LoadBootRom(rom_low, boot_path, quick_boot);
   rom_high.LoadFromFile(game_path, 0x4000);
 
   save_file = game_path.filename().string() + string(".save");
@@ -353,11 +357,11 @@ void Cartridge::Mbc3::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   }
 }
 
-Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file)
+Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot)
     : MemoryBankCtrler(512, 16, symbol_file), rom_ind_(0), ram_ind_(0), ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
-  LoadBootRom(rom_low, boot_path);
+  LoadBootRom(rom_low, boot_path, quick_boot);
   rom_high.LoadFromFile(game_path, 0x4000);
 }
 
@@ -409,20 +413,20 @@ uint Cartridge::Mbc5::transport_dbg_ram(tlm::tlm_generic_payload& trans) {
 }
 
 Cartridge::Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
-                     bool symbol_file)
+                     bool symbol_file, bool quick_boot)
     : sc_module(name), sig_unmap_rom_in("sig_unmap_rom_in"), game_path_(game_path), boot_path_(boot_path) {
   game_info = std::make_unique<GameInfo>(game_path_);
   string cr_type = game_info->GetCartridgeType();
 
   if (cr_type == "ROM ONLY")
-    mbc = std::make_unique<Rom>(game_path, boot_path, symbol_file);
+    mbc = std::make_unique<Rom>(game_path, boot_path, symbol_file, quick_boot);
   else if (cr_type == "MBC1"  // TODO(niko): finer granularity and more MBC types
            || cr_type == "MBC1+RAM" || cr_type == "MBC1+BAT+RAM")
-    mbc = std::make_unique<Mbc1>(game_path, boot_path, symbol_file);
+    mbc = std::make_unique<Mbc1>(game_path, boot_path, symbol_file, quick_boot);
   else if (cr_type == "MBC3" || cr_type == "MBC3+RAM" || cr_type == "MBC3+BAT+RAM")
-    mbc = std::make_unique<Mbc3>(game_path, boot_path, symbol_file);
+    mbc = std::make_unique<Mbc3>(game_path, boot_path, symbol_file, quick_boot);
   else if (cr_type == "MBC5" || cr_type == "MBC5+RAM" || cr_type == "MBC5+BAT+RAM")
-    mbc = std::make_unique<Mbc5>(game_path, boot_path, symbol_file);
+    mbc = std::make_unique<Mbc5>(game_path, boot_path, symbol_file, quick_boot);
   else
     throw std::runtime_error(std::format("Cartidge type {} not implemented", cr_type));
 

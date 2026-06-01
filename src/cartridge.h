@@ -58,14 +58,14 @@ class Cartridge : public sc_module {
 
   class Rom : public MemoryBankCtrler {
    public:
-    Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file);
+    Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file, bool quick_boot = false);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
   };
 
   class Mbc1 : public MemoryBankCtrler {
    public:
-    Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
+    Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot = false);
     virtual ~Mbc1() override;
 
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
@@ -83,7 +83,7 @@ class Cartridge : public sc_module {
 
   class Mbc3 : public MemoryBankCtrler {
    public:
-    Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
+    Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot = false);
     virtual ~Mbc3() override;
 
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
@@ -101,7 +101,7 @@ class Cartridge : public sc_module {
 
   class Mbc5 : public MemoryBankCtrler {
    public:
-    Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file);
+    Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot = false);
     void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
     uint transport_dbg_ram(tlm::tlm_generic_payload& trans) override;
@@ -121,7 +121,7 @@ class Cartridge : public sc_module {
   sc_in<bool> sig_unmap_rom_in;
 
   Cartridge(sc_module_name name, std::filesystem::path game_path, std::filesystem::path boot_path,
-            bool symbol_file = false);
+            bool symbol_file = false, bool quick_boot = false);
 
   void SigHandler();
 

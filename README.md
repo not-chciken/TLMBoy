@@ -54,6 +54,7 @@ cd build
 * `--show-ext-game-window`: Show the extended game window that renders out-of-viewport background tiles.
 * `--show-window-window`: Show the window tile data table.
 * `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
+* `--quick-boot`: Faster boot that skips the logo scrolling and data check.
 
 ## Screenshots
 Alleyway | Super Mario Land

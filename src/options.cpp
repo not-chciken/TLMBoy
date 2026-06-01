@@ -23,6 +23,7 @@ void Options::InitOpts(int argc, char* argv[]) {
                                      {"wait-for-gdb", no_argument, 0, 'w'},
                                      {"show-ext-game-window", no_argument, 0, 'x'},
                                      {"show-window-window", no_argument, 0, 'n'},
+                                     {"quick-boot", no_argument, 0, 'q'},
                                      {nullptr, 0, nullptr, 0}};
 
   int index;
@@ -60,6 +61,9 @@ void Options::InitOpts(int argc, char* argv[]) {
       continue;
     case 'n':
       show_window_wndw = true;
+      continue;
+    case 'q':
+      quick_boot = true;
       continue;
     case 'y':
       symbol_file = true;
