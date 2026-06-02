@@ -32,11 +32,10 @@ void Bus::AddBusSlave(tlm::tlm_target_socket<gb_const::kBusDataWidth>* targ_sock
 void Bus::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
   const u16 adr = static_cast<u16>(trans.get_address());
 
-  for (auto slave : bus_slave_vec_) {
+  for (const auto& slave : bus_slave_vec_) {
     if ((slave.addr_from <= adr) && (adr <= slave.addr_to)) {
-      auto socket = slave.socket;
       trans.set_address(adr - slave.addr_from);
-      (*socket)->b_transport(trans, delay);
+      (*slave.socket)->b_transport(trans, delay);
       return;
     }
   }
@@ -47,11 +46,10 @@ void Bus::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay) {
 uint Bus::transport_dbg(tlm::tlm_generic_payload& trans) {
   const u16 adr = static_cast<u16>(trans.get_address());
 
-  for (auto slave : bus_slave_vec_) {
+  for (const auto& slave : bus_slave_vec_) {
     if ((slave.addr_from <= adr) && (adr <= slave.addr_to)) {
-      auto socket = slave.socket;
       trans.set_address(adr - slave.addr_from);
-      return (*socket)->transport_dbg(trans);
+      return (*slave.socket)->transport_dbg(trans);
     }
   }
 
@@ -62,7 +60,7 @@ uint Bus::transport_dbg(tlm::tlm_generic_payload& trans) {
 bool Bus::get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data) {
   const u16 adr = static_cast<u16>(trans.get_address());
 
-  for (auto slave : bus_slave_vec_) {
+  for (const auto& slave : bus_slave_vec_) {
     if (slave.addr_from <= adr && adr <= slave.addr_to) {
       trans.set_address(adr - slave.addr_from);
       return (*slave.socket)->get_direct_mem_ptr(trans, dmi_data);
