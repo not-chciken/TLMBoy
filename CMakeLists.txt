@@ -59,7 +59,15 @@ add_executable(tlmboy src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy libsystemc.a -lSDL2)
-target_compile_options(tlmboy PUBLIC -O3 -flto)
+target_compile_options(tlmboy PUBLIC -O3 -g)
+
+# The ultra-fast executable.
+add_executable(tlmboy_fast src/main.cpp ${ALL_CPPS})
+target_include_directories(tlmboy_fast SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
+target_link_libraries(tlmboy_fast "-L${SYSTEMC_PATH}/lib-linux64")
+target_link_libraries(tlmboy_fast libsystemc.a -lSDL2)
+target_compile_options(tlmboy_fast PUBLIC -O3 -flto -march=native -fcf-protection=none -g)
+target_link_options(tlmboy_fast PUBLIC -flto -no-pie)
 
 # The debug version.
 add_executable(tlmboy_debug src/main.cpp ${ALL_CPPS})
@@ -82,12 +90,12 @@ target_link_libraries(tlmboy_static_test "-L${SYSTEMC_PATH}/lib-linux64")
 target_link_libraries(tlmboy_static_test -lgcov -lsystemc -lSDL2)
 target_compile_options(tlmboy_static_test PUBLIC -O0 -g --coverage)
 
-# For performance analysis.
-add_executable(tlmboy_performance src/main.cpp ${ALL_CPPS})
-target_include_directories(tlmboy_performance SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
-target_link_libraries(tlmboy_performance "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy_performance -lgcov -lsystemc -lSDL2)
-target_compile_options(tlmboy_performance PUBLIC -O3 -lprofiler -g)
+# For performance analysis using gperftools.
+add_executable(tlmboy_analysis src/main.cpp ${ALL_CPPS})
+target_include_directories(tlmboy_analysis SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
+target_link_libraries(tlmboy_analysis "-L${SYSTEMC_PATH}/lib-linux64")
+target_link_libraries(tlmboy_analysis -lgcov -lsystemc -lSDL2)
+target_compile_options(tlmboy_analysis PUBLIC -O3 -lprofiler -g)
 
 # Copy the logo.
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/tlmboy_icon.bmp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
