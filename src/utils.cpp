@@ -53,30 +53,6 @@ bool CompareFiles(const std::filesystem::path file1, const std::filesystem::path
   return true;
 }
 
-bool IsBitSet(u8 dat, u8 bit_index) {
-  assert(bit_index < 8);
-  return dat & (1 << bit_index);
-}
-
-u8 SetBit(u8 dat, bool val, u8 bit_index) {
-  assert(bit_index < 8);
-  if (val) {
-    dat |= (1 << bit_index);
-  } else {
-    dat &= ~(1 << bit_index);
-  }
-  return dat;
-}
-
-void SetBit(u8* dat, bool val, u8 bit_index) {
-  assert(bit_index < 8);
-  if (val) {
-    *dat |= (1 << bit_index);
-  } else {
-    *dat &= ~(1 << bit_index);
-  }
-}
-
 std::shared_ptr<tlm::tlm_generic_payload> MakeSharedPayloadPtr(tlm::tlm_command cmd, sc_dt::uint64 addr, void* data,
                                                                bool dmi_allowed, uint size) {
   auto p = std::make_shared<tlm::tlm_generic_payload>();
