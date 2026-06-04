@@ -15,89 +15,89 @@ void Cpu::InstrHalt() {
 
 // NOP, does nothing.
 void Cpu::InstrNop() {
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // LD reg,(u16)
 void Cpu::InstrLoad(Reg<u8> &reg, const u16 &addr_val) {
   reg = ReadBus(addr_val, GbCommand::kGbReadData);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // LD reg8,(reg16)
 void Cpu::InstrLoad(Reg<u8> &reg, Reg<u16> &addr_reg) {
   reg = ReadBus(addr_reg, GbCommand::kGbReadData);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD reg16,u16
 void Cpu::InstrLoadImm(Reg<u16> &reg) {
   reg = FetchNext2InstrBytes();
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // LD reg8,u8
 void Cpu::InstrLoadImm(Reg<u8> &reg) {
   reg = FetchNextInstrByte();
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // "LD reg8,(reg16+)
 void Cpu::InstrLoadInc(Reg<u8> &reg, Reg<u16> &addr_reg) {
   reg = ReadBus(addr_reg, GbCommand::kGbReadData);
   ++addr_reg;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD reg8,(reg16-)
 void Cpu::InstrLoadDec(Reg<u16> &addr_reg, Reg<u8> &reg) {
   reg = ReadBus(addr_reg, GbCommand::kGbReadData);
   --addr_reg;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD (reg16+),reg8
 void Cpu::InstrStoreInc(Reg<u16> &addr_reg, const u8 val) {
   WriteBus(addr_reg, val);
   ++addr_reg;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD (reg16-),reg8
 void Cpu::InstrStoreDec(Reg<u16> &addr_reg, const u8 val) {
   WriteBus(addr_reg, val);
   --addr_reg;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD (reg16),reg8
 void Cpu::InstrStore(const Reg<u16> &addr_reg, const Reg<u8> &reg) {
   WriteBus(addr_reg, reg);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD (reg8+0xFF),reg8
 void Cpu::InstrStore(const u8 &addr_reg, const Reg<u8> &reg) {
   WriteBus(static_cast<u16>(addr_reg) + 0xFF00, reg);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // LD (u16),reg8
 void Cpu::InstrStore(const Reg<u8> &reg) {
   WriteBus(FetchNext2InstrBytes(), reg);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // LD (reg16), u8
 void Cpu::InstrStoreImm(Reg<u16> &addr) {
   WriteBus(addr, FetchNextInstrByte());
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // LDH (u8+0xFF00), reg8
 void Cpu::InstrStoreH(Reg<u8> &reg) {
   WriteBus(static_cast<u16>(FetchNextInstrByte()) + 0xFF00, reg);
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // LDH reg8,(u8+0xFF00)
@@ -105,7 +105,7 @@ void Cpu::InstrLoadH(Reg<u8> &reg) {
   u16 addr = static_cast<u16>(FetchNextInstrByte()) + 0xFF00;
   reg = ReadBus(addr, GbCommand::kGbReadData);
   assert(addr >= 0xFF00);
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // LDHL SP,n
@@ -118,13 +118,13 @@ void Cpu::InstrLoadHlSpRel() {
   SetFlagH(((reg ^ imm ^ (result & 0xFFFF)) & 0x10) == 0x10);
   SetFlagN(false);
   SetFlagZ(false);
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // LD SP,HL
 void Cpu::InstrLoadSpHl() {
   reg_file.SP = reg_file.HL;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // INC reg8
@@ -133,13 +133,13 @@ void Cpu::InstrInc(Reg<u8> &reg) {
   SetFlagZ((reg == 0));
   SetFlagN(false);
   SetFlagH((reg & 0x0F) == 0);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // INC reg16
 void Cpu::InstrInc(Reg<u16> &reg) {
   ++reg;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // INC (reg16)
@@ -150,7 +150,7 @@ void Cpu::InstrIncAddr(Reg<u16> &addr) {
   SetFlagZ((val == 0));
   SetFlagN(false);
   SetFlagH((val & 0x0F) == 0);
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // DEC (reg16)
@@ -161,7 +161,7 @@ void Cpu::InstrDecAddr(Reg<u16> &addr) {
   SetFlagH((val & 0x0F) == 0x0F);
   SetFlagN(true);
   SetFlagZ((val == 0));
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate A left. Old bit 7 to carry.
@@ -171,7 +171,7 @@ void Cpu::InstrRlca() {
   SetFlagZ(false);
   SetFlagN(false);
   SetFlagC((reg_file.A & 0x01));
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate A right. Old bit 0 to carry.
@@ -182,7 +182,7 @@ void Cpu::InstrRrca() {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(false);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate A right. Old bit 0 to carry.
@@ -194,7 +194,7 @@ void Cpu::InstrRra() {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(false);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate reg8 left. Old bit 7 to Carry flag.
@@ -204,7 +204,7 @@ void Cpu::InstrRlc(Reg<u8> &reg) {
   SetFlagZ(reg == 0);
   SetFlagN(false);
   SetFlagC((reg & 0x01));
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate (reg16) left. Old bit 7 to Carry flag.
@@ -216,7 +216,7 @@ void Cpu::InstrRlc(const Reg<u16> &addr_reg) {
   SetFlagZ(dat == 0);
   SetFlagN(false);
   SetFlagC((dat & 0x01));
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate reg8 right. Old bit 0 to carry.
@@ -226,7 +226,7 @@ void Cpu::InstrRrc(Reg<u8> &reg) {
   SetFlagZ(reg == 0);
   SetFlagN(false);
   SetFlagC((reg & 0x80));
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // Rotate (reg16) right. Old bit 0 to carry.
@@ -238,7 +238,7 @@ void Cpu::InstrRrc(const Reg<u16> &addr_reg) {
   SetFlagZ(dat == 0);
   SetFlagN(false);
   SetFlagC((dat & 0x80));
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // LD (u16),SP
@@ -246,7 +246,7 @@ void Cpu::InstrStoreSp() {
   u16 addr = FetchNext2InstrBytes();
   WriteBus(addr, reg_file.SPlsb);
   WriteBus(addr + 1, reg_file.SPmsb);
-  wait(20 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 20 * gb_const::kNsPerClkCycle;
 }
 
 // ADD HL,reg16
@@ -256,7 +256,7 @@ void Cpu::InstrAddHl(Reg<u16> &reg) {
   reg_file.HL += reg;
   SetFlagN(false);
   SetFlagC(reg_file.HL < old_val);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // ADD SP,i8
@@ -269,7 +269,7 @@ void Cpu::InstrAddSp() {
   SetFlagN(false);
   SetFlagC(((reg ^ data ^ (result & 0xFFFF)) & 0x100) == 0x100);
   SetFlagZ(false);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // ADD A,reg8
@@ -280,7 +280,7 @@ void Cpu::InstrAddA(Reg<u8> &reg) {
   SetFlagN(false);
   SetFlagC(reg_file.A < old_val);
   SetFlagZ(reg_file.A == 0);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // ADD A,(reg16)
@@ -291,7 +291,7 @@ void Cpu::InstrAddA(Reg<u16> &addr_reg) {
   SetFlagN(false);
   SetFlagC(reg_file.A < reg);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // ADD A,u8
@@ -302,7 +302,7 @@ void Cpu::InstrAddAImm() {
   SetFlagN(false);
   SetFlagC(reg_file.A < imm);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // ADC A,reg8: Add reg8 + carry flag to A.
@@ -314,7 +314,7 @@ void Cpu::InstrAddACarry(Reg<u8> &reg) {
   SetFlagN(false);
   SetFlagC((reg_file.A < old_val) || (reg_file.A == old_val && carry_add == 1));
   SetFlagZ(reg_file.A == 0);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // ADC A,(reg16): Add (reg16) + carry flag to A.
@@ -327,7 +327,7 @@ void Cpu::InstrAddACarry(Reg<u16> &addr_reg) {
   SetFlagN(false);
   SetFlagC(reg_file.A < old_val || (reg_file.A == old_val && carry_add == 1));
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // ADC A,u8: Add u8 + carry flag to A.
@@ -340,7 +340,7 @@ void Cpu::InstrAddACarryImm() {
   SetFlagN(false);
   SetFlagC(reg_file.A < old_val || (reg_file.A == old_val && carry_add == 1));
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SUB (d8): subtract immediate from register A.
@@ -352,7 +352,7 @@ void Cpu::InstrSubImm() {
   SetFlagH(((pre_val & 0xf) - (imm & 0xf)) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SUB reg8: Subtract reg8 from register A.
@@ -364,7 +364,7 @@ void Cpu::InstrSub(Reg<u8> &reg) {
   SetFlagH(((pre_val & 0xf) - (old_reg_val & 0xf)) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // SUB (reg16): Subtract (reg16) from register A.
@@ -376,7 +376,7 @@ void Cpu::InstrSub(Reg<u16> &addr_reg) {
   SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SBC A,reg8: Subtract reg8 and carry from register A.
@@ -388,7 +388,7 @@ void Cpu::InstrSubCarry(Reg<u8> &reg) {
   SetFlagH(((old_val & 0xf) - (reg & 0xf) - carry_sub) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // SBC A,(reg16): Subtract (reg16) and carry from register A.
@@ -401,7 +401,7 @@ void Cpu::InstrSubCarry(Reg<u16> &addr_reg) {
   SetFlagH(((old_val & 0xf) - (reg & 0xf) - carry_sub) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SBC A, u8: Subtract immediate and carry form register A.
@@ -414,7 +414,7 @@ void Cpu::InstrSubCarryImm() {
   SetFlagH(((old_val & 0xf) - (dat & 0xf) - carry_sub) < 0);
   SetFlagZ(reg_file.A == 0);
   SetFlagN(true);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // CP A,reg8: Compare A with reg8.
@@ -426,7 +426,7 @@ void Cpu::InstrComp(Reg<u8> &reg) {
   SetFlagH(((pre_val & 0xf) - (reg & 0xf)) < 0);
   SetFlagZ(result == 0);
   SetFlagN(true);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // CP A,(reg16): Compare A with (reg16).
@@ -439,7 +439,7 @@ void Cpu::InstrComp(Reg<u16> &reg) {
   SetFlagH(((pre_val & 0xf) - (read_reg & 0xf)) < 0);
   SetFlagZ(result == 0);
   SetFlagN(true);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // CP A,u8: Compare A with u8.
@@ -453,13 +453,13 @@ void Cpu::InstrCompImm() {
   SetFlagH(((pre_val & 0xf) - (imm & 0xf)) < 0);
   SetFlagZ(result == 0);
   SetFlagN(true);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // DEC reg16
 void Cpu::InstrDec(Reg<u16> &reg) {
   --reg;
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // DEC reg8
@@ -468,7 +468,7 @@ void Cpu::InstrDec(Reg<u8> &reg) {
   SetFlagH((reg & 0x0F) == 0x0F);
   SetFlagN(true);
   SetFlagZ((reg == 0));
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // XOR A,reg8
@@ -478,7 +478,7 @@ void Cpu::InstrXor(Reg<u8> &reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // XOR A,(reg16)
@@ -488,7 +488,7 @@ void Cpu::InstrXor(Reg<u16> &addr_reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // XOR A,u8
@@ -498,7 +498,7 @@ void Cpu::InstrXorImm() {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // AND A,reg8
@@ -508,7 +508,7 @@ void Cpu::InstrAnd(Reg<u8> &reg) {
   SetFlagH(true);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // AND A,reg16
@@ -518,7 +518,7 @@ void Cpu::InstrAnd(Reg<u16> &addr_reg) {
   SetFlagH(true);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // AND A,u8
@@ -528,7 +528,7 @@ void Cpu::InstrAndImm() {
   SetFlagH(true);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // OR A,reg8
@@ -538,7 +538,7 @@ void Cpu::InstrOr(Reg<u8> &reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // OR A,reg16
@@ -548,7 +548,7 @@ void Cpu::InstrOr(Reg<u16> &addr_reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // OR A,u8
@@ -558,7 +558,7 @@ void Cpu::InstrOrImm() {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg_file.A == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // JR PC+1+i8
@@ -566,19 +566,19 @@ void Cpu::InstrJump() {
   int tmp_pc = static_cast<int>(reg_file.PC);
   int tmp_instr = static_cast<int>(static_cast<int8_t>(FetchNextInstrByte()));
   reg_file.PC = static_cast<u16>(tmp_pc + 1 + tmp_instr);
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // JR reg16: Jump to address in reg16.
 void Cpu::InstrJump(Reg<u16> &addr_reg) {
   reg_file.PC = addr_reg;
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // JR u16: Jump to u16.
 void Cpu::InstrJumpAddr() {
   reg_file.PC = FetchNext2InstrBytes();
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // JP cond,reg: Jump to reg8+PC+1 if cond is true.
@@ -587,10 +587,10 @@ void Cpu::InstrJumpIf(bool cond) {
     int tmp_pc = static_cast<int>(reg_file.PC);
     int tmp_instr = static_cast<int>(static_cast<int8_t>(FetchNextInstrByte()));
     reg_file.PC = static_cast<u16>(tmp_pc + tmp_instr + 1);
-    wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 12 * gb_const::kNsPerClkCycle;
   } else {
     FetchNextInstrByte();
-    wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 8 * gb_const::kNsPerClkCycle;
   }
 }
 
@@ -599,9 +599,9 @@ void Cpu::InstrJumpAddrIf(bool cond) {
   u16 jmp_addr = FetchNext2InstrBytes();
   if (cond) {
     reg_file.PC = jmp_addr;
-    wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 16 * gb_const::kNsPerClkCycle;
   } else {
-    wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 12 * gb_const::kNsPerClkCycle;
   }
 }
 
@@ -611,7 +611,7 @@ void Cpu::InstrBitN(uint bit_index, Reg<u8> &reg) {
   SetFlagH(true);
   SetFlagN(false);
   SetFlagZ(!IsBitSet(reg, bit_index));
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // BIT ind,(reg16): set z flag bit b of address (reg16)
@@ -620,13 +620,13 @@ void Cpu::InstrBitN(uint bit_index, Reg<u16> &addr) {
   SetFlagH(true);
   SetFlagN(false);
   SetFlagZ(!IsBitSet(ReadBus(addr, GbCommand::kGbReadData), bit_index));
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // SET ind,reg8
 void Cpu::InstrSetBitN(uint bit_index, Reg<u8> &reg) {
   reg = SetBit(reg, true, bit_index);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SET ind,(reg16)
@@ -634,7 +634,7 @@ void Cpu::InstrSetBitN(uint bit_index, Reg<u16> &addr_reg) {
   u8 tmp = ReadBus(addr_reg, GbCommand::kGbReadData);
   tmp = SetBit(tmp, true, bit_index);
   WriteBus(addr_reg, tmp);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // CALL u16: Push address of next instruction onto stack and then jump to u16.
@@ -644,7 +644,7 @@ void Cpu::InstrCall() {
   WriteBus(--reg_file.SP, reg_file.PCmsb);
   WriteBus(--reg_file.SP, reg_file.PClsb);
   reg_file.PC = jmp_addr;
-  wait(24 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 24 * gb_const::kNsPerClkCycle;
 }
 
 // CALL cond,u16: Push address of next instruction onto stack and then jump to u16 if cond is true.
@@ -657,9 +657,9 @@ void Cpu::InstrCallIf(bool cond) {
     --reg_file.SP;
     WriteBus(reg_file.SP, reg_file.PClsb);
     reg_file.PC = jmp_addr;
-    wait(24 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 24 * gb_const::kNsPerClkCycle;
   } else {
-    wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 12 * gb_const::kNsPerClkCycle;
   }
 }
 
@@ -671,7 +671,7 @@ void Cpu::InstrRet() {
   msb <<= 8;
   ++reg_file.SP;
   reg_file.PC = msb | lsb;
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // RETI: Pop two bytes from stack and jump to that address and enable interrupts.
@@ -683,7 +683,7 @@ void Cpu::InstrRetI() {
   ++reg_file.SP;
   reg_file.PC = msb | lsb;
   intr_master_enable = true;
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // PUSH reg16: Push register reg16 onto stack. Decrement Stack Pointer (SP) by two.
@@ -692,7 +692,7 @@ void Cpu::InstrPush(Reg<u16> &reg) {
   WriteBus(reg_file.SP, static_cast<u8>(reg >> 8));  // msb
   --reg_file.SP;
   WriteBus(reg_file.SP, static_cast<u8>(reg & 0x00FF));  // lsb
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // POP reg16: Pop two bytes off stack into register pair nn. Increment Stack Pointer (SP) by two.
@@ -705,13 +705,13 @@ void Cpu::InstrPop(Reg<u16> &reg) {
   msb <<= 8;
   reg = msb | lsb;
   reg_file.F = (reg_file.F & 0xF0) | f_tmp;
-  wait(12 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 12 * gb_const::kNsPerClkCycle;
 }
 
 // LD reg8,reg8: Register to register transfer.
 void Cpu::InstrMov(Reg<u8> &reg_to, Reg<u8> &reg_from) {
     reg_to = reg_from;
-    wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 4 * gb_const::kNsPerClkCycle;
   }
 
 // RL reg8
@@ -723,7 +723,7 @@ void Cpu::InstrRotLeft(Reg<u8> &reg) {
   SetFlagZ(reg == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // RL (reg16)
@@ -737,7 +737,7 @@ void Cpu::InstrRotLeft(Reg<u16> &addr_reg) {
   SetFlagZ(dat == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // RR reg8
@@ -749,7 +749,7 @@ void Cpu::InstrRotRight(Reg<u8> &reg) {
   SetFlagZ(reg == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // RR (reg16)
@@ -763,7 +763,7 @@ void Cpu::InstrRotRight(Reg<u16> &addr_reg) {
   SetFlagZ(dat == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // RLA: Note, GBCPUMan and opcode missmatch (zero flag)
@@ -775,7 +775,7 @@ void Cpu::InstrRotLeftA() {
   SetFlagZ(false);
   SetFlagN(false);
   SetFlagH(false);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // SRL reg8
@@ -786,7 +786,7 @@ void Cpu::InstrShiftRight(Reg<u8> &reg) {
   SetFlagZ(reg == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SRL reg16
@@ -799,19 +799,19 @@ void Cpu::InstrShiftRight(Reg<u16> &addr_reg) {
   SetFlagZ(dat == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // DI
 void Cpu::InstrDI() {
   intr_master_enable = false;
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // EI
 void Cpu::InstrEI() {
   intr_master_enable = true;
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // RET cond: Pop two bytes from stack & jump to that address if cond is true
@@ -823,9 +823,9 @@ void Cpu::InstrRetIf(bool cond) {
     msb <<= 8;
     ++reg_file.SP;
     reg_file.PC = msb | lsb;
-    wait(20 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 20 * gb_const::kNsPerClkCycle;
   } else {
-    wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 8 * gb_const::kNsPerClkCycle;
   }
 }
 
@@ -838,7 +838,7 @@ void Cpu::InstrSwap(Reg<u8> &reg) {
   SetFlagZ(reg == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SWAP reg16
@@ -852,7 +852,7 @@ void Cpu::InstrSwap(Reg<u16> &addr_reg) {
   SetFlagZ(dat == 0);
   SetFlagN(false);
   SetFlagH(false);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // RST u8
@@ -862,13 +862,13 @@ void Cpu::InstrRST(const u8 addr) {
   --reg_file.SP;
   WriteBus(reg_file.SP, reg_file.PClsb);
   reg_file.PC = addr;
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);  // TODO(niko): PDF and opcode table differ.
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;  // TODO(niko): PDF and opcode table differ.
 }
 
 // RES bit, reg8
 void Cpu::InstrResetBit(const uint bit, Reg<u8> &reg) {
   reg = reg & ~(1 << bit);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // RES bit, (reg16)
@@ -876,7 +876,7 @@ void Cpu::InstrResetBit(const uint bit, Reg<u16> &addr_reg) {
   u8 res = ReadBus(addr_reg, GbCommand::kGbReadData);
   res = res & ~(1 << bit);
   WriteBus(addr_reg, res);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // CPL: Complement of register A.
@@ -884,7 +884,7 @@ void Cpu::InstrComplement() {
   reg_file.A = ~reg_file.A;
   SetFlagH(true);
   SetFlagN(true);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // SLA reg8: Shift left into carry.
@@ -895,7 +895,7 @@ void Cpu::InstrSLA(Reg<u8> &reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // InstrSLA (reg16)
@@ -908,7 +908,7 @@ void Cpu::InstrSLA(Reg<u16> &addr_reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(dat == 0);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // Not part of the original ISA. Stops the simulation.
@@ -944,7 +944,7 @@ void Cpu::InstrDAA() {
     SetFlagH(false);
     SetFlagZ(reg == 0);
     reg_file.A = reg;
-    wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // SCF
@@ -952,7 +952,7 @@ void Cpu::InstrSCF() {
   SetFlagC(true);
   SetFlagH(false);
   SetFlagN(false);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // CCF
@@ -960,7 +960,7 @@ void Cpu::InstrCCF() {
   SetFlagC(!GetFlagC());
   SetFlagH(false);
   SetFlagN(false);
-  wait(4 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 4 * gb_const::kNsPerClkCycle;
 }
 
 // Shift n right into Carry. MSB doesn't change.
@@ -972,7 +972,7 @@ void Cpu::InstrSRA(Reg<u8> &reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(reg == 0);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }
 
 // SRA reg8
@@ -986,11 +986,11 @@ void Cpu::InstrSRA(Reg<u16> &addr_reg) {
   SetFlagH(false);
   SetFlagN(false);
   SetFlagZ(result == 0);
-  wait(16 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 16 * gb_const::kNsPerClkCycle;
 }
 
 // LD A,(C).
 void Cpu::InstrLoadC() {
   reg_file.A = ReadBus(0xFF00 + reg_file.C, GbCommand::kGbReadData);
-  wait(8 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  wait_ns_ = 8 * gb_const::kNsPerClkCycle;
 }

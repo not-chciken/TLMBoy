@@ -33,6 +33,8 @@ void Cpu::DoMachineCycle() {
       continue;
     }
 
+    wait_ns_ = 0;
+
     HandleInterrupts();  // This disables IME and sets the PC in case of an interrupt.
 
     if (single_step_) {
@@ -2078,6 +2080,12 @@ void Cpu::DoMachineCycle() {
                   << " at PC=0x" << std::hex <<static_cast<int>(reg_file.PC) << std::endl;
         exit(EXIT_FAILURE);
         break;
+    }
+  
+    local_time_delta_ += sc_time(wait_ns_, sc_core::SC_NS);
+    if (sc_time_to_pending_activity() <= local_time_delta_) {
+        wait(local_time_delta_);
+        local_time_delta_ = sc_time(0, sc_core::SC_NS);
     }
   }
 }  // NOLINT(readability/fn_size)

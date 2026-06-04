@@ -84,6 +84,10 @@ class Cpu : public InterruptModule<Cpu>, public sc_module {
   bool single_step_ = false;
   // TCP port for the GDB stub.
   const int gdb_port_ = 1337;
+  // Instruction wait time in nanoseconds.
+  int wait_ns_;
+  sc_time local_time_delta_;
+
 
   // All of the SM83's instructions.
   void InstrAddA(Reg<u8>& reg);
