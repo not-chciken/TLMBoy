@@ -2083,9 +2083,11 @@ void Cpu::DoMachineCycle() {
     }
   
     local_time_delta_ += sc_time(wait_ns_, sc_core::SC_NS);
-    if (sc_time_to_pending_activity() <= local_time_delta_) {
-        wait(local_time_delta_);
-        local_time_delta_ = sc_time(0, sc_core::SC_NS);
+    auto time_limit = sc_time_to_pending_activity();
+    auto max_time = sc_max_time() - sc_time_stamp();
+    if ((time_limit <= local_time_delta_) || (time_limit == max_time)) {
+      wait(local_time_delta_);
+      local_time_delta_ = sc_time(0, sc_core::SC_NS);
     }
   }
 }  // NOLINT(readability/fn_size)
