@@ -16,7 +16,8 @@ Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step):
     sc_module(name),
     gdb_server(this),
     attach_gdb_(attach_gdb),
-    single_step_(single_step) {
+    single_step_(single_step),
+    rom_bank_0_(nullptr) {
   SC_THREAD(DoMachineCycle);
 }
 
@@ -76,6 +77,10 @@ void Cpu::WriteBusDebug(u16 addr, u8 data) {
 }
 
 u8 Cpu::ReadBus(u16 addr, GbCommand::Cmd cmd) {
+  if ((addr <= 0x3FFF) && (rom_bank_0_ != nullptr)) {
+    return rom_bank_0_[addr];
+  }
+
   this->gbcmd.cmd = cmd;
   static sc_time delay = sc_time(0, SC_NS);  // Dummy delay.
   u8 data;
@@ -137,6 +142,20 @@ void Cpu::Continue() {
 void Cpu::start_of_simulation() {
   InterruptModule::start_of_simulation();
   payload = new tlm::tlm_generic_payload;
+
+  tlm::tlm_dmi dmi_data;
+  unsigned char dummy;
+  payload->set_command(tlm::TLM_READ_COMMAND);
+  payload->set_address(0x0);
+  payload->set_data_ptr(&dummy);
+  payload->set_address(0x0);
+  if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
+    assert(dmi_data.get_start_address() == 0);
+    assert(dmi_data.get_end_address() == 0x3FFF);
+    rom_bank_0_ = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
+  }
+  // May not get a DMI pointer if tracing is enabled.
+
   payload->set_command(tlm::TLM_IGNORE_COMMAND);
   payload->set_address(0);
   payload->set_data_ptr(nullptr);

@@ -49,6 +49,7 @@ class Cartridge : public sc_module {
     virtual void b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& delay) = 0;
     virtual uint transport_dbg_ram(tlm::tlm_generic_payload& trans);
     virtual uint transport_dbg_rom(tlm::tlm_generic_payload& trans);
+    virtual bool get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data);
     virtual void UnmapBootRom();
 
    protected:

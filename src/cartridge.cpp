@@ -66,6 +66,7 @@ Cartridge::MemoryBankCtrler::MemoryBankCtrler(uint num_rom_banks, uint num_ram_b
   ram_socket_in.register_b_transport(this, &MemoryBankCtrler::b_transport_ram);
   rom_socket_in.register_transport_dbg(this, &MemoryBankCtrler::transport_dbg_rom);
   ram_socket_in.register_transport_dbg(this, &MemoryBankCtrler::transport_dbg_ram);
+  rom_socket_in.register_get_direct_mem_ptr(this, &MemoryBankCtrler::get_direct_mem_ptr);
   rom_low_socket_out.bind(rom_low.targ_socket);
   rom_high_socket_out.bind(rom_high.targ_socket);
   ram_socket_out.bind(ext_ram.targ_socket);
@@ -100,6 +101,19 @@ uint Cartridge::MemoryBankCtrler::transport_dbg_ram(tlm::tlm_generic_payload& tr
   sc_time delay = sc_time(0, SC_NS);
   b_transport_ram(trans, delay);
   return 1;
+}
+
+bool Cartridge::MemoryBankCtrler::get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data) {
+  const u16 adr = static_cast<u16>(trans.get_address());
+  if (adr >= 0x4000u || symfile_tracer_) {
+    return false;
+  }
+
+  dmi_data.allow_read();
+  dmi_data.set_start_address(0);
+  dmi_data.set_end_address(0x3FFFu);
+  dmi_data.set_dmi_ptr(reinterpret_cast<unsigned char*>(rom_low.GetDataPtr() + adr));
+  return true;
 }
 
 void Cartridge::MemoryBankCtrler::UnmapBootRom() {

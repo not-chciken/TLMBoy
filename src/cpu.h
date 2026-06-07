@@ -86,8 +86,10 @@ class Cpu : public InterruptModule<Cpu>, public sc_module {
   const int gdb_port_ = 1337;
   // Instruction wait time in nanoseconds.
   int wait_ns_;
+  // The time the local SC_THREAD advanced without calling sc_wait.
   sc_time local_time_delta_;
-
+  // DMI pointer to lower ROM bank.
+  u8* rom_bank_0_;
 
   // All of the SM83's instructions.
   void InstrAddA(Reg<u8>& reg);
