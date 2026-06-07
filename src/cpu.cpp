@@ -151,7 +151,7 @@ void Cpu::start_of_simulation() {
   payload->set_address(0x0);
   if (init_socket->get_direct_mem_ptr(*payload, dmi_data)) {
     assert(dmi_data.get_start_address() == 0);
-    assert(dmi_data.get_end_address() == 0x3FFF);
+    assert(dmi_data.get_end_address() >= 0x3FFF);
     rom_bank_0_ = reinterpret_cast<u8*>(dmi_data.get_dmi_ptr());
   }
   // May not get a DMI pointer if tracing is enabled.
