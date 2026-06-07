@@ -20,9 +20,7 @@
 #include "utils.h"
 
 const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-Options options{
-    .headless = true,
-    .rom_path = tlm_boy_root + "/roms/dummy.gb"};
+Options options{.headless = true, .rom_path = tlm_boy_root + "/roms/dummy.gb"};
 
 struct Top : public GbTop {
   SC_HAS_PROCESS(Top);
@@ -59,11 +57,11 @@ int sc_main(int argc, char* argv[]) {
   for (;;) {
     int index;
     switch (getopt_long(argc, argv, "l", long_opts, &index)) {
-      case 'l':
-        options.headless = true;
-        continue;
-      default:
-        break;
+    case 'l':
+      options.headless = true;
+      continue;
+    default:
+      break;
     }
     break;
   }

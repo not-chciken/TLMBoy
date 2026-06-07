@@ -7,10 +7,11 @@
  * remote serial protocol.
  ************************************************************************************/
 
-#include <cstdlib>
-#include <chrono>
-#include <future>
 #include <gtest/gtest.h>
+
+#include <chrono>
+#include <cstdlib>
+#include <future>
 #include <string>
 
 #include "utils.h"
@@ -21,18 +22,15 @@ const std::chrono::seconds kTestTimeoutS = 50s;
 const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 const string exe = tlm_boy_root + "/build/tlmboy_test";
 const string rom_path = tlm_boy_root + "/roms/dummy.bin";
-const string cmd_test = exe + " --max-cycles=800 --headless --wait-for-gdb -r "
-                  + rom_path;
-const string cmd_test_wo_max = exe + " --headless --wait-for-gdb -r "
-                  + rom_path;
+const string cmd_test = exe + " --max-cycles=800 --headless --wait-for-gdb -r " + rom_path;
+const string cmd_test_wo_max = exe + " --headless --wait-for-gdb -r " + rom_path;
 
 // This test boots up the Gameboy and compares the states of the register
 // against a golden file once per machine cycle using the GDB remote
 TEST(GdbTests, SystemTest) {
   string boot_checker_path = tlm_boy_root + "/tests/gdb/boot_checker_gdb.py";
   string cmd_gdb = "z80-unknown-elf-gdb --batch -x " + boot_checker_path;
-  std::cout << "Executing: " << cmd_test << std::endl
-            << "Executing: " << cmd_gdb << std::endl;
+  std::cout << "Executing: " << cmd_test << std::endl << "Executing: " << cmd_gdb << std::endl;
   auto fut_tlm = std::async(std::launch::async, std::system, cmd_test.c_str());
   auto fut_gdb = std::async(std::launch::async, std::system, cmd_gdb.c_str());
   ASSERT_EQ(fut_tlm.wait_for(kTestTimeoutS), std::future_status::ready);
@@ -41,10 +39,9 @@ TEST(GdbTests, SystemTest) {
   ASSERT_EQ(fut_gdb.get(), 0);
 }
 
-void FailTest(const string &script_path) {
+void FailTest(const string& script_path) {
   string cmd_script = tlm_boy_root + script_path;
-  std::cout << "Executing: " << cmd_script << std::endl
-            << "Executing: " << cmd_test_wo_max << std::endl;
+  std::cout << "Executing: " << cmd_script << std::endl << "Executing: " << cmd_test_wo_max << std::endl;
   auto fut_tlm = std::async(std::launch::async, std::system, cmd_test_wo_max.c_str());
   auto fut_tcp = std::async(std::launch::async, std::system, cmd_script.c_str());
   ASSERT_EQ(fut_tlm.wait_for(kTestTimeoutS), std::future_status::ready);

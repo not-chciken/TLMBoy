@@ -18,11 +18,8 @@ struct Top : public sc_module {
   Cpu test_cpu;
   GenericMemory test_memory;
 
-  explicit Top (sc_module_name name)
-      : sc_module(name),
-        test_bus("test_bus"),
-        test_cpu("test_cpu"),
-        test_memory(65536, "test_memory") {
+  explicit Top(sc_module_name name)
+      : sc_module(name), test_bus("test_bus"), test_cpu("test_cpu"), test_memory(65536, "test_memory") {
     test_bus.AddBusMaster(&test_cpu.init_socket);
     test_bus.AddBusSlave(&test_memory.targ_socket, 0x0000, 0xFFFF);
   }
@@ -30,8 +27,8 @@ struct Top : public sc_module {
 Top test_top("test_top");
 
 // Unit test: check register assignment
-TEST(CpuTests, RegisterAssignment){
-  Cpu *cpu = &test_top.test_cpu;
+TEST(CpuTests, RegisterAssignment) {
+  Cpu* cpu = &test_top.test_cpu;
   cpu->reg_file.A = 1;
   cpu->reg_file.B = 1;
   cpu->reg_file.C = 1;
@@ -50,18 +47,18 @@ TEST(CpuTests, RegisterAssignment){
   ASSERT_EQ(cpu->reg_file.F, 2);
   ASSERT_EQ(cpu->reg_file.H, 1);
   ASSERT_EQ(cpu->reg_file.L, 1);
-  ASSERT_EQ(cpu->reg_file.SP ,1);
-  ASSERT_EQ(cpu->reg_file.PC ,1);
-  ASSERT_EQ(cpu->reg_file.AF ,258);
-  ASSERT_EQ(cpu->reg_file.BC ,257);
-  ASSERT_EQ(cpu->reg_file.DE ,257);
-  ASSERT_EQ(cpu->reg_file.HL ,257);
+  ASSERT_EQ(cpu->reg_file.SP, 1);
+  ASSERT_EQ(cpu->reg_file.PC, 1);
+  ASSERT_EQ(cpu->reg_file.AF, 258);
+  ASSERT_EQ(cpu->reg_file.BC, 257);
+  ASSERT_EQ(cpu->reg_file.DE, 257);
+  ASSERT_EQ(cpu->reg_file.HL, 257);
 }
 
-//Unit test: Opcodes 0x00-0x03
+// Unit test: Opcodes 0x00-0x03
 TEST(CpuTests, Firstopcodes) {
   test_top.test_cpu.reg_file.PC = 0x0100;
-  u8 *data = test_top.test_memory.GetDataPtr();
+  u8* data = test_top.test_memory.GetDataPtr();
   data[0x100] = 0x00;  // NOP, 4 cycles
 
   data[0x101] = 0x01;  // LD BC,0x4223, 12 cycles

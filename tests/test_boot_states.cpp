@@ -11,8 +11,8 @@
 
 #include "bus.h"
 #include "cartridge.h"
-#include "cpu.h"
 #include "common.h"
+#include "cpu.h"
 #include "game_info.h"
 #include "gb_top.h"
 #include "generic_memory.h"

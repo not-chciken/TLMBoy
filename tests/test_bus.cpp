@@ -26,15 +26,11 @@ struct BusMaster : public sc_module {
   SC_HAS_PROCESS(BusMaster);
   tlm_utils::simple_initiator_socket<BusMaster, gb_const::kBusDataWidth> init_socket;
 
-  explicit BusMaster(sc_module_name name) : sc_module(name), init_socket("init_socket") {
-    SC_THREAD(BusMasterThread);
-  }
+  explicit BusMaster(sc_module_name name) : sc_module(name), init_socket("init_socket") { SC_THREAD(BusMasterThread); }
 
   void BusMasterThread() {
     int data = 1337;
-    auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND,
-                                        0x0FFF,
-                                        reinterpret_cast<void*>(&data));
+    auto payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x0FFF, reinterpret_cast<void*>(&data));
     sc_time delay = sc_time(0, SC_NS);
 
     init_socket->b_transport(*payload, delay);
@@ -69,7 +65,7 @@ struct BusMaster : public sc_module {
     ASSERT_EQ(payload->get_response_status(), tlm::TLM_ADDRESS_ERROR_RESPONSE);
 
     tlm::tlm_dmi dmi_data;
-    u8 *data_ptr;
+    u8* data_ptr;
     payload->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
     payload->set_address(0x6000);
     ASSERT_FALSE(init_socket->get_direct_mem_ptr(*payload, dmi_data));
@@ -98,7 +94,7 @@ struct BusSlave : public sc_module {
   tlm_utils::simple_target_socket<BusSlave, gb_const::kBusDataWidth> target_socket;
   u8 data[0x1000];
 
-  explicit BusSlave(sc_module_name name): sc_module(name), target_socket("target_socket") {
+  explicit BusSlave(sc_module_name name) : sc_module(name), target_socket("target_socket") {
     SC_THREAD(BusSlaveThread);
     target_socket.register_b_transport(this, &BusSlave::b_transport);
     target_socket.register_transport_dbg(this, &BusSlave::transport_dbg);

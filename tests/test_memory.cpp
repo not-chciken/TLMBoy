@@ -12,24 +12,21 @@
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/simple_target_socket.h>
 
-#include "generic_memory.h"
 #include "gb_const.h"
+#include "generic_memory.h"
 #include "utils.h"
 
 struct MemRequester : public sc_module {
   SC_HAS_PROCESS(MemRequester);
   tlm_utils::simple_initiator_socket<MemRequester, gb_const::kBusDataWidth> init_socket;
 
-  explicit MemRequester(sc_module_name name)
-      : sc_module(name), init_socket("init_socket") {
+  explicit MemRequester(sc_module_name name) : sc_module(name), init_socket("init_socket") {
     SC_THREAD(MemRequesterThread);
   }
 
   void MemRequesterThread() {
     u8 data = 123;
-    auto payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND,
-                                        0x0FFF,
-                                        reinterpret_cast<void*>(&data));
+    auto payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0x0FFF, reinterpret_cast<void*>(&data));
     sc_time delay = sc_time(0, SC_NS);
 
     init_socket->b_transport(*payload, delay);
@@ -44,16 +41,14 @@ struct Top : public sc_module {
   MemRequester test_memrequester;
 
   explicit Top(sc_module_name name)
-      : sc_module(name),
-        test_memory(0x1000, "test_memory"),
-        test_memrequester("test_memrequester") {
+      : sc_module(name), test_memory(0x1000, "test_memory"), test_memrequester("test_memrequester") {
     SC_THREAD(TopThread);
     test_memrequester.init_socket.bind(test_memory.targ_socket);
   }
 
   void TopThread() {
     wait(10, SC_NS);
-    u8 *dat = test_memory.GetDataPtr();
+    u8* dat = test_memory.GetDataPtr();
     ASSERT_EQ(dat[0x0FFF], 123);
   }
 };

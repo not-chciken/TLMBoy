@@ -7,11 +7,10 @@
  * the payload factory
  ******************************************************************************/
 
-
-
-#include <iostream>
-#include <cstdint>
 #include <gtest/gtest.h>
+
+#include <cstdint>
+#include <iostream>
 
 #include "boot_checker.h"
 
