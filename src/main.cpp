@@ -27,6 +27,7 @@ int sc_main(int argc, char* argv[]) {
     return 1;
   }
 
+  sc_set_time_resolution(1.0, SC_NS);
   GbTop gb_top("game_boy_top", options);
 
   std::cout << static_cast<string>(*gb_top.cartridge.game_info);

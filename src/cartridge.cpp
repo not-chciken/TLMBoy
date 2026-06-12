@@ -53,7 +53,7 @@ void Cartridge::BankSwitchedMem::b_transport(tlm::tlm_generic_payload& trans, sc
 }
 
 uint Cartridge::BankSwitchedMem::transport_dbg(tlm::tlm_generic_payload& trans) {
-  sc_time delay = sc_time(0, SC_NS);
+  sc_time delay = SC_ZERO_TIME;
   b_transport(trans, delay);
   return 1;
 }
@@ -98,7 +98,7 @@ uint Cartridge::MemoryBankCtrler::transport_dbg_rom(tlm::tlm_generic_payload& tr
 }
 
 uint Cartridge::MemoryBankCtrler::transport_dbg_ram(tlm::tlm_generic_payload& trans) {
-  sc_time delay = sc_time(0, SC_NS);
+  sc_time delay = SC_ZERO_TIME;
   b_transport_ram(trans, delay);
   return 1;
 }

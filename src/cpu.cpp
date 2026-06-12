@@ -57,7 +57,7 @@ bool Cpu::GetFlagZ() const {
 }
 
 void Cpu::WriteBus(u16 addr, u8 data) {
-  static sc_time delay = sc_time(0, SC_NS);  // Dummy delay.
+  static sc_time delay = SC_ZERO_TIME;  // Dummy delay.
 
   payload->set_command(tlm::TLM_WRITE_COMMAND);
   payload->set_address(addr);
@@ -82,7 +82,7 @@ u8 Cpu::ReadBus(u16 addr, GbCommand::Cmd cmd) {
   }
 
   this->gbcmd.cmd = cmd;
-  static sc_time delay = sc_time(0, SC_NS);  // Dummy delay.
+  static sc_time delay = SC_ZERO_TIME;  // Dummy delay.
   u8 data;
   payload->set_command(tlm::TLM_READ_COMMAND);
   payload->set_address(addr);

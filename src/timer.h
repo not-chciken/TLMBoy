@@ -53,5 +53,6 @@ struct Timer : public sc_module {
   u8 reg_tima_;
   u8 reg_tma_;
   u8* reg_if_;  // Interrupt flag register (0xFF0F).
-  u32 cycles_per_inc_ = 1024;
+  u32 cycles_per_inc_;
+  sc_time inc_time_;
 };

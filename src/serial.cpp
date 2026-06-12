@@ -61,7 +61,7 @@ void Serial::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe
 }
 
 uint Serial::transport_dbg(tlm::tlm_generic_payload& trans) {
-  sc_time delay = sc_time(0, SC_NS);
+  sc_time delay = SC_ZERO_TIME;
   b_transport(trans, delay);
   return 1;
 }

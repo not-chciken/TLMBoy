@@ -14,7 +14,7 @@ IoRegisters::IoRegisters(sc_module_name name)
 void IoRegisters::DmaTransfer(const u8 byte) {
   u8 read_data;
   u8 write_data;
-  sc_time delay = sc_time(0, SC_NS);
+  sc_time delay = SC_ZERO_TIME;
   auto read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0xFFFFF, &read_data);
   auto write_payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0xFFFFF, &write_data);
   const u16 start_address = byte * 0x100;

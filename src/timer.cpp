@@ -5,7 +5,11 @@
 
 #include "timer.h"
 
-Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if_(reg_if) {
+Timer::Timer(sc_module_name name, u8* reg_if)
+    : sc_module(name),
+      reg_if_(reg_if),
+      cycles_per_inc_(1024),
+      inc_time_(cycles_per_inc_ * gb_const::kNsPerClkCycle, sc_core::SC_NS) {
   SC_THREAD(DivLoop);
   SC_THREAD(TimerLoop);
   targ_socket.register_b_transport(this, &Timer::b_transport);
@@ -14,15 +18,16 @@ Timer::Timer(sc_module_name name, u8* reg_if) : sc_module(name), reg_if_(reg_if)
 
 // Increments the div register at rate of 16384 Hz.
 void Timer::DivLoop() {
+  const sc_time div_time(256 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
   while (true) {
-    wait(256 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait(div_time);
     ++reg_div_;
   }
 }
 
 void Timer::TimerLoop() {
   while (true) {
-    wait(cycles_per_inc_ * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+    wait(inc_time_);
     if (reg_tac_ & kMaskTimerEnabled) {
       u8 old_val = reg_tima_++;
       if (old_val > reg_tima_) {  // Overflow case.
@@ -84,13 +89,14 @@ void Timer::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay [[maybe_
       }
     }
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    inc_time_ = sc_time(cycles_per_inc_ * gb_const::kNsPerClkCycle, sc_core::SC_NS);
   } else {
     trans.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
   }
 }
 
 uint Timer::transport_dbg(tlm::tlm_generic_payload& trans) {
-  sc_time delay = sc_time(0, SC_NS);
+  sc_time delay = SC_ZERO_TIME;
   b_transport(trans, delay);
   return 1;
 }

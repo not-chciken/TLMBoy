@@ -284,17 +284,22 @@ void Ppu::CheckLycInterrupt() {
 
 // A complete screen refresh occurs every 70224 cycles.
 void Ppu::RenderLoop() {
+  const sc_time oam_search_time(80 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  const sc_time lcd_transfer_time(168 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  const sc_time check_lyc_time(208 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+  const sc_time vblank_time(456 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+
   wait(1, sc_core::SC_NS);  // Ensures correct ordering of CPU and PPU.
   while (1) {
     for (int i = 0; i < kGbScreenHeight; ++i) {
       // Mode = OAM-search (10).
       SetBit(reg_stat, false, 0);
       SetBit(reg_stat, true, 1);
-      wait(80 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+      wait(oam_search_time);
 
       // Mode = LCD transfer (11)
       SetBit(reg_stat, true, 0);
-      wait(168 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+      wait(lcd_transfer_time);
 
       // Mode = H-Blank (00).
       SetBit(reg_stat, false, 0);
@@ -311,7 +316,7 @@ void Ppu::RenderLoop() {
       }
 
       CheckLycInterrupt();
-      wait(208 * gb_const::kNsPerClkCycle, sc_core::SC_NS);
+      wait(check_lyc_time);
     }
     window_line_ = 0;
 
@@ -324,7 +329,7 @@ void Ppu::RenderLoop() {
     *reg_intr_pending_dmi |= kMaskVBlankIE;  // V-Blank interrupt.
 
     for (int i = 0; i < 10; ++i) {
-      wait(456 * gb_const::kNsPerClkCycle, sc_core::SC_NS);  // The vblank period is 4560 cycles.
+      wait(vblank_time);  // The vblank period is 10 * 4560 = 4560 cycles.
       ++(*reg_lcdc_y);
       CheckLycInterrupt();
     }

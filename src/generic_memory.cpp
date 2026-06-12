@@ -101,7 +101,7 @@ void GenericMemory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay 
 }
 
 uint GenericMemory::transport_dbg(tlm::tlm_generic_payload& trans) {
-  sc_time delay(0, SC_NS);
+  sc_time delay = SC_ZERO_TIME;
   b_transport(trans, delay);
   return 1;
 }
