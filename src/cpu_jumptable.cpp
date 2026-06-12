@@ -2085,7 +2085,7 @@ void Cpu::DoMachineCycle() {
     local_time_delta_ += sc_time::from_value(wait_ns_);
     auto time_limit = sc_time_to_pending_activity();
     auto max_time = sc_max_time() - sc_time_stamp();
-    if ((time_limit <= local_time_delta_) || (time_limit == max_time)) {
+    if ((time_limit <= local_time_delta_) || (time_limit == max_time) || single_step_) {
       wait(local_time_delta_);
       local_time_delta_ = SC_ZERO_TIME;
     }

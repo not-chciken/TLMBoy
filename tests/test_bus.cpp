@@ -162,7 +162,6 @@ struct Top : public sc_module {
 };
 
 TEST(BusTests, GenericTest) {
-  sc_set_time_resolution(1.0, SC_NS);
   Top test_top("test_top");
   sc_start(30, SC_NS);
 }
