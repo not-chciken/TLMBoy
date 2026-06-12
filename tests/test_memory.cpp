@@ -27,7 +27,7 @@ struct MemRequester : public sc_module {
   void MemRequesterThread() {
     u8 data = 123;
     auto payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0x0FFF, reinterpret_cast<void*>(&data));
-    sc_time delay = sc_time(0, SC_NS);
+    sc_time delay = SC_ZERO_TIME;
 
     init_socket->b_transport(*payload, delay);
     ASSERT_EQ(payload->get_response_status(), tlm::TLM_OK_RESPONSE);
@@ -59,6 +59,7 @@ TEST(MemoryTests, GenericTest) {
 }
 
 int sc_main(int argc, char* argv[]) {
+  sc_set_time_resolution(1.0, SC_NS);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

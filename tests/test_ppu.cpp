@@ -147,6 +147,7 @@ TEST(PpuTests, SmokeTest) {
 }
 
 int sc_main(int argc, char* argv[]) {
+  sc_set_time_resolution(1.0, SC_NS);
   ::testing::InitGoogleTest(&argc, argv);
 
   const struct option long_opts[] = {{"headless", no_argument, 0, 'l'}, {nullptr, 0, nullptr, 0}};

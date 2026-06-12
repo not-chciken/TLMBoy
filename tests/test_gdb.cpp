@@ -71,6 +71,7 @@ TEST(GdbTests, MessageTooLong) {
 }
 
 int sc_main(int argc, char* argv[]) {
+  sc_set_time_resolution(1.0, SC_NS);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -30,6 +30,7 @@ TEST(BlarrgTest, cpuinstr04) {
 }
 
 int sc_main(int argc, char* argv[]) {
+  sc_set_time_resolution(1.0, SC_NS);
   ::testing::InitGoogleTest(&argc, argv);
   options.InitOpts(argc, argv);
 
