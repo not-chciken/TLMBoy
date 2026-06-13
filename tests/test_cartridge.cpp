@@ -31,8 +31,13 @@ TEST(CartridgeTestsMbc5, Rom) {
   sc_time delay = SC_ZERO_TIME;
   u8 data = 0;
 
+  // Read lower, fixed ROM Bank.
+  auto read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x1000, &data);
+  cart_mbc5->mbc->b_transport_rom(*read_payload, delay);
+  ASSERT_EQ(data, 0x91u);
+
   // Read upper ROM Bank 0 (file offset 0x4000, first byte = 0xaf).
-  auto read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x4000, &data);
+  read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x4000, &data);
   cart_mbc5->mbc->b_transport_rom(*read_payload, delay);
   ASSERT_EQ(data, 0xafu);
   ASSERT_EQ(cart_mbc5->mbc->GetRomInd(), 0);
@@ -46,6 +51,12 @@ TEST(CartridgeTestsMbc5, Rom) {
   // Read upper ROM Bank 1(file offset 0x8000, first byte = 0xf8).
   read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x4000, &data);
   cart_mbc5->mbc->b_transport_rom(*read_payload, delay);
+  ASSERT_EQ(data, 0xf8u);
+
+  // Debug should read the same value.
+  data = 0x00;
+  read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x4000, &data);
+  cart_mbc5->mbc->transport_dbg_rom(*read_payload);
   ASSERT_EQ(data, 0xf8u);
 
   // Read a second byte from the same bank to confirm the whole bank is mapped.
@@ -74,6 +85,7 @@ TEST(CartridgeTestsMbc5, Ram) {
   auto enable_payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0x0000, &data);
   cart_mbc5->mbc->b_transport_rom(*enable_payload, delay);
   ASSERT_EQ(cart_mbc5->mbc->GetRamInd(), 0);
+  ASSERT_EQ(cart_mbc5->mbc->ext_ram.GetCurrentBankIndex(), 0);
 
   // Write a value to RAM bank 0, address 0x0000.
   data = 0xBE;
@@ -86,11 +98,17 @@ TEST(CartridgeTestsMbc5, Ram) {
   cart_mbc5->mbc->b_transport_ram(*read_payload, delay);
   ASSERT_EQ(data, 0xBEu);
 
+  // Debug should read the same value.
+  data = 0x00;
+  cart_mbc5->mbc->transport_dbg_ram(*read_payload);
+  ASSERT_EQ(data, 0xBEu);
+
   // Switch to RAM bank 1 by writing 1 to 0x4000 via b_transport_rom.
   data = 1;
   auto bank_payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0x4000, &data);
   cart_mbc5->mbc->b_transport_rom(*bank_payload, delay);
   ASSERT_EQ(cart_mbc5->mbc->GetRamInd(), 1);
+  ASSERT_EQ(cart_mbc5->mbc->ext_ram.GetCurrentBankIndex(), 1);
 
   // Write a different value to Bank 1, same address.
   data = 0xEF;
@@ -160,10 +178,36 @@ TEST(CartridgeTestsNoMbc, Rom) {
   read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x40B7, &data);
   cart_no_mbc->mbc->b_transport_rom(*read_payload, delay);
   ASSERT_EQ(data, 0x03u);
+
+  // Some games like Tetris try to write into the ROM. Nothing should happen
+  data = 0xaau;
+  auto write_payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0x40B7, &data);
+  cart_no_mbc->mbc->b_transport_rom(*write_payload, delay);
+  ASSERT_EQ(write_payload->get_response_status(), tlm::TLM_OK_RESPONSE);
+
+  read_payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x40B7, &data);
+  cart_no_mbc->mbc->b_transport_rom(*read_payload, delay);
+  ASSERT_EQ(data, 0x03u);
+}
+
+TEST(CartridgeTestsNoMbc, Ram) {
+  sc_time delay = SC_ZERO_TIME;
+  u8 data = 0xab;
+
+  // Some games like Alleyway write into the non-existing RAM. Nothing should happen.
+  auto payload = MakeSharedPayloadPtr(tlm::TLM_WRITE_COMMAND, 0x0000, &data);
+  cart_no_mbc->mbc->b_transport_ram(*payload, delay);
+  ASSERT_EQ(payload->get_response_status(), tlm::TLM_OK_RESPONSE);
+
+  // Also reads from the non-existing RAM are a thing.
+  payload = MakeSharedPayloadPtr(tlm::TLM_READ_COMMAND, 0x0000, &data);
+  cart_no_mbc->mbc->b_transport_ram(*payload, delay);
+  ASSERT_EQ(data, 0x00u);
+  ASSERT_EQ(payload->get_response_status(), tlm::TLM_OK_RESPONSE);
 }
 
 int sc_main(int argc, char* argv[]) {
-  cart_mbc5 = new Cartridge("cartridge_mbc5", rom_dummy_path, "");
+  cart_mbc5 = new Cartridge("cartridge_mbc5", rom_dummy_path, "", false, true);
   cart_no_mbc = new Cartridge("cartridge_no_mbc", rom_flappyboy_path, "");
   cart_mbc5->mbc->UnmapBootRom();
   cart_no_mbc->mbc->UnmapBootRom();
