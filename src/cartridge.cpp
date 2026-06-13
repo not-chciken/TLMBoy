@@ -218,11 +218,11 @@ void Cartridge::Mbc1::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
   if (cmd == tlm::TLM_WRITE_COMMAND) {
     if (adr <= 0x1FFF) {
       ram_enabled_ = (*ptr & 0xA) == 0xA;
-    } else if (adr >= 0x2000 && adr <= 0x3FFF) {
+    } else if (adr <= 0x3FFF) {
       rom_bank_low_bits = 0b00011111 & *ptr;
-    } else if (adr >= 0x4000 && adr <= 0x5FFF) {
+    } else if (adr <= 0x5FFF) {
       the_two_bits_ = *ptr & 0b00000011;
-    } else if (adr >= 0x6000 && adr <= 0x7FFF) {
+    } else if (adr <= 0x7FFF) {
       more_ram_mode_ = static_cast<bool>(*ptr & 0b0000001);
     }
     rom_ind_ = rom_bank_low_bits | (more_ram_mode_ ? 0 : (the_two_bits_ << 5));
@@ -264,7 +264,11 @@ void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
 
 Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file,
                       bool quick_boot)
-    : MemoryBankCtrler(128, 4, symbol_file), ram_rtc_enabled_(false) {
+    : MemoryBankCtrler(128, 4, symbol_file),
+      rtc_reg_(0),
+      ram_rtc_enabled_(false),
+      rtc_mapped_(false),
+      rtc_halted_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
   LoadBootRom(rom_low, boot_path, quick_boot);
@@ -382,7 +386,11 @@ void Cartridge::Mbc3::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
 
 Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file,
                       bool quick_boot)
-    : MemoryBankCtrler(512, 16, symbol_file), ram_enabled_(false) {
+    : MemoryBankCtrler(512, 16, symbol_file),
+      ram_bits_(0),
+      rom_bank_low_bits_(0),
+      rom_bank_high_bits_(0),
+      ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
   LoadBootRom(rom_low, boot_path, quick_boot);
@@ -398,11 +406,11 @@ void Cartridge::Mbc5::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
   if (cmd == tlm::TLM_WRITE_COMMAND) {
     if (adr <= 0x1FFF) {
       ram_enabled_ = (*ptr & 0xA) == 0xA;
-    } else if (adr >= 0x2000 && adr <= 0x2FFF) {
+    } else if (adr <= 0x2FFF) {
       rom_bank_low_bits_ = *ptr;
-    } else if (adr >= 0x3000 && adr <= 0x3FFF) {
+    } else if (adr <= 0x3FFF) {
       rom_bank_high_bits_ = *ptr & 1;
-    } else if (adr >= 0x4000 && adr <= 0x5FFF) {
+    } else if (adr <= 0x5FFF) {
       ram_bits_ = *ptr & 0x0F;
     }
     ram_ind_ = ram_enabled_ ? ram_bits_ : 0;
