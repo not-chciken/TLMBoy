@@ -22,6 +22,7 @@ add_executable(test_blarrg_cpuinstr11 test_blarrg_cpuinstr11.cpp)
 # Some unit tests and system tests.
 add_executable(test_boot test_boot.cpp)
 add_executable(test_boot_states test_boot_states.cpp)
+add_executable(test_cartridge test_cartridge.cpp)
 add_executable(test_bus test_bus.cpp)
 add_executable(test_cpu test_cpu.cpp)
 add_executable(test_dmg_acid2 test_dmg_acid2.cpp)
@@ -60,6 +61,7 @@ create_test_case(test_blarrg_cpuinstr11)
 create_test_case(test_boot)
 create_test_case(test_boot_states)
 create_test_case(test_bus)
+create_test_case(test_cartridge)
 create_test_case(test_cpu)
 create_test_case(test_dmg_acid2)
 create_test_case(test_gdb)
@@ -71,6 +73,7 @@ target_compile_options(test_boot_states PUBLIC ${TEST_COMPILE_OPTS} -DENABLE_DBG
 
 # Let them run sequentially. Might algo work in parallel, but better be safe.
 set_tests_properties(
+  test_cartridge
   test_cpu
   test_bus
   test_dmg_acid2

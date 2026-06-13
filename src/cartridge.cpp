@@ -3,11 +3,12 @@
  * Copyright (c) 2025 chciken/Niko
  ******************************************************************************/
 #include "cartridge.h"
-#include "dmg_rom_data.h"
 
 #include <ctime>
 #include <format>
 #include <string>
+
+#include "dmg_rom_data.h"
 
 static void LoadBootRom(GenericMemory& mem, const std::filesystem::path& boot_path, bool quick_boot) {
   if (boot_path.empty()) {
@@ -61,7 +62,9 @@ uint Cartridge::BankSwitchedMem::transport_dbg(tlm::tlm_generic_payload& trans) 
 Cartridge::MemoryBankCtrler::MemoryBankCtrler(uint num_rom_banks, uint num_ram_banks, bool symbol_file)
     : rom_low(0x4000, "rom_low"),
       rom_high("rom_high", num_rom_banks, 0x4000),
-      ext_ram("ext_ram", num_ram_banks, 0x2000) {
+      ext_ram("ext_ram", num_ram_banks, 0x2000),
+      ram_ind_(0),
+      rom_ind_(0) {
   rom_socket_in.register_b_transport(this, &MemoryBankCtrler::b_transport_rom);
   ram_socket_in.register_b_transport(this, &MemoryBankCtrler::b_transport_ram);
   rom_socket_in.register_transport_dbg(this, &MemoryBankCtrler::transport_dbg_rom);
@@ -120,7 +123,16 @@ void Cartridge::MemoryBankCtrler::UnmapBootRom() {
   rom_low.LoadFromFile(game_path_);
 }
 
-Cartridge::Rom::Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file, bool quick_boot)
+u8 Cartridge::MemoryBankCtrler::GetRomInd() {
+  return rom_ind_;
+}
+
+u8 Cartridge::MemoryBankCtrler::GetRamInd() {
+  return ram_ind_;
+}
+
+Cartridge::Rom::Rom(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbole_file,
+                    bool quick_boot)
     : MemoryBankCtrler(1, 1, symbole_file) {
   assert(game_path != "");
   game_path_ = game_path;
@@ -171,12 +183,11 @@ void Cartridge::Rom::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& d
   }
 }
 
-Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot)
+Cartridge::Mbc1::Mbc1(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file,
+                      bool quick_boot)
     : MemoryBankCtrler(128, 4, symbol_file),
       rom_bank_low_bits(0),
       the_two_bits_(0),
-      rom_ind_(0),
-      ram_ind_(0),
       more_ram_mode_(false),
       ram_enabled_(false) {
   game_path_ = game_path;
@@ -251,11 +262,9 @@ void Cartridge::Mbc1::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   }
 }
 
-Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot)
-    : MemoryBankCtrler(128, 4, symbol_file),
-      rom_ind_(0),
-      ram_ind_(0),
-      ram_rtc_enabled_(false) {
+Cartridge::Mbc3::Mbc3(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file,
+                      bool quick_boot)
+    : MemoryBankCtrler(128, 4, symbol_file), ram_rtc_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
   LoadBootRom(rom_low, boot_path, quick_boot);
@@ -339,28 +348,28 @@ void Cartridge::Mbc3::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
       const time_t t = std::time(nullptr);
       const time_t secs = t % 60;
       const time_t minutes = (t / 60) % 60;
-      const time_t hours = (t /(60 * 60)) % 60;
+      const time_t hours = (t / (60 * 60)) % 60;
       const time_t days = (t / (60 * 60 * 24)) % 512;
       time_t val;
 
       switch (rtc_reg_) {
-        case 0:
-          val = secs;
-          break;
-        case 1:
-          val = minutes;
-          break;
-        case 2:
-          val = hours;
-          break;
-        case 3:
-          val = days % 256;
-          break;
-        case 4:
-          val = (days >> 8) | ((uint)rtc_halted_ << 6);
-          break;
-        default:
-          val = 0;
+      case 0:
+        val = secs;
+        break;
+      case 1:
+        val = minutes;
+        break;
+      case 2:
+        val = hours;
+        break;
+      case 3:
+        val = days % 256;
+        break;
+      case 4:
+        val = (days >> 8) | ((uint)rtc_halted_ << 6);
+        break;
+      default:
+        val = 0;
       }
       *ptr = (u8)val;
     } else {
@@ -371,8 +380,9 @@ void Cartridge::Mbc3::b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& 
   }
 }
 
-Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file, bool quick_boot)
-    : MemoryBankCtrler(512, 16, symbol_file), rom_ind_(0), ram_ind_(0), ram_enabled_(false) {
+Cartridge::Mbc5::Mbc5(std::filesystem::path game_path, std::filesystem::path boot_path, bool symbol_file,
+                      bool quick_boot)
+    : MemoryBankCtrler(512, 16, symbol_file), ram_enabled_(false) {
   game_path_ = game_path;
   rom_low.LoadFromFile(game_path);
   LoadBootRom(rom_low, boot_path, quick_boot);
@@ -396,7 +406,7 @@ void Cartridge::Mbc5::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
       ram_bits_ = *ptr & 0x0F;
     }
     ram_ind_ = ram_enabled_ ? ram_bits_ : 0;
-    rom_ind_ = (rom_bank_high_bits_ << 8) & rom_bank_low_bits_;
+    rom_ind_ = (rom_bank_high_bits_ << 8) | rom_bank_low_bits_;
     rom_high.DoBankSwitch(rom_ind_);  // TODO(niko): Bank 0
     ext_ram.DoBankSwitch(ram_ind_);
   }

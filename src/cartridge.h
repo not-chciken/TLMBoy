@@ -51,10 +51,14 @@ class Cartridge : public sc_module {
     virtual uint transport_dbg_rom(tlm::tlm_generic_payload& trans);
     virtual bool get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data);
     virtual void UnmapBootRom();
+    u8 GetRomInd();
+    u8 GetRamInd();
 
    protected:
     std::filesystem::path game_path_;
     std::unique_ptr<SymfileTracer> symfile_tracer_;
+    u8 ram_ind_;
+    u8 rom_ind_;
   };
 
   class Rom : public MemoryBankCtrler {
@@ -75,8 +79,6 @@ class Cartridge : public sc_module {
    private:
     u8 rom_bank_low_bits;
     u8 the_two_bits_;
-    u8 rom_ind_;
-    u8 ram_ind_;
     bool more_ram_mode_;
     bool ram_enabled_;
     std::filesystem::path save_file;
@@ -91,8 +93,6 @@ class Cartridge : public sc_module {
     void b_transport_ram(tlm::tlm_generic_payload& trans, sc_time& delay) override;
 
    private:
-    u8 rom_ind_;
-    u8 ram_ind_;
     uint rtc_reg_;
     bool ram_rtc_enabled_;
     bool rtc_mapped_;
@@ -108,8 +108,6 @@ class Cartridge : public sc_module {
     uint transport_dbg_ram(tlm::tlm_generic_payload& trans) override;
 
    private:
-    u16 rom_ind_;
-    u16 ram_ind_;
     u16 ram_bits_;
     u16 rom_bank_low_bits_;
     u16 rom_bank_high_bits_;
