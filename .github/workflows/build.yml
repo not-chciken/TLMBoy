@@ -40,14 +40,7 @@ jobs:
       working-directory: ./build/tests
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
-            ./test_bus
             ./test_boot --headless
-            ./test_cartridge
-            ./test_cpu
-            ./test_gdb
-            ./test_memory
-            ./test_ppu --headless
-            ./test_symfile_tracer
             ./test_blarrg_cpuinstr01 --headless
             ./test_blarrg_cpuinstr02 --headless
             ./test_blarrg_cpuinstr03 --headless
@@ -59,6 +52,14 @@ jobs:
             ./test_blarrg_cpuinstr09 --headless
             ./test_blarrg_cpuinstr10 --headless
             ./test_blarrg_cpuinstr11 --headless
+            ./test_bus
+            ./test_cartridge
+            ./test_cpu
+            ./test_dmg_acid2 --headless
+            ./test_gdb
+            ./test_memory
+            ./test_ppu --headless
+            ./test_symfile_tracer
     - name: coverage report
       run: |
            export CODACY_PROJECT_TOKEN=${{secrets.CODACY_TOKEN}}
