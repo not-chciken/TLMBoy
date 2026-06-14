@@ -19,9 +19,11 @@ Options options;
 TEST(PpuTest, DmgAcid2) {
   string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
   options.rom_path = tlm_boy_root + "/roms/dmg-acid2.gb";
+  options.quick_boot = true;
+  options.resolution_scaling = 1;
 
   GbTop test_top("test_top", options);
-  sc_start(5, SC_SEC);
+  sc_start(1.0, SC_SEC);
   test_top.ppu.game_wndw->SaveScreenshot("dmg-acid2.bmp");
 
   ASSERT_TRUE(CompareFiles("dmg-acid2.bmp", tlm_boy_root + "/tests/golden_files/dmg-acid2.bmp"));
@@ -31,6 +33,19 @@ int sc_main(int argc, char* argv[]) {
   sc_set_time_resolution(1.0, SC_NS);
   ::testing::InitGoogleTest(&argc, argv);
   options.InitOpts(argc, argv);
+
+  const struct option long_opts[] = {{"headless", no_argument, 0, 'l'}, {nullptr, 0, nullptr, 0}};
+  for (;;) {
+    int index;
+    switch (getopt_long(argc, argv, "l", long_opts, &index)) {
+    case 'l':
+      options.headless = true;
+      continue;
+    default:
+      break;
+    }
+    break;
+  }
 
   return RUN_ALL_TESTS();
 }
