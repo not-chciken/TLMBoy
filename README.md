@@ -1,9 +1,8 @@
+# TLMBoy <img alt="TLMBoy icon" src="./assets/tlmboy_icon.svg" width="4%"><br>
+
 ![example workflow](https://github.com/not-chciken/TLMBoy/actions/workflows/build.yml/badge.svg)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=not-chciken/TLMBoy\&utm_campaign=Badge_Coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4791a60cefd140328652ee67756c69b9)](https://www.codacy.com/gh/not-chciken/TLMBoy/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=not-chciken/TLMBoy\&utm_campaign=Badge_Grade)
-
-
-# TLMBoy <img src="./assets/tlmboy_icon.svg" width="4%"><br>
 
 A Game Boy Simulator written in C++/SystemC TLM-2.0.
 
@@ -27,7 +26,8 @@ Dependencies:
 
 ## Usage
 
-After building TLMBoy, emulating a game is a simple as:
+After building TLMBoy, emulating a game is as simple as:
+
 ```bash
 cd build
 ./tlmboy -r <PATH_TO_GAME_ROM>
@@ -35,6 +35,7 @@ cd build
 
 Currently, the homebrew game [FlappyBoy](https://github.com/bitnenfer/flappy-boy-asm.git) is included as an example.
 The example can be launched with:
+
 ```bash
 cd build
 ./tlmboy -r ../roms/flappyboy.gb
@@ -42,7 +43,7 @@ cd build
 
 ## Command Line Arguments
 
-* `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Points to "../roms/DMG\_ROM.bin" by default. Alternatively, use "../roms/FASTBOOT.bin" to skip the lenghty logo scroll down.
+* `--boot-rom-path=X`: Specifies the path `X` of the boot ROM. Uses the standard DMG boot if no argument is provided.
 * `--color-palette=X`: Color palette hex string with four RGB colors from bright to dark. Default: f2ffd9aaaaaa555555000000.
 * `--fps-cap=X`: Limits the maximum frames per second to `X`. Defaults to the Game Boy's default frame rate of 60 fps. Use -1 for no limit.
 * `--headless`: Run the TLMBoy without any graphical output. This is useful for CI environments.
@@ -56,17 +57,39 @@ cd build
 * `--wait-for-gdb`: Wait for a GDB remote connection on port 1337.
 * `--quick-boot`: Faster boot that skips the logo scrolling and data check.
 
-## Screenshots
-Alleyway | Super Mario Land
-:-------------------------:|:-------------------------:
-<img src="./assets/alleyway.png" width="95%"> |  <img src="./assets/super_mario_land.png" width="95%">
+## Impressions
 
-Tetris | The Jungle Book
-:-------------------------:|:-------------------------:
-<img src="./assets/tetris.png" width="95%"> |  <img src="./assets/jungle_book.png" width="95%">
+### Games
+
+| Alleyway                   | Super Mario Land       |
+|:--------------------------:|:----------------------:|
+| <img alt="Alleyway screenshot" src="./assets/alleyway.png" width="95%"> | <img alt="Super Mario Land screenshot" src="./assets/super_mario_land.png" width="95%"> |
+
+| Tetris                   | The Jungle Book          |
+|:------------------------:|:------------------------:|
+| <img alt="Tetris screenshot" src="./assets/tetris.png" width="95%"> | <img alt="The Jungle Book screenshpt" src="./assets/jungle_book.png" width="95%"> |
+
+### Color Palettes (`--color-palette`)
+
+| Default                  | Original                 | [Cozy Camp](https://lospec.com/palette-list/cozy-camp) |
+|:------------------------:|:------------------------:|:-------------------------------------------------------:|
+| f2ffd9aaaaaa555555000000 | 9bbc0f8bac0f3062300f380f | f8eacfc07e5330455c071721 |
+| <img alt="Default palette" src="./assets/palette_default.png" width="95%"> | <img alt="Original palette" src="./assets/palette_original.png" width="95%"> | <img alt="Cozy camp palette" src="./assets/palette_cozy_camp.png" width="95%"> |
+
+### Extended Game Window (`--show-ext-game-window`)
+
+<div align="center">
+<img width="50%" alt="Extended screen view" src="./assets/extended_screen_zelda.gif"><br>
+</div>
+
+### Tile Data (`--show-window-window`)
+
+| Screen                | Tile Data Table             | 
+|:------------------------:|:------------------------:|
+| <img alt="Default palette" src="./assets/screenshot_zelda.png" width="65%"> | <img alt="Original palette" src="./assets/tile_data_table_zelda.png" width="95%"> |
 
 
-# Controls
+## Controls
 
 | Keyboard  | Game Boy  |
 |-----------|-----------|
@@ -77,13 +100,13 @@ Tetris | The Jungle Book
 | P         | Start     |
 
 Utilities:
+
 | Keyboard  | Description                                  |
 |-----------|----------------------------------------------|
 | 1         | Press to disable/enable background rendering |
 | 2         | Press to disable/enable window rendering     |
 | 3         | Press to disable/enable sprites rendering    |
 | SPACE     | Hold for turbo mode (3x speed)               |
-
 
 ## Documentation
 
