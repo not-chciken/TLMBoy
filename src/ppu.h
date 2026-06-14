@@ -198,9 +198,14 @@ struct Ppu : public sc_module {
   // For the headless mode. Doesn't create any windows, hence renders nothing.
   class DummyWindow : public RenderWindow {
    public:
-    DummyWindow() : RenderWindow() {}
-    void DrawToScreen(Ppu& ppu [[maybe_unused]]) override {};                                  // Do nothing.
-    void SaveScreenshot(const std::filesystem::path& file_path [[maybe_unused]]) override {};  // Do nothing.
+    explicit DummyWindow(Ppu* ppu = nullptr) : RenderWindow(), ppu_(ppu) {
+      log_width = kGbScreenWidth;
+      log_height = kGbScreenHeight;
+    }
+    void DrawToScreen(Ppu& ppu [[maybe_unused]]) override {}; // Do nothing.
+    void SaveScreenshot(const std::filesystem::path& file_path) override;
+   private:
+    Ppu* ppu_;
   };
 
  private:
