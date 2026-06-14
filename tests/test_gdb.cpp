@@ -21,7 +21,7 @@ const std::chrono::seconds kTestTimeoutS = 50s;
 
 const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
 const string exe = tlm_boy_root + "/build/tlmboy_test";
-const string rom_path = tlm_boy_root + "/roms/dummy.bin";
+const string rom_path = tlm_boy_root + "/roms/dummy.gb";
 const string cmd_test = exe + " --max-cycles=800 --headless --wait-for-gdb -r " + rom_path;
 const string cmd_test_wo_max = exe + " --headless --wait-for-gdb -r " + rom_path;
 

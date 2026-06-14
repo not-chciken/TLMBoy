@@ -11,7 +11,7 @@
 #include "utils.h"
 
 const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-const string rom_dummy_path = tlm_boy_root + "/roms/dummy.bin";
+const string rom_dummy_path = tlm_boy_root + "/roms/dummy.gb";
 const string rom_flappyboy_path = tlm_boy_root + "/roms/flappyboy.gb";
 Cartridge* cart_mbc5;
 Cartridge* cart_no_mbc;
