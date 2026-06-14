@@ -41,8 +41,9 @@ jobs:
       run: |
             export TLMBOY_ROOT=${GITHUB_WORKSPACE}
             ./test_bus
-            ./test_cpu
+            ./test_boot --headless
             ./test_cartridge
+            ./test_cpu
             ./test_gdb
             ./test_memory
             ./test_ppu --headless
