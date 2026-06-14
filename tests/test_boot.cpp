@@ -20,7 +20,7 @@
 #include "utils.h"
 
 const string tlm_boy_root = GetEnvVariable("TLMBOY_ROOT");
-Options options{.headless = true, .rom_path = tlm_boy_root + "/roms/dummy.gb"};
+Options options{.headless = false, .rom_path = tlm_boy_root + "/roms/dummy.gb", .resolution_scaling = 1};
 
 struct Top : public GbTop {
   SC_HAS_PROCESS(Top);
@@ -44,9 +44,7 @@ TEST(BootTests, Boot) {
   ASSERT_EQ(test_top.cartridge.game_info->GetCartridgeType(), "MBC5+BAT+RAM");
   ASSERT_EQ(test_top.cartridge.game_info->GetRomSize(), 8);
   ASSERT_EQ(test_top.cartridge.game_info->GetRamSize(), 32);
-  if (options.headless == false) {
-    ASSERT_TRUE(CompareFiles("test_boot.bmp", tlm_boy_root + "/tests/golden_files/test_boot.bmp"));
-  }
+  ASSERT_TRUE(CompareFiles("test_boot.bmp", tlm_boy_root + "/tests/golden_files/test_boot.bmp"));
 }
 
 int sc_main(int argc, char* argv[]) {
