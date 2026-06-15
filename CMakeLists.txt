@@ -58,14 +58,14 @@ set(ALL_CPPS
 add_executable(tlmboy src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy libsystemc.a -lSDL2)
+target_link_libraries(tlmboy -lsystemc -lSDL2)
 target_compile_options(tlmboy PUBLIC -O3 -g)
 
 # The ultra-fast executable.
 add_executable(tlmboy_fast src/main.cpp ${ALL_CPPS})
 target_include_directories(tlmboy_fast SYSTEM PUBLIC "${SYSTEMC_PATH}/include")
 target_link_libraries(tlmboy_fast "-L${SYSTEMC_PATH}/lib-linux64")
-target_link_libraries(tlmboy_fast libsystemc.a -lSDL2)
+target_link_libraries(tlmboy_fast -lsystemc -lSDL2)
 target_compile_options(tlmboy_fast PUBLIC -O3 -flto -march=native -fcf-protection=none -g -DNDEBUG)
 target_link_options(tlmboy_fast PUBLIC -flto -no-pie)
 
