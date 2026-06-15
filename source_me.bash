@@ -1,5 +1,5 @@
 #!/bin/bash
-export SYSTEMC_PATH=/usr/local/systemc-2.3.3
+export SYSTEMC_PATH=/opt/systemc
 export TLMBOY_ROOT=$(pwd)
 export LD_LIBRARY_PATH=${SYSTEMC_PATH}/lib-linux64/
 export SYSTEMC_DISABLE_COPYRIGHT_MESSAGE=1

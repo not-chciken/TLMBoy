@@ -56,7 +56,8 @@ RUN cp -r build /opt/gdb
 WORKDIR /tmp
 RUN rm -rf binutils-gdb
 
-ENV SYSTEMC_PATH=/usr/local/systemc-2.3.3
+ENV SYSTEMC_PATH=/opt/systemc/
+RUN cp -r ${SYSTEMC_PATH}/lib ${SYSTEMC_PATH}/lib-linux64
 ENV LD_LIBRARY_PATH="${SYSTEMC_PATH}/lib-linux64:${LD_LIBRARY_PATH}"
 ENV PATH="/opt/gdb/bin:${PATH}"
 
