@@ -6,6 +6,7 @@ RUN apt-get install software-properties-common -yq
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN  apt-get install -yq \
      build-essential \
+     clang-format \
      cmake \
      curl \
      git \
@@ -35,11 +36,11 @@ RUN ln -sf /usr/bin/gcc-10 /usr/bin/gcc
 WORKDIR /tmp
 RUN git clone --branch 2.3.3 https://github.com/accellera-official/systemc.git
 WORKDIR /tmp/systemc
-RUN mkdir objdir
-WORKDIR /tmp/systemc/objdir
-RUN ../configure --prefix=/usr/local/systemc-2.3.3
-RUN make -j$(nproc)
-RUN make install
+RUN mkdir build
+WORKDIR /tmp/systemc/build
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release
+RUN cmake --build . -j$(nproc) 
+RUN cmake --install .
 RUN rm -rf /tmp/systemc
 
 # Install Z80 GDB
