@@ -57,8 +57,9 @@ Ppu::Ppu(sc_module_name name, PpuArgs args) : sc_module(name), init_socket("init
                                              (int)kGbScreenHeight, "TLMBoy", args.fps_cap);
 
     if (args.show_ext_game_wndw) {
-      ext_game_wndw = std::make_unique<ExtGameWindow>((int)kGbScreenBufferWidth * 2, (int)kGbScreenBufferHeight * 2,
-                                                      (int)kGbScreenBufferWidth, (int)kGbScreenBufferHeight, "Extended Screen");
+      ext_game_wndw =
+          std::make_unique<ExtGameWindow>((int)kGbScreenBufferWidth * 2, (int)kGbScreenBufferHeight * 2,
+                                          (int)kGbScreenBufferWidth, (int)kGbScreenBufferHeight, "Extended Screen");
     } else {
       ext_game_wndw = std::make_unique<DummyWindow>(this);
     }
@@ -614,7 +615,7 @@ void Ppu::WindowWindow::DrawToScreen(Ppu& p) {
 
 void Ppu::DummyWindow::SaveScreenshot(const std::filesystem::path& file_path) {
   const int kPixelDataSize = log_width * log_height * 4;  // 32-bit ARGB, no row padding needed.
-  const int kFileSize = 14 + 108 + kPixelDataSize;       // BITMAPV4HEADER is 108 bytes.
+  const int kFileSize = 14 + 108 + kPixelDataSize;        // BITMAPV4HEADER is 108 bytes.
 
   std::ofstream ofs(file_path, std::ios::binary);
   if (!ofs)
@@ -633,27 +634,27 @@ void Ppu::DummyWindow::SaveScreenshot(const std::filesystem::path& file_path) {
   write_u32(122);  // Pixel data offset (14 + 108).
 
   // BITMAPV4HEADER (108 bytes).
-  write_u32(108);             // bV4Size.
-  write_i32(log_width);       // bV4Width.
-  write_i32(log_height);      // bV4Height (positive = bottom-to-top).
-  write_u16(1);               // bV4Planes.
-  write_u16(32);              // bV4BitCount.
-  write_u32(3);               // bV4V4Compression = BI_BITFIELDS.
-  write_u32(kPixelDataSize);  // bV4SizeImage.
-  write_i32(0);               // bV4XPelsPerMeter.
-  write_i32(0);               // bV4YPelsPerMeter.
-  write_u32(0);               // bV4ClrUsed.
-  write_u32(0);               // bV4ClrImportant.
-  write_u32(0x00FF0000);      // bV4RedMask.
-  write_u32(0x0000FF00);      // bV4GreenMask.
-  write_u32(0x000000FF);      // bV4BlueMask.
-  write_u32(0xFF000000);      // bV4AlphaMask.
-  write_u32(0x57696E20);      // bV4CSType = LCS_WINDOWS_COLOR_SPACE (matches SDL_SaveBMP output).
-  for (int i = 0; i < 36; ++i) // bV4Endpoints (CIEXYZTRIPLE, unused for sRGB).
-    ofs.put(0);               
-  write_u32(0);               // bV4GammaRed.
-  write_u32(0);               // bV4GammaGreen.
-  write_u32(0);               // bV4GammaBlue.
+  write_u32(108);               // bV4Size.
+  write_i32(log_width);         // bV4Width.
+  write_i32(log_height);        // bV4Height (positive = bottom-to-top).
+  write_u16(1);                 // bV4Planes.
+  write_u16(32);                // bV4BitCount.
+  write_u32(3);                 // bV4V4Compression = BI_BITFIELDS.
+  write_u32(kPixelDataSize);    // bV4SizeImage.
+  write_i32(0);                 // bV4XPelsPerMeter.
+  write_i32(0);                 // bV4YPelsPerMeter.
+  write_u32(0);                 // bV4ClrUsed.
+  write_u32(0);                 // bV4ClrImportant.
+  write_u32(0x00FF0000);        // bV4RedMask.
+  write_u32(0x0000FF00);        // bV4GreenMask.
+  write_u32(0x000000FF);        // bV4BlueMask.
+  write_u32(0xFF000000);        // bV4AlphaMask.
+  write_u32(0x57696E20);        // bV4CSType = LCS_WINDOWS_COLOR_SPACE (matches SDL_SaveBMP output).
+  for (int i = 0; i < 36; ++i)  // bV4Endpoints (CIEXYZTRIPLE, unused for sRGB).
+    ofs.put(0);
+  write_u32(0);  // bV4GammaRed.
+  write_u32(0);  // bV4GammaGreen.
+  write_u32(0);  // bV4GammaBlue.
 
   for (int row = log_height - 1; row >= 0; --row) {
     for (int col = 0; col < log_width; ++col) {

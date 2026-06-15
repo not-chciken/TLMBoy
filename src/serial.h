@@ -18,7 +18,7 @@
 struct Serial : public sc_module {
   SC_HAS_PROCESS(Serial);
 
-  static constexpr u8 kMaskClockSource = 0b1u;;
+  static constexpr u8 kMaskClockSource = 0b1u;
   static constexpr u8 kMaskTransferStart = 0b10000000u;
 
   Serial(sc_module_name name, u8* reg_if);

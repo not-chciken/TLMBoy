@@ -202,8 +202,9 @@ struct Ppu : public sc_module {
       log_width = kGbScreenWidth;
       log_height = kGbScreenHeight;
     }
-    void DrawToScreen(Ppu& ppu [[maybe_unused]]) override {}; // Do nothing.
+    void DrawToScreen(Ppu& ppu [[maybe_unused]]) override {};  // Do nothing.
     void SaveScreenshot(const std::filesystem::path& file_path) override;
+
    private:
     Ppu* ppu_;
   };

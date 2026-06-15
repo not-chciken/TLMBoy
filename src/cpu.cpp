@@ -1,7 +1,7 @@
 /**********************************************
  * Apache License, Version 2.0
  * Copyright (c) 2025 chciken/Niko
-**********************************************/
+ **********************************************/
 
 #include "cpu.h"
 
@@ -12,12 +12,8 @@
 #include "cpu_jumptable.cpp"
 #include "cpu_ops.cpp"
 
-Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step):
-    sc_module(name),
-    gdb_server(this),
-    attach_gdb_(attach_gdb),
-    single_step_(single_step),
-    rom_bank_0_(nullptr) {
+Cpu::Cpu(sc_module_name name, bool attach_gdb, bool single_step)
+    : sc_module(name), gdb_server(this), attach_gdb_(attach_gdb), single_step_(single_step), rom_bank_0_(nullptr) {
   SC_THREAD(DoMachineCycle);
 }
 
@@ -91,7 +87,9 @@ u8 Cpu::ReadBus(u16 addr, GbCommand::Cmd cmd) {
   if (payload->is_response_error()) {
     DBG_LOG_CPU("Transport status is:" << payload->get_response_string());
     throw std::runtime_error(std::format("Response error from transport_dbg!\n"
-                             "Address=0x{:04x} Data=0x{:02x}", addr, data).c_str());
+                                         "Address=0x{:04x} Data=0x{:02x}",
+                                         addr, data)
+                                 .c_str());
   }
   return data;
 }
