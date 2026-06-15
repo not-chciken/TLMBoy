@@ -22,6 +22,7 @@ jobs:
         submodules: 'false'
     - name: run clang-format
       run: |
+           clang-format --version
            clang-format --dry-run --Werror src/*
 
   build:
