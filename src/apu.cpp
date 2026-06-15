@@ -324,9 +324,9 @@ void Apu::DecrementLengths() {
 }
 
 void Apu::DoSweep() {
-  square1.sweep_step = *(reg_nr10) & 0b111;
-  square1.sweep_direction = *(reg_nr10) & 0b1000;
-  square1.sweep_period = (*(reg_nr10) >> 4) & 0b111;
+  square1.sweep_step = *reg_nr10 & 0b111;
+  square1.sweep_direction = *reg_nr10 & 0b1000;
+  square1.sweep_period = (*reg_nr10 >> 4) & 0b111;
 
   if (square1.sweep_period == 0)
     return;
