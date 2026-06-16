@@ -297,9 +297,9 @@ void Cartridge::Mbc3::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
   if (cmd == tlm::TLM_WRITE_COMMAND) {
     if (adr <= 0x1FFF) {
       ram_rtc_enabled_ = (*ptr & 0xA) == 0xA;
-    } else if (adr >= 0x2000 && adr <= 0x3FFF) {
+    } else if (adr <= 0x3FFF) {
       rom_ind_ = 0b01111111 & *ptr;
-    } else if (adr >= 0x4000 && adr <= 0x5FFF) {
+    } else if (adr <= 0x5FFF) {
       if (*ptr < 8) {
         ram_ind_ = *ptr;
         rtc_mapped_ = false;
@@ -307,7 +307,7 @@ void Cartridge::Mbc3::b_transport_rom(tlm::tlm_generic_payload& trans, sc_time& 
         rtc_reg_ = *ptr - 8;
         rtc_mapped_ = true;
       }
-    } else if (adr >= 0x6000 && adr <= 0x7FFF) {
+    } else if (adr <= 0x7FFF) {
       // TODO: latch thing.
     }
 
