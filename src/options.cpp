@@ -97,7 +97,9 @@ void Options::InitOpts(int argc, char* argv[]) {
                 << "          --show-ext-game-window" << std::endl
                 << "          Show the extended game window that renders out-of-viewport background tiles." << std::endl
                 << "          --show-window-window" << std::endl
-                << "          Show the window tile data table." << std::endl;
+                << "          Show the window tile data table." << std::endl
+                << "          --quick-boot" << std::endl
+                << "          Faster boot that skips the logo scrolling and data check." << std::endl;
       exit(1);
     case -1:
       break;
